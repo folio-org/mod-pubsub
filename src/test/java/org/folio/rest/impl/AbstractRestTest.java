@@ -19,7 +19,7 @@ import org.junit.BeforeClass;
 
 import java.io.IOException;
 
-import static org.folio.dataimport.util.RestUtil.OKAPI_TENANT_HEADER;
+import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 
 public abstract class AbstractRestTest {
 
@@ -40,7 +40,7 @@ public abstract class AbstractRestTest {
     PostgresClient.stopEmbeddedPostgres();
     PostgresClient.closeAllClients();
     useExternalDatabase = System.getProperty(
-      "org.folio.source.record.manager.test.database",
+      "org.folio.pubsub.test.database",
       "embedded");
 
     switch (useExternalDatabase) {
@@ -49,7 +49,7 @@ public abstract class AbstractRestTest {
         break;
       case "external":
         String postgresConfigPath = System.getProperty(
-          "org.folio.source.record.manager.test.config",
+          "org.folio.pubsub.test.config",
           "/postgres-conf-local.json");
         PostgresClient.setConfigFilePath(postgresConfigPath);
         break;
@@ -59,7 +59,7 @@ public abstract class AbstractRestTest {
         break;
       default:
         String message = "No understood database choice made." +
-          "Please set org.folio.source.record.manager.test.database" +
+          "Please set org.folio.pubsub.test.database" +
           "to 'external', 'environment' or 'embedded'";
         throw new Exception(message);
     }
@@ -94,7 +94,7 @@ public abstract class AbstractRestTest {
   public void setUp(TestContext context) throws IOException {
     spec = new RequestSpecBuilder()
       .setContentType(ContentType.JSON)
-      .addHeader(OKAPI_TENANT_HEADER, TENANT_ID)
+      .addHeader(OKAPI_HEADER_TENANT, TENANT_ID)
       .setBaseUri("http://localhost:" + port)
       .addHeader("Accept", "text/plain, application/json")
       .build();

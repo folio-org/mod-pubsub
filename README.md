@@ -1,4 +1,4 @@
-# mod-sample
+# mod-pubsub
 
 Copyright (C) 2019 The Open Library Foundation
 
@@ -85,5 +85,5 @@ curl -w '\n' -X POST -D -   \
 
 ## Issue tracker
 
-See project [MODDATAIMP](https://issues.folio.org/browse/MODDATAIMP)
+See project [MODPUBSUB](https://issues.folio.org/browse/MODPUBSUB)
 at the [FOLIO issue tracker](https://dev.folio.org/guidelines/issue-tracker/).
