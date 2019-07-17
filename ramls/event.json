@@ -21,7 +21,7 @@
           "type": "string"
         },
         "eventTTL": {
-          "description": "Default time-to-live (TTL) for event in minutes",
+          "description": "Time-to-live (TTL) for event in minutes",
           "type": "integer"
         },
         "correlationId": {
