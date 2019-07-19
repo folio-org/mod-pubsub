@@ -6,7 +6,7 @@
   "properties": {
     "id": {
       "description": "UUID",
-      "type": "string"
+      "$ref": "uuid.json"
     },
     "eventType": {
       "description": "Unique Event type, human-readable String, not UUID",
@@ -16,7 +16,7 @@
       "description": "Event metadata",
       "type": "object",
       "properties": {
-        "tenantId" : {
+        "tenantId": {
           "description": "Tenant id",
           "type": "string"
         },
@@ -26,15 +26,25 @@
         },
         "correlationId": {
           "description": "Id to track related events",
-          "type": "string"
+          "$ref": "uuid.json"
         },
         "originalEventId": {
           "description": "Id of the event that started the sequence of related events",
-          "type": "string"
+          "$ref": "uuid.json"
         },
         "publisherCallback": {
           "description": "Allows a publisher to provide a callback endpoint or an error Event Type to be notified that despite the fact that there are subscribers for such an event type no one has received the event within the specified period of time",
-          "type": "string"
+          "type": "object",
+          "properties": {
+            "endpoint": {
+              "description": "Callback endpoint",
+              "type": "string"
+            },
+            "eventType": {
+              "description": "Error Event Type",
+              "type": "string"
+            }
+          }
         }
       },
       "required": [

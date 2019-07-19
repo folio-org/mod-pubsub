@@ -18,7 +18,8 @@
     },
     "signed": {
       "description": "Indicated whether all events of this event type must be digitally signed by the publisher",
-      "type": "boolean"
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [
