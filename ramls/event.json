@@ -25,8 +25,8 @@
           "type": "integer"
         },
         "correlationId": {
-          "description": "Id to track related events",
-          "$ref": "uuid.json"
+          "description": "Id to track related events, can be a meaningful string or a UUID",
+          "type": "string"
         },
         "originalEventId": {
           "description": "Id of the event that started the sequence of related events",
