@@ -5,3 +5,5 @@
 * Extended Event schema
 * Added samples
 * Applied Liquibase scripting tool to manage database tables
+* Applied Spring DI maintenance
+* Added stub implementations for EventService and EventDao
