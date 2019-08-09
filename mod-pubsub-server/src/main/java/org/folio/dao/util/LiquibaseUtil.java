@@ -28,6 +28,8 @@ public class LiquibaseUtil {
   private static final String CHANGELOG_TENANT_PATH = "liquibase/tenant/changelog.xml";
   private static final String MODULE_CONFIGURATION_SCHEMA = "pubsub_config";
 
+  private LiquibaseUtil() {}
+
   /**
    * Performs initialization for module configuration schema:
    * - creates schema for module configuration

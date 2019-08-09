@@ -22,6 +22,8 @@ public class SingleConnectionProvider {
   private static final String CONFIG_PORT_KEY = "port";
   private static final String CONFIG_DATABASE_KEY = "database";
 
+  private SingleConnectionProvider() {}
+
   /**
    * Returns database connection for the given tenant
    *
