@@ -17,6 +17,6 @@ public class EventServiceImpl implements EventService {
 
   @Override
   public Future<Optional<Event>> getById(String eventId, String tenantId) {
-    return eventDao.getById(eventId, tenantId);
+    return eventDao.getById(eventId, tenantId); // NOSONAR
   }
 }
