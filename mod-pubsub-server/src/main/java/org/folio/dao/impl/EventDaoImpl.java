@@ -19,7 +19,7 @@ public class EventDaoImpl implements EventDao {
   public Future<Optional<Event>> getById(String eventId, String tenantId) {
     /*
       Implementation is stubbed.
-      Use pgClientFactory to obtain PostgresClient instance and
+      Use PostgresClientFactory to obtain PostgresClient instance and
       query for Event entity from the underlying database.
     */
     return Future.succeededFuture(Optional.of(new Event().withId(eventId)));
