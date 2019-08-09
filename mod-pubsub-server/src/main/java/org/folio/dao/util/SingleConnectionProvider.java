@@ -17,7 +17,7 @@ import static java.lang.String.format;
 public class SingleConnectionProvider {
   private static final String JDBC_DRIVER = "jdbc:postgresql";
   private static final String CONFIG_USERNAME_KEY = "username";
-  private static final String CONFIG_PASSWORD_KEY = "password";
+  private static final String CONFIG_PASS_KEY = "password";
   private static final String CONFIG_HOST_KEY = "host";
   private static final String CONFIG_PORT_KEY = "port";
   private static final String CONFIG_DATABASE_KEY = "database";
@@ -49,7 +49,7 @@ public class SingleConnectionProvider {
 
   private static Connection getConnectionInternal(JsonObject connectionConfig) throws SQLException {
     String username = connectionConfig.getString(CONFIG_USERNAME_KEY);
-    String password = connectionConfig.getString(CONFIG_PASSWORD_KEY);
+    String password = connectionConfig.getString(CONFIG_PASS_KEY);
     String host = connectionConfig.getString(CONFIG_HOST_KEY);
     String port = String.valueOf(connectionConfig.getInteger(CONFIG_PORT_KEY));
     String database = connectionConfig.getString(CONFIG_DATABASE_KEY);
