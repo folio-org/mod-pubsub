@@ -33,7 +33,7 @@ public class LiquibaseUtil {
   /**
    * Performs initialization for module configuration schema:
    * - creates schema for module configuration
-   * - runs scripts to fill module schema in
+   * - runs scripts to fill module schema 
    *
    * @param vertx vertx instance
    */
