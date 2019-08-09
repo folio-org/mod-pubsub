@@ -38,7 +38,7 @@ public class LiquibaseUtil {
   public static void initializeSchemaForModule(Vertx vertx) {
     LOGGER.info(format("Initializing schema %s for the module", MODULE_CONFIGURATION_SCHEMA));
     try (Connection connection = getConnection(vertx)) {
-      createSchema(MODULE_CONFIGURATION_SCHEMA, connection);
+      createModuleConfigurationSchema(connection);
       runScripts(MODULE_CONFIGURATION_SCHEMA, connection, CHANGELOG_MODULE_PATH);
       LOGGER.info("Schema is initialized for the module");
     } catch (Exception e) {
@@ -89,16 +89,15 @@ public class LiquibaseUtil {
   }
 
   /**
-   * Creates schema with given name
+   * Creates module configuration schema
    *
-   * @param schemaName schema name
    * @param connection connection to the underlying database
    * @throws SQLException if query execution error occurs
    */
-  private static void createSchema(String schemaName, Connection connection) throws SQLException {
+  private static void createModuleConfigurationSchema(Connection connection) throws SQLException {
     try (Statement statement = connection.createStatement()) {
-      String sql = "create schema if not exists " + schemaName;
-      statement.executeUpdate(sql);
+      String sql = format("create schema if not exists %s", MODULE_CONFIGURATION_SCHEMA);
+      statement.execute(sql);
     }
   }
 }
