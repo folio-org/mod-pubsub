@@ -17,7 +17,7 @@ import java.util.Optional;
 public class EventDaoImpl implements EventDao {
 
   private static final String TABLE_NAME = "events";
-  private static final String GET_BY_ID_QUERY = "SELECT * FROM %s.%s WHERE id = ?";
+  private static final String GET_BY_ID_QUERY = "SELECT id FROM %s.%s WHERE id = ?";
 
   @Autowired
   private PostgresClientFactory pgClientFactory;
