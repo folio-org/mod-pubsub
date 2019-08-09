@@ -17,6 +17,8 @@ import java.util.Optional;
 public class EventDaoImpl implements EventDao {
 
   private static final String TABLE_NAME = "events";
+  private static final String GET_BY_ID_QUERY = "SELECT * FROM %s.%s WHERE id = ?";
+
   @Autowired
   private PostgresClientFactory pgClientFactory;
 
@@ -24,8 +26,7 @@ public class EventDaoImpl implements EventDao {
   public Future<Optional<Event>> getById(String eventId, String tenantId) {
     Future<ResultSet> future = Future.future();
     try {
-      String getByIdQuery = "SELECT * FROM %s.%s WHERE id = ?";
-      String query = String.format(getByIdQuery, PostgresClient.convertToPsqlStandard(tenantId), TABLE_NAME);
+      String query = String.format(GET_BY_ID_QUERY, PostgresClient.convertToPsqlStandard(tenantId), TABLE_NAME);
       JsonArray params = new JsonArray().add(eventId);
       pgClientFactory.getInstance(tenantId).select(query, params, future.completer());
     } catch (Exception e) {

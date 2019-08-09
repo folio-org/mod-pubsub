@@ -1,6 +1,9 @@
 package org.folio.dao;
 
 import io.vertx.core.Future;
+import org.folio.rest.jaxrs.model.Event;
+
+import java.util.Optional;
 
 /**
  * Event data access object
@@ -13,5 +16,5 @@ public interface EventDao {
    * @param tenantId tenant id
    * @return event entity
    */
-  Future getById(String eventId, String tenantId);
+  Future<Optional<Event>> getById(String eventId, String tenantId);
 }
