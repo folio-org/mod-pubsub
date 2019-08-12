@@ -38,7 +38,7 @@ public class SingleConnectionProvider {
   }
 
   /**
-   * Returns database connection for the public tenant
+   * Returns database connection for the current user
    *
    * @param vertx vertx instance
    * @return Connection to database
