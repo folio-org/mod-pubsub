@@ -7,3 +7,4 @@
 * Applied Liquibase scripting tool to manage database tables
 * Applied Spring DI maintenance
 * Added stub implementations for EventService and EventDao
+* Added pub-sub register init script
