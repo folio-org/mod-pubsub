@@ -14,6 +14,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <ramlfiles_path>${project.parent.basedir}/ramls</ramlfiles_path>
+    <powermock.version>1.7.1</powermock.version>
   </properties>
 
   <dependencies>
@@ -31,6 +32,12 @@
       <groupId>org.folio</groupId>
       <artifactId>mod-pubsub-server</artifactId>
       <version>${project.parent.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jmockit</groupId>
+      <artifactId>jmockit</artifactId>
+      <version>1.24</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
