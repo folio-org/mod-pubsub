@@ -9,7 +9,7 @@
       "description": "Unique Event type, human-readable String, not UUID",
       "type": "string"
     },
-    "callbackEndpoint": {
+    "callbackAddress": {
       "description": "Endpoint to deliver events of certain event type",
       "type": "string"
     }

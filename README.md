@@ -20,7 +20,7 @@ For subscriber module, should specifies a set of event type and callback endpoin
 \
 MessagingDescriptor contains follow parts:
 * publications - list of event descriptors describing events that this module produces, can be ommited if module does not generate any events.
-* subscriptions - set of event types and endpoints for receiving events of specified types, can be ommited if module does not receive any events.
+* subscriptions - set of event types and endpoints (callback address) for receiving events of specified types, can be ommited if module does not receive any events.
 
 \
 MessagingDescriptor.json example:
@@ -37,11 +37,11 @@ MessagingDescriptor.json example:
   "subscriptions": [
     {
       "eventType": "CREATED_SRS_MARC_BIB_RECORD_WITH_ORDER_DATA",
-      "callbackEndpoint": ""
+      "callbackAddress": ""
     },
     {
       "eventType": "CREATED_SRS_MARC_BIB_RECORD_WITH_INVOICE_DATA",
-      "callbackEndpoint": ""
+      "callbackAddress": ""
     }
   ]
 }
