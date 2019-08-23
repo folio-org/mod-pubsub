@@ -30,11 +30,13 @@ public class PubSubUtils {
   }
 
   /**
-   * Reads messaging descriptor file and returns {@link DescriptorHolder} that contains
+   * Reads messaging descriptor file 'MessagingDescriptor.json' and returns {@link DescriptorHolder} that contains
    * descriptors for module registration as publisher and subscriber.
-   * At first, messaging descriptor is searched by path specified in 'messaging_config_path' system property,
+   * At first, messaging descriptor is searched in directory by path specified in 'messaging_config_path' system property,
    * if file was not found then it is searched in classpath.
-   * Throws {@link MessagingDescriptorNotFoundException ) when messaging descriptor file was not found.
+   * Location for descriptor directory can be specified as absolute or relative path.
+   * If descriptor directory path is relative then file is searched relative to classpath.
+   * Throws {@link MessagingDescriptorNotFoundException} when messaging descriptor file was not found.
    *
    * @return {@link DescriptorHolder}
    * @throws MessagingDescriptorNotFoundException if messaging descriptor file was not found
