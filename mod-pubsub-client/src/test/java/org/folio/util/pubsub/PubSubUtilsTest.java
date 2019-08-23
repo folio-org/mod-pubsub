@@ -1,14 +1,11 @@
 package org.folio.util.pubsub;
 
-import mockit.Mock;
-import mockit.MockUp;
-import mockit.integration.junit4.JMockit;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,7 +15,6 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
 
-@RunWith(JMockit.class)
 public class PubSubUtilsTest {
 
   private static final String MESSAGE_DESCRIPTOR_PATH_WITH_INVALID_FIELD = "config/with_invalid_field";
@@ -28,6 +24,11 @@ public class PubSubUtilsTest {
   public ExpectedException exceptionRule = ExpectedException.none();
   @Rule
   public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+  @After
+  public void tearDown() {
+    System.clearProperty(MESSAGING_CONFIG_PATH_PROPERTY);
+  }
 
   @Test
   public void shouldReadMessagingDescriptorByDefaultPathAndReturnFilledDescriptorHolder() throws IOException {
@@ -43,7 +44,7 @@ public class PubSubUtilsTest {
 
   @Test
   public void shouldReadMessagingDescriptorByPathFromSystemProperty() throws IOException {
-    mockSystemProperty(MESSAGING_CONFIG_PATH_PROPERTY, VALID_MESSAGE_DESCRIPTOR_PATH);
+    System.setProperty(MESSAGING_CONFIG_PATH_PROPERTY, VALID_MESSAGE_DESCRIPTOR_PATH);
 
     DescriptorHolder descriptorHolder = PubSubUtils.readMessagingDescriptor();
 
@@ -56,9 +57,9 @@ public class PubSubUtilsTest {
   }
 
   @Test
-  public void shouldReadMessagingDescriptorFromClassPathWhenWasNotFoundByPathFromSystemProperty() throws IOException {
+  public void shouldReadMessagingDescriptorFromClassPathWhenFileWasNotFoundByPathFromSystemProperty() throws IOException {
     File descriptorParentFolder = temporaryFolder.newFolder();
-    mockSystemProperty(MESSAGING_CONFIG_PATH_PROPERTY, descriptorParentFolder.getAbsolutePath());
+    System.setProperty(MESSAGING_CONFIG_PATH_PROPERTY, descriptorParentFolder.getAbsolutePath());
 
     DescriptorHolder descriptorHolder = PubSubUtils.readMessagingDescriptor();
 
@@ -73,21 +74,9 @@ public class PubSubUtilsTest {
   @Test
   public void shouldThrowExceptionWhenReadInvalidMessagingDescriptor() throws IOException {
     exceptionRule.expect(IllegalArgumentException.class);
-    mockSystemProperty(MESSAGING_CONFIG_PATH_PROPERTY, MESSAGE_DESCRIPTOR_PATH_WITH_INVALID_FIELD);
+    System.setProperty(MESSAGING_CONFIG_PATH_PROPERTY, MESSAGE_DESCRIPTOR_PATH_WITH_INVALID_FIELD);
 
     PubSubUtils.readMessagingDescriptor();
   }
 
-  private void mockSystemProperty(String propertyName, String propertyValue) {
-    new MockUp<System>() {
-
-      @Mock
-      public String getenv(String name) {
-        if (propertyName.equals(name)) {
-          return propertyValue;
-        }
-        return null;
-      }
-    };
-  }
 }

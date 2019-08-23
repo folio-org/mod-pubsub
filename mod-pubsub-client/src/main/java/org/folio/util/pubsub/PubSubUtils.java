@@ -32,7 +32,7 @@ public class PubSubUtils {
   /**
    * Reads messaging descriptor file and returns {@link DescriptorHolder} that contains
    * descriptors for module registration as publisher and subscriber.
-   * At first, messaging descriptor is searched by path specified in 'messaging_config_path' environment variable,
+   * At first, messaging descriptor is searched by path specified in 'messaging_config_path' system property,
    * if file was not found then it is searched in classpath.
    * Throws {@link MessagingDescriptorNotFoundException ) when messaging descriptor file was not found.
    *
@@ -62,7 +62,7 @@ public class PubSubUtils {
   }
 
   private static File getMessagingDescriptorFile() throws MessagingDescriptorNotFoundException {
-    return Optional.ofNullable(System.getenv(MESSAGING_CONFIG_PATH_PROPERTY))
+    return Optional.ofNullable(System.getProperty(MESSAGING_CONFIG_PATH_PROPERTY))
       .flatMap(PubSubUtils::getFileByParentPath)
       .map(Optional::of)
       .orElseGet(() -> getFileFromClassPath(MESSAGING_CONFIG_FILE_NAME))
