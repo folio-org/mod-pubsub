@@ -19,14 +19,14 @@ import java.util.Optional;
 /**
  * Util class for reading module messaging descriptor
  */
-public class PubSubUtils {
+public class PubSubClientUtils {
 
   public static final String MESSAGING_CONFIG_PATH_PROPERTY = "messaging_config_path";
   private static final String MESSAGING_CONFIG_FILE_NAME = "MessagingDescriptor.json";
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(PubSubUtils.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(PubSubClientUtils.class);
 
-  private PubSubUtils() {
+  private PubSubClientUtils() {
   }
 
   /**
@@ -65,7 +65,7 @@ public class PubSubUtils {
 
   private static File getMessagingDescriptorFile() throws MessagingDescriptorNotFoundException {
     return Optional.ofNullable(System.getProperty(MESSAGING_CONFIG_PATH_PROPERTY))
-      .flatMap(PubSubUtils::getFileByParentPath)
+      .flatMap(PubSubClientUtils::getFileByParentPath)
       .map(Optional::of)
       .orElseGet(() -> getFileFromClassPath(MESSAGING_CONFIG_FILE_NAME))
       .orElseThrow(() -> new MessagingDescriptorNotFoundException("Messaging descriptor file 'MessagingDescriptor.json' not found"));
@@ -89,7 +89,7 @@ public class PubSubUtils {
 
   private static Optional<File> getFileFromClassPath(String path) {
     String preparedPath = path.replace('\\', '/');
-    URL fileUrl = PubSubUtils.class.getClassLoader().getResource(preparedPath);
+    URL fileUrl = PubSubClientUtils.class.getClassLoader().getResource(preparedPath);
     if (fileUrl == null) {
       return Optional.empty();
     }

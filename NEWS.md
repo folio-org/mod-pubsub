@@ -9,4 +9,4 @@
 * Added stub implementations for EventService and EventDao
 * Added scripts to create module specific tables: module, event_type, messaging_module
 * Defined MessagingDescriptor, PublisherDescriptor and SubscriberDescriptor schemas.
-* Added util method to read MessagingDescriptor file.
+* Added PubSubClientUtil to read MessagingDescriptor file.
