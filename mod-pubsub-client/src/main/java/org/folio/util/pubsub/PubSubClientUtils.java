@@ -65,8 +65,11 @@ public class PubSubClientUtils {
 
   private static File getMessagingDescriptorFile() throws MessagingDescriptorNotFoundException {
     return Optional.ofNullable(System.getProperty(MESSAGING_CONFIG_PATH_PROPERTY))
+      // returns empty Optional when file was not found or Optional<File> with found file in otherwise
       .flatMap(PubSubClientUtils::getFileByParentPath)
+      // returns empty Optional when file not found or Optional<Optional<File>> with found file in otherwise
       .map(Optional::of)
+      // looking for a file in class path when file was not found by parent path
       .orElseGet(() -> getFileFromClassPath(MESSAGING_CONFIG_FILE_NAME))
       .orElseThrow(() -> new MessagingDescriptorNotFoundException("Messaging descriptor file 'MessagingDescriptor.json' not found"));
   }
