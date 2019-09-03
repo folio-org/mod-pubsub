@@ -24,7 +24,7 @@
       "description": "Username of the user whose action caused an event",
       "type": "string"
     },
-    "stateDate": {
+    "auditDate": {
       "description": "Date of event's state in timestamp",
       "type": "string",
       "format": "date-time"
