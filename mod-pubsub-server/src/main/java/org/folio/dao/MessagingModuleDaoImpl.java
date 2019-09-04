@@ -34,7 +34,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
   private static final String MODULE_SCHEMA = "pubsub_config";
   private static final String GET_ALL_SQL = "SELECT * FROM %s.%s ";
   private static final String GET_BY_ID_SQL = "SELECT * FROM %s.%s WHERE id = ?";
-  private static final String INSERT_SQL = "INSERT INTO %s.%s (event_type_id, module_id, tenant_id, role, is_applied, subscriber_callback) VALUES (?, ?, ?, ?, ?, ?, ?)";
+  private static final String INSERT_SQL = "INSERT INTO %s.%s (id, event_type_id, module_id, tenant_id, role, is_applied, subscriber_callback) VALUES (?, ?, ?, ?, ?, ?, ?)";
   private static final String UPDATE_BY_ID_SQL = "UPDATE %s.%s SET event_type_id = ?, module_id = ?, tenant_id = ?, role = ?, is_applied = ?, subscriber_callback = ? WHERE id = ?";
   private static final String DELETE_BY_ID_SQL = "DELETE FROM %s.%s WHERE id = ?";
 
