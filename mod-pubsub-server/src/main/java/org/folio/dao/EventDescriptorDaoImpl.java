@@ -8,8 +8,8 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.sql.UpdateResult;
 import javassist.NotFoundException;
-import org.folio.model.EventType;
 import org.folio.rest.jaxrs.model.EventDescriptor;
+import org.folio.rest.persist.PostgresClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -21,16 +21,16 @@ import static java.lang.String.format;
 import static org.folio.rest.persist.PostgresClient.pojo2json;
 
 /**
- * Implementation for the EventTypeDao, works with PostgresClient to access data.
+ * Implementation for the EventDescriptorDao, works with PostgresClient to access data.
  *
- * @see EventTypeDao
+ * @see EventDescriptorDao
  */
 @Repository
-public class EventTypeDaoImpl implements EventTypeDao {
+public class EventDescriptorDaoImpl implements EventDescriptorDao {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(EventTypeDaoImpl.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(EventDescriptorDaoImpl.class);
 
-  private static final String TABLE_NAME = "event_type";
+  private static final String TABLE_NAME = "event_descriptor";
   private static final String MODULE_SCHEMA = "pubsub_config";
   private static final String GET_ALL_SQL = "SELECT * FROM %s.%s";
   private static final String GET_BY_ID_SQL = "SELECT * FROM %s.%s WHERE id = ?";
@@ -42,59 +42,59 @@ public class EventTypeDaoImpl implements EventTypeDao {
   private PostgresClientFactory pgClientFactory;
 
   @Override
-  public Future<List<EventType>> getAll() {
+  public Future<List<EventDescriptor>> getAll() {
     Future<ResultSet> future = Future.future();
     String preparedQuery = format(GET_ALL_SQL, MODULE_SCHEMA, TABLE_NAME);
     pgClientFactory.createInstance().select(preparedQuery, future.completer());
-    return future.map(this::mapResultSetToEventTypeList);
+    return future.map(this::mapResultSetToEventDescriptorList);
   }
 
   @Override
-  public Future<Optional<EventType>> getById(String id) {
+  public Future<Optional<EventDescriptor>> getById(String id) {
     Future<ResultSet> future = Future.future();
     try {
       String preparedQuery = format(GET_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
       JsonArray params = new JsonArray().add(id);
       pgClientFactory.createInstance().select(preparedQuery, params, future.completer());
     } catch (Exception e) {
-      LOGGER.error("Error getting EntityType by id '{}'", e, id);
+      LOGGER.error("Error getting EventDescriptor by event descriptor id '{}'", e, id);
       future.fail(e);
     }
     return future.map(resultSet -> resultSet.getResults().isEmpty() ? Optional.empty()
-      : Optional.of(mapRowJsonToEventType(resultSet.getRows().get(0))));
+      : Optional.of(mapRowJsonToEventDescriptor(resultSet.getRows().get(0))));
   }
 
   @Override
-  public Future<String> save(EventType eventType) {
+  public Future<String> save(EventDescriptor eventDescriptor) {
     Future<UpdateResult> future = Future.future();
     try {
       String query = format(INSERT_SQL, MODULE_SCHEMA, TABLE_NAME);
       JsonArray params = new JsonArray()
-        .add(eventType.getId())
-        .add(pojo2json(eventType.getEventDescriptor()));
+        .add(eventDescriptor.getEventType())
+        .add(pojo2json(eventDescriptor));
       pgClientFactory.createInstance().execute(query, params, future.completer());
     } catch (Exception e) {
-      LOGGER.error("Error saving EntityType with id '{}'", e, eventType.getId());
+      LOGGER.error("Error saving EventDescriptor with id '{}'", e, eventDescriptor.getEventType());
       future.fail(e);
     }
-    return future.map(updateResult -> eventType.getId());
+    return future.map(updateResult -> eventDescriptor.getEventType());
   }
 
   @Override
-  public Future<EventType> update(EventType eventType) {
+  public Future<EventDescriptor> update(EventDescriptor eventDescriptor) {
     Future<UpdateResult> future = Future.future();
     try {
       String query = format(UPDATE_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
       JsonArray params = new JsonArray()
-        .add(pojo2json(eventType.getEventDescriptor()))
-        .add(eventType.getId());
+        .add(pojo2json(eventDescriptor))
+        .add(eventDescriptor.getEventType());
       pgClientFactory.createInstance().execute(query, params, future.completer());
     } catch (Exception e) {
-      LOGGER.error("Error updating EntityType by id '{}'", e, eventType.getId());
+      LOGGER.error("Error updating EventDescriptor by id '{}'", e, eventDescriptor.getEventType());
       future.fail(e);
     }
-    return future.compose(updateResult -> updateResult.getUpdated() == 1 ? Future.succeededFuture(eventType)
-      : Future.failedFuture(new NotFoundException(format("EventType by id '%s' was not updated", eventType.getId()))));
+    return future.compose(updateResult -> updateResult.getUpdated() == 1 ? Future.succeededFuture(eventDescriptor)
+      : Future.failedFuture(new NotFoundException(format("EventDescriptor by id '%s' was not updated", eventDescriptor.getEventType()))));
   }
 
   @Override
@@ -105,22 +105,25 @@ public class EventTypeDaoImpl implements EventTypeDao {
       JsonArray params = new JsonArray().add(id);
       pgClientFactory.createInstance().execute(query, params, future.completer());
     } catch (Exception e) {
-      LOGGER.error("Error deleting EntityType with id '{}'", e, id);
+      LOGGER.error("Error deleting EventDescriptor with id '{}'", e, id);
       future.fail(e);
     }
     return future.map(updateResult -> updateResult.getUpdated() == 1);
   }
 
-  private EventType mapRowJsonToEventType(JsonObject rowAsJson) {
-    EventType eventType = new EventType();
-    eventType.setId(rowAsJson.getString("id"));
-    eventType.setEventDescriptor(new JsonObject(rowAsJson.getString("descriptor")).mapTo(EventDescriptor.class));
-    return eventType;
+  private EventDescriptor mapRowJsonToEventDescriptor(JsonObject rowAsJson) {
+    EventDescriptor eventDescriptor = new EventDescriptor();
+    eventDescriptor.setEventType(rowAsJson.getString("id"));
+    JsonObject descriptorAsJson = new JsonObject(rowAsJson.getString("descriptor"));
+    eventDescriptor.setDescription(descriptorAsJson.getString("description"));
+    eventDescriptor.setEventTTL(descriptorAsJson.getInteger("eventTTL"));
+    eventDescriptor.setSigned(descriptorAsJson.getBoolean("signed"));
+    return eventDescriptor;
   }
 
-  private List<EventType> mapResultSetToEventTypeList(ResultSet resultSet) {
+  private List<EventDescriptor> mapResultSetToEventDescriptorList(ResultSet resultSet) {
     return resultSet.getRows().stream()
-      .map(this::mapRowJsonToEventType)
+      .map(this::mapRowJsonToEventDescriptor)
       .collect(Collectors.toList());
   }
 }
