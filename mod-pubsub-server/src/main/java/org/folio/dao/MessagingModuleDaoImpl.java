@@ -34,7 +34,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
   private static final String MODULE_SCHEMA = "pubsub_config";
   private static final String GET_ALL_SQL = "SELECT * FROM %s.%s ";
   private static final String GET_BY_ID_SQL = "SELECT * FROM %s.%s WHERE id = ?";
-  private static final String INSERT_SQL = "INSERT INTO %s.%s (event_type_id, module_id, tenant_id, role, is_applied, subscriber_callback) VALUES (?, ?, ?, ?, ?, ?) RETURNING id";
+  private static final String INSERT_SQL = "INSERT INTO %s.%s (event_type_id, module_id, tenant_id, role, is_applied, subscriber_callback) VALUES (?, ?, ?, ?, ?, ?, ?)";
   private static final String UPDATE_BY_ID_SQL = "UPDATE %s.%s SET event_type_id = ?, module_id = ?, tenant_id = ?, role = ?, is_applied = ?, subscriber_callback = ? WHERE id = ?";
   private static final String DELETE_BY_ID_SQL = "DELETE FROM %s.%s WHERE id = ?";
 
@@ -50,7 +50,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
   }
 
   @Override
-  public Future<Optional<MessagingModule>> getById(long id) {
+  public Future<Optional<MessagingModule>> getById(String id) {
     Future<ResultSet> future = Future.future();
     String preparedQuery = format(GET_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
     JsonArray params = new JsonArray().add(id);
@@ -60,11 +60,12 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
   }
 
   @Override
-  public Future<Long> save(MessagingModule messagingModule) {
-    Future<JsonArray> future = Future.future();
+  public Future<String> save(MessagingModule messagingModule) {
+    Future<UpdateResult> future = Future.future();
     try {
       String query = format(INSERT_SQL, MODULE_SCHEMA, TABLE_NAME);
       JsonArray params = new JsonArray()
+        .add(messagingModule.getId())
         .add(messagingModule.getEventType())
         .add(messagingModule.getModuleId())
         .add(messagingModule.getTenantId())
@@ -72,16 +73,16 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
         .add(messagingModule.isApplied());
       String subscriberCallback = messagingModule.getSubscriberCallback();
       params.add(subscriberCallback != null ? subscriberCallback : EMPTY);
-      pgClientFactory.createInstance().selectSingle(query, params, future.completer());
+      pgClientFactory.createInstance().execute(query, params, future.completer());
     } catch (Exception e) {
       LOGGER.error("Error saving MessagingModule", e);
       future.fail(e);
     }
-    return future.map(rowAsJsonArray -> rowAsJsonArray.getLong(0));
+    return future.map(updateResult -> messagingModule.getId());
   }
 
   @Override
-  public Future<MessagingModule> update(long id, MessagingModule messagingModule) {
+  public Future<MessagingModule> update(String id, MessagingModule messagingModule) {
     Future<UpdateResult> future = Future.future();
     try {
       String query = format(UPDATE_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
@@ -105,7 +106,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
   }
 
   @Override
-  public Future<Boolean> delete(long id) {
+  public Future<Boolean> delete(String id) {
     Future<UpdateResult> future = Future.future();
     String query = format(DELETE_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
     JsonArray params = new JsonArray().add(id);
@@ -115,9 +116,9 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
 
   private MessagingModule mapRowJsonToMessagingModule(JsonObject rowAsJson) {
     MessagingModule messagingModule = new MessagingModule();
-    messagingModule.setId(rowAsJson.getLong("id"));
+    messagingModule.setId(rowAsJson.getString("id"));
     messagingModule.setEventType(rowAsJson.getString("event_type_id"));
-    messagingModule.setModuleId(rowAsJson.getLong("module_id"));
+    messagingModule.setModuleId(rowAsJson.getString("module_id"));
     messagingModule.setTenantId(rowAsJson.getString("tenant_id"));
     messagingModule.setModuleRole(ModuleRole.valueOf(rowAsJson.getString("role")));
     messagingModule.setApplied(rowAsJson.getBoolean("is_applied"));

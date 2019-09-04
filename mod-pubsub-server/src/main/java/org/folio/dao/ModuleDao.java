@@ -24,7 +24,7 @@ public interface ModuleDao {
    * @param id Module id
    * @return future with optional of Module
    */
-  Future<Optional<Module>> getById(long id);
+  Future<Optional<Module>> getById(String id);
 
   /**
    * Saves new {@link Module} to data base
@@ -32,7 +32,7 @@ public interface ModuleDao {
    * @param module Module entity to save
    * @return module id
    */
-  Future<Long> save(Module module);
+  Future<String> save(Module module);
 
   /**
    * Updates {@link Module} in data base
@@ -41,7 +41,7 @@ public interface ModuleDao {
    * @param module entity to update
    * @return future with updated Module
    */
-  Future<Module> update(long id, Module module);
+  Future<Module> update(String id, Module module);
 
   /**
    * Deletes {@link Module} by id
@@ -49,5 +49,5 @@ public interface ModuleDao {
    * @param id Module id
    * @return future with boolean
    */
-  Future<Boolean> delete(long id);
+  Future<Boolean> delete(String id);
 }

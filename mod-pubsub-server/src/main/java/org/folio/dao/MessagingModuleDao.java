@@ -24,7 +24,7 @@ public interface MessagingModuleDao {
    * @param id MessagingModule id
    * @return future with optional of MessagingModule
    */
-  Future<Optional<MessagingModule>> getById(long id);
+  Future<Optional<MessagingModule>> getById(String id);
 
   /**
    * Saves new {@link MessagingModule} to data base
@@ -32,7 +32,7 @@ public interface MessagingModuleDao {
    * @param messagingModule messagingModule entity to save
    * @return messagingModule id
    */
-  Future<Long> save(MessagingModule messagingModule);
+  Future<String> save(MessagingModule messagingModule);
 
   /**
    * Updates {@link MessagingModule} in data base
@@ -41,7 +41,7 @@ public interface MessagingModuleDao {
    * @param messagingModule entity to update
    * @return future with updated MessagingModule
    */
-  Future<MessagingModule> update(long id, MessagingModule messagingModule);
+  Future<MessagingModule> update(String id, MessagingModule messagingModule);
 
   /**
    * Deletes {@link MessagingModule} by id
@@ -49,5 +49,5 @@ public interface MessagingModuleDao {
    * @param id messagingModule id
    * @return future with boolean
    */
-  Future<Boolean> delete(long id);
+  Future<Boolean> delete(String id);
 }

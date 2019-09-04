@@ -32,8 +32,8 @@ public class ModuleDaoImpl implements ModuleDao {
   private static final String MODULE_SCHEMA = "pubsub_config";
   private static final String GET_ALL_SQL = "SELECT * FROM %s.%s";
   private static final String GET_BY_ID_SQL = "SELECT * FROM %s.%s WHERE id = ?";
-  private static final String INSERT_SQL = "INSERT INTO %s.%s (name) VALUES (?) ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id";
-  private static final String UPDATE_BY_ID_SQL = "UPDATE %s.%s SET event_type_id = ?, module_id = ?, tenant_id = ?, role = ?, is_applied = ?, subscriber_callback = ? WHERE id = ?";
+  private static final String INSERT_SQL = "INSERT INTO %s.%s (id, name) VALUES (?, ?)";
+  private static final String UPDATE_BY_ID_SQL = "UPDATE %s.%s SET name = ? WHERE id = ?";
   private static final String DELETE_BY_ID_SQL = "DELETE FROM %s.%s WHERE id = ?";
 
   @Autowired
@@ -48,7 +48,7 @@ public class ModuleDaoImpl implements ModuleDao {
   }
 
   @Override
-  public Future<Optional<Module>> getById(long id) {
+  public Future<Optional<Module>> getById(String id) {
     Future<ResultSet> future = Future.future();
     String preparedQuery = format(GET_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
     JsonArray params = new JsonArray().add(id);
@@ -58,21 +58,23 @@ public class ModuleDaoImpl implements ModuleDao {
   }
 
   @Override
-  public Future<Long> save(Module module) {
-    Future<JsonArray> future = Future.future();
+  public Future<String> save(Module module) {
+    Future<UpdateResult> future = Future.future();
     try {
       String query = format(INSERT_SQL, MODULE_SCHEMA, TABLE_NAME);
-      JsonArray params = new JsonArray().add(module.getName());
-      pgClientFactory.createInstance().selectSingle(query, params, future.completer());
+      JsonArray params = new JsonArray()
+        .add(module.getId())
+        .add(module.getName());
+      pgClientFactory.createInstance().execute(query, params, future.completer());
     } catch (Exception e) {
       LOGGER.error("Error saving Module", e);
       future.fail(e);
     }
-    return future.map(rowAsJsonArray -> rowAsJsonArray.getLong(0));
+    return future.map(updateResult -> module.getId());
   }
 
   @Override
-  public Future<Module> update(long id, Module module) {
+  public Future<Module> update(String id, Module module) {
     Future<UpdateResult> future = Future.future();
     try {
       String query = format(UPDATE_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
@@ -89,7 +91,7 @@ public class ModuleDaoImpl implements ModuleDao {
   }
 
   @Override
-  public Future<Boolean> delete(long id) {
+  public Future<Boolean> delete(String id) {
     Future<UpdateResult> future = Future.future();
     String query = format(DELETE_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
     JsonArray params = new JsonArray().add(id);
@@ -99,7 +101,7 @@ public class ModuleDaoImpl implements ModuleDao {
 
   private Module mapRowJsonToModule(JsonObject rowAsJson) {
     Module module = new Module();
-    module.setId(rowAsJson.getLong("id"));
+    module.setId(rowAsJson.getString("id"));
     module.setName(rowAsJson.getString("name"));
     return module;
   }

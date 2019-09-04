@@ -2,19 +2,19 @@ package org.folio.model;
 
 public class MessagingModule {
 
-  private long id;
+  private String id;
   private String eventType;
-  private long moduleId;
+  private String moduleId;
   private String tenantId;
   private ModuleRole moduleRole;
   private boolean applied;
   private String subscriberCallback;
 
-  public long getId() {
+  public String getId() {
     return id;
   }
 
-  public void setId(long id) {
+  public void setId(String id) {
     this.id = id;
   }
 
@@ -26,11 +26,11 @@ public class MessagingModule {
     this.eventType = eventType;
   }
 
-  public long getModuleId() {
+  public String getModuleId() {
     return moduleId;
   }
 
-  public void setModuleId(long moduleId) {
+  public void setModuleId(String moduleId) {
     this.moduleId = moduleId;
   }
 
