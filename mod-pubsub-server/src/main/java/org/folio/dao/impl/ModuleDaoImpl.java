@@ -10,7 +10,7 @@ import io.vertx.ext.sql.UpdateResult;
 import javassist.NotFoundException;
 import org.folio.dao.ModuleDao;
 import org.folio.dao.PostgresClientFactory;
-import org.folio.model.Module;
+import org.folio.rest.jaxrs.model.Module;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 

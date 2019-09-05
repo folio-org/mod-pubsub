@@ -1,7 +1,7 @@
 package org.folio.dao;
 
 import io.vertx.core.Future;
-import org.folio.model.Module;
+import org.folio.rest.jaxrs.model.Module;
 
 import java.util.List;
 import java.util.Optional;

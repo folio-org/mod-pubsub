@@ -10,8 +10,8 @@ import io.vertx.ext.sql.UpdateResult;
 import javassist.NotFoundException;
 import org.folio.dao.MessagingModuleDao;
 import org.folio.dao.PostgresClientFactory;
-import org.folio.model.MessagingModule;
-import org.folio.model.ModuleRole;
+import org.folio.rest.jaxrs.model.MessagingModule;
+import org.folio.rest.jaxrs.model.MessagingModule.ModuleRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -72,7 +72,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
         .add(messagingModule.getModuleId())
         .add(messagingModule.getTenantId())
         .add(messagingModule.getModuleRole().value())
-        .add(messagingModule.isApplied());
+        .add(messagingModule.getApplied());
       String subscriberCallback = messagingModule.getSubscriberCallback();
       params.add(subscriberCallback != null ? subscriberCallback : EMPTY);
       pgClientFactory.createInstance().execute(query, params, future.completer());
@@ -94,7 +94,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
         .add(messagingModule.getModuleId())
         .add(messagingModule.getTenantId())
         .add(messagingModule.getModuleRole())
-        .add(messagingModule.isApplied())
+        .add(messagingModule.getApplied())
         .add(subscriberCallback != null ? subscriberCallback : EMPTY)
         .add(id);
       pgClientFactory.createInstance().execute(query, params, future.completer());
