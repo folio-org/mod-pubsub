@@ -1,4 +1,4 @@
-package org.folio.dao;
+package org.folio.dao.impl;
 
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
@@ -8,6 +8,8 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.sql.UpdateResult;
 import javassist.NotFoundException;
+import org.folio.dao.MessagingModuleDao;
+import org.folio.dao.PostgresClientFactory;
 import org.folio.model.MessagingModule;
 import org.folio.model.ModuleRole;
 import org.springframework.beans.factory.annotation.Autowired;

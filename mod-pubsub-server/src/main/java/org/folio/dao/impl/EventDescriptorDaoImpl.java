@@ -1,4 +1,4 @@
-package org.folio.dao;
+package org.folio.dao.impl;
 
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
@@ -8,8 +8,9 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.sql.UpdateResult;
 import javassist.NotFoundException;
+import org.folio.dao.EventDescriptorDao;
+import org.folio.dao.PostgresClientFactory;
 import org.folio.rest.jaxrs.model.EventDescriptor;
-import org.folio.rest.persist.PostgresClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
