@@ -2,58 +2,63 @@ package org.folio.dao.impl;
 
 import org.folio.rest.jaxrs.model.MessagingModule.ModuleRole;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.stream.Stream;
-
 /**
  * Filter for messagingModule entity
  */
 public class MessagingModuleFilter {
 
-  private Map<String, String> fieldValuesMap = new HashMap<>();
+  private String eventType;
+  private String moduleId;
+  private String tenantId;
+  private String moduleRole;
+  private String applied;
+  private String subscriberCallback;
 
   public void byEventType(String eventType) {
-    fieldValuesMap.put("event_type_id", eventType);
+    this.eventType = eventType;
   }
 
   public void byModuleId(String moduleId) {
-    fieldValuesMap.put("module_id", moduleId);
+    this.moduleId = moduleId;
   }
 
   public void byTenantId(String tenantId) {
-    fieldValuesMap.put("tenant_id", tenantId);
+    this.tenantId = tenantId;
   }
 
   public void byModuleRole(ModuleRole moduleRole) {
-    fieldValuesMap.put("role", moduleRole.value());
+    this.moduleRole = moduleRole.value();
   }
 
   public void byApplied(boolean applied) {
-    fieldValuesMap.put("is_applied", String.valueOf(applied));
+    this.applied = String.valueOf(applied);
   }
 
   public void bySubscriberCallback(String subscriberCallback) {
-    fieldValuesMap.put("subscriber_callback", subscriberCallback);
+    this.subscriberCallback = subscriberCallback;
   }
 
-  /**
-   * Checks whether filter contains selection conditions for messagingModule entity
-   *
-   * @return true if filter contains conditions, otherwise false
-   */
-  public boolean isEmpty() {
-    return fieldValuesMap.isEmpty();
+  public String getEventType() {
+    return eventType;
   }
 
-  /**
-   * Returns stream of pairs with column name and selection condition value
-   *
-   * @return stream of pairs with column name and selection condition value
-   */
-  public Stream<Entry<String, String>> getFieldValuesStream() {
-    return fieldValuesMap.entrySet().stream();
+  public String getModuleId() {
+    return moduleId;
+  }
 
+  public String getTenantId() {
+    return tenantId;
+  }
+
+  public String getModuleRole() {
+    return moduleRole;
+  }
+
+  public String getApplied() {
+    return applied;
+  }
+
+  public String getSubscriberCallback() {
+    return subscriberCallback;
   }
 }

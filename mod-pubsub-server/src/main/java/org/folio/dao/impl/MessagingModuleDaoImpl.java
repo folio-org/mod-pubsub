@@ -34,7 +34,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
 
   private static final String TABLE_NAME = "messaging_module";
   private static final String MODULE_SCHEMA = "pubsub_config";
-  private static final String GET_BY_SQL = "SELECT * FROM %s.%s ";
+  private static final String GET_BY_SQL = "SELECT * FROM %s.%s %s";
   private static final String GET_BY_ID_SQL = "SELECT * FROM %s.%s WHERE id = ?";
   private static final String INSERT_SQL = "INSERT INTO %s.%s (id, event_type_id, module_id, tenant_id, role, is_applied, subscriber_callback) VALUES (?, ?, ?, ?, ?, ?, ?)";
   private static final String UPDATE_BY_ID_SQL = "UPDATE %s.%s SET event_type_id = ?, module_id = ?, tenant_id = ?, role = ?, is_applied = ?, subscriber_callback = ? WHERE id = ?";
@@ -46,8 +46,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
   @Override
   public Future<List<MessagingModule>> get(MessagingModuleFilter filter) {
     Future<ResultSet> future = Future.future();
-    String preparedQuery = filter.isEmpty() ? format(GET_BY_SQL, MODULE_SCHEMA, TABLE_NAME)
-      : format(GET_BY_SQL, MODULE_SCHEMA, TABLE_NAME) + buildWhereClause(filter);
+    String preparedQuery = format(GET_BY_SQL, MODULE_SCHEMA, TABLE_NAME, buildWhereClause(filter));
     pgClientFactory.getInstance().select(preparedQuery, future.completer());
     return future.map(this::mapResultSetToMessagingModuleList);
   }
@@ -118,15 +117,14 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
   }
 
   private MessagingModule mapRowJsonToMessagingModule(JsonObject rowAsJson) {
-    MessagingModule messagingModule = new MessagingModule();
-    messagingModule.setId(rowAsJson.getString("id"));
-    messagingModule.setEventType(rowAsJson.getString("event_type_id"));
-    messagingModule.setModuleId(rowAsJson.getString("module_id"));
-    messagingModule.setTenantId(rowAsJson.getString("tenant_id"));
-    messagingModule.setModuleRole(ModuleRole.valueOf(rowAsJson.getString("role")));
-    messagingModule.setApplied(rowAsJson.getBoolean("is_applied"));
-    messagingModule.setSubscriberCallback(rowAsJson.getString("subscriber_callback"));
-    return messagingModule;
+    return new MessagingModule()
+      .withId(rowAsJson.getString("id"))
+      .withEventType(rowAsJson.getString("event_type_id"))
+      .withModuleId(rowAsJson.getString("module_id"))
+      .withTenantId(rowAsJson.getString("tenant_id"))
+      .withModuleRole(ModuleRole.valueOf(rowAsJson.getString("role")))
+      .withApplied(rowAsJson.getBoolean("is_applied"))
+      .withSubscriberCallback(rowAsJson.getString("subscriber_callback"));
   }
 
   private List<MessagingModule> mapResultSetToMessagingModuleList(ResultSet resultSet) {
@@ -136,15 +134,31 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
   }
 
   private String buildWhereClause(MessagingModuleFilter filter) {
-    StringBuilder conditionBuilder = new StringBuilder();
-    filter.getFieldValuesStream().forEach(fieldValuePair -> {
-      if (conditionBuilder.length() != 0) {
-        conditionBuilder.append(" AND ");
-      }
-      conditionBuilder.append(fieldValuePair.getKey()).append(" = ")
-        .append("'").append(fieldValuePair.getValue()).append("'");
-    });
-    return conditionBuilder.length() != 0 ? new StringBuilder(" WHERE ").append(conditionBuilder).toString()
-      : conditionBuilder.toString();
+    StringBuilder conditionBuilder = new StringBuilder("WHERE TRUE");
+    if (filter.getEventType() != null) {
+      conditionBuilder.append(" AND ")
+        .append("event_type_id = '").append(filter.getEventType()).append("'");
+    }
+    if (filter.getModuleId() != null) {
+      conditionBuilder.append(" AND ")
+        .append("module_id = '").append(filter.getModuleId()).append("'");
+    }
+    if (filter.getTenantId() != null) {
+      conditionBuilder.append(" AND ")
+        .append("tenant_id = '").append(filter.getTenantId()).append("'");
+    }
+    if (filter.getModuleRole() != null) {
+      conditionBuilder.append(" AND ")
+        .append("role = '").append(filter.getModuleRole()).append("'");
+    }
+    if (filter.getApplied() != null) {
+      conditionBuilder.append(" AND ")
+        .append("is_applied = '").append(filter.getApplied()).append("'");
+    }
+    if (filter.getSubscriberCallback() != null) {
+      conditionBuilder.append(" AND ")
+        .append("subscriber_callback = '").append(filter.getSubscriberCallback()).append("'");
+    }
+    return conditionBuilder.toString();
   }
 }
