@@ -9,7 +9,7 @@
       "$ref": "uuid.json"
     },
     "eventId": {
-      "description": "Unique Event type id, UUID",
+      "description": "Unique Event id, UUID",
       "$ref": "uuid.json"
     },
     "eventType": {

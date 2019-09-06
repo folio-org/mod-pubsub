@@ -15,7 +15,6 @@ import org.folio.rest.jaxrs.model.AuditMessagePayload;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -35,7 +34,7 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
   private static final String INSERT_AUDIT_MESSAGE_QUERY = "INSERT INTO %s.%s (id, event_id, event_type, correlation_id, tenant_id, created_by, audit_date, state) VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
   private static final String INSERT_AUDIT_MESSAGE_PAYLOAD_QUERY = "INSERT INTO %s.%s (event_id, content) VALUES (?, ?);";
   private static final String SELECT_QUERY = "SELECT * FROM %s.%s";
-  private static final String GET_BY_EVENT_ID_QUERY = "SELECT * FROM %s.%s WHERE event_id = ?";
+  private static final String GET_BY_EVENT_ID_QUERY = "SELECT * FROM %s.%s WHERE event_id = ?;";
 
   @Autowired
   private PostgresClientFactory pgClientFactory;
@@ -44,7 +43,8 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
   public Future<List<AuditMessage>> getAuditMessages(AuditMessageFilter filter, String tenantId) {
     Future<ResultSet> future = Future.future();
     try {
-      String query = constructFilteredAuditMessagesQuery(filter, tenantId);
+      String query = format(SELECT_QUERY, convertToPsqlStandard(tenantId), AUDIT_MESSAGE_TABLE)
+        .concat(constructWhereClauseForGetAuditMessagesQuery(filter));
       pgClientFactory.getInstance(tenantId).select(query, future.completer());
     } catch (Exception e) {
       LOGGER.error("Error retrieving audit messages", e);
@@ -128,38 +128,18 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
       .withContent(result.getString("content"));
   }
 
-  private String constructFilteredAuditMessagesQuery(AuditMessageFilter filter, String tenantId) {
-    List<String> filterValues = getFilterValues(filter);
-    StringBuilder query = new StringBuilder(format(SELECT_QUERY, convertToPsqlStandard(tenantId), AUDIT_MESSAGE_TABLE));
-    if (!filterValues.isEmpty()) {
-      query.append(" WHERE ");
-      for (int i = 0; i < filterValues.size(); i++) {
-        if (i != 0) {
-          query.append(" AND ");
-        }
-        query.append(filterValues.get(i));
-      }
-    }
-    return query.append(";").toString();
-  }
-
-  private List<String> getFilterValues(AuditMessageFilter filter) {
-    List<String> filterValues = new ArrayList<>();
-    if (filter.getFromDate() != null) {
-      filterValues.add("audit_date > " + filter.getFromDate());
-    }
-    if (filter.getTillDate() != null) {
-      filterValues.add("audit_date < " + filter.getTillDate());
-    }
+  private String constructWhereClauseForGetAuditMessagesQuery(AuditMessageFilter filter) {
+    StringBuilder whereClause = new StringBuilder(" WHERE ");
+    whereClause.append("audit_date BETWEEN ").append(filter.getFromDate()).append(" AND ").append(filter.getTillDate());
     if (filter.getEventId() != null) {
-      filterValues.add("event_id = " + filter.getEventId());
+      whereClause.append(" AND event_id = ").append(filter.getEventId());
     }
     if (filter.getEventType() != null) {
-      filterValues.add("event_type = " + filter.getEventType());
+      whereClause.append(" AND event_type = ").append(filter.getEventType());
     }
     if (filter.getCorrelationId() != null) {
-      filterValues.add("correlation_id = " + filter.getCorrelationId());
+      whereClause.append(" AND correlation_id = ").append(filter.getCorrelationId());
     }
-    return filterValues;
+    return whereClause.append(";").toString();
   }
 }
