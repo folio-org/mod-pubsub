@@ -14,10 +14,6 @@ public class MessagingModuleFilter {
 
   private Map<String, String> fieldValuesMap = new HashMap<>();
 
-  public void byId(String id) {
-    fieldValuesMap.put("id", id);
-  }
-
   public void byEventType(String eventType) {
     fieldValuesMap.put("event_type_id", eventType);
   }
