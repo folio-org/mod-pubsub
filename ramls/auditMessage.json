@@ -16,6 +16,10 @@
       "description": "Unique Event type, human-readable String, not UUID",
       "type": "string"
     },
+    "correlationId": {
+      "description": "Id to track related events, can be a meaningful string or a UUID",
+      "type": "string"
+    },
     "tenantId": {
       "description": "Tenant id",
       "type": "string"
