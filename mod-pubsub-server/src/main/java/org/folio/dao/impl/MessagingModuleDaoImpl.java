@@ -34,7 +34,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
 
   private static final String TABLE_NAME = "messaging_module";
   private static final String MODULE_SCHEMA = "pubsub_config";
-  private static final String GET_ALL_SQL = "SELECT * FROM %s.%s ";
+  private static final String GET_BY_SQL = "SELECT * FROM %s.%s ";
   private static final String GET_BY_ID_SQL = "SELECT * FROM %s.%s WHERE id = ?";
   private static final String INSERT_SQL = "INSERT INTO %s.%s (id, event_type_id, module_id, tenant_id, role, is_applied, subscriber_callback) VALUES (?, ?, ?, ?, ?, ?, ?)";
   private static final String UPDATE_BY_ID_SQL = "UPDATE %s.%s SET event_type_id = ?, module_id = ?, tenant_id = ?, role = ?, is_applied = ?, subscriber_callback = ? WHERE id = ?";
@@ -44,9 +44,10 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
   private PostgresClientFactory pgClientFactory;
 
   @Override
-  public Future<List<MessagingModule>> getAll() {
+  public Future<List<MessagingModule>> get(MessagingModuleFilter filter) {
     Future<ResultSet> future = Future.future();
-    String preparedQuery = format(GET_ALL_SQL, MODULE_SCHEMA, TABLE_NAME);
+    String preparedQuery = filter.isEmpty() ? format(GET_BY_SQL, MODULE_SCHEMA, TABLE_NAME)
+      : format(GET_BY_SQL, MODULE_SCHEMA, TABLE_NAME) + buildWhereClause(filter);
     pgClientFactory.createInstance().select(preparedQuery, future.completer());
     return future.map(this::mapResultSetToMessagingModuleList);
   }
@@ -132,5 +133,18 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
     return resultSet.getRows().stream()
       .map(this::mapRowJsonToMessagingModule)
       .collect(Collectors.toList());
+  }
+
+  private String buildWhereClause(MessagingModuleFilter filter) {
+    StringBuilder conditionBuilder = new StringBuilder();
+    filter.getFieldValuesStream().forEach(fieldValuePair -> {
+      if (conditionBuilder.length() != 0) {
+        conditionBuilder.append(" AND ");
+      }
+      conditionBuilder.append(fieldValuePair.getKey()).append(" = ")
+        .append("'").append(fieldValuePair.getValue()).append("'");
+    });
+    return conditionBuilder.length() != 0 ? new StringBuilder(" WHERE ").append(conditionBuilder).toString()
+      : conditionBuilder.toString();
   }
 }
