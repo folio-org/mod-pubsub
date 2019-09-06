@@ -159,6 +159,6 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
       conditionBuilder.append(" AND ")
         .append("subscriber_callback = '").append(filter.getSubscriberCallback()).append("'");
     }
-    return conditionBuilder.toString();
+    return conditionBuilder.append(';').toString();
   }
 }
