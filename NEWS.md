@@ -12,3 +12,4 @@
 * Added PubSubClientUtil to read MessagingDescriptor file.
 * Added schemas for audit trail
 * Added Dao components for module schema.
+* Added DAO component for tenant schema
