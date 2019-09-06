@@ -46,7 +46,7 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
   public Future<List<EventDescriptor>> getAll() {
     Future<ResultSet> future = Future.future();
     String preparedQuery = format(GET_ALL_SQL, MODULE_SCHEMA, TABLE_NAME);
-    pgClientFactory.createInstance().select(preparedQuery, future.completer());
+    pgClientFactory.getInstance().select(preparedQuery, future.completer());
     return future.map(this::mapResultSetToEventDescriptorList);
   }
 
@@ -56,7 +56,7 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
     try {
       String preparedQuery = format(GET_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
       JsonArray params = new JsonArray().add(id);
-      pgClientFactory.createInstance().select(preparedQuery, params, future.completer());
+      pgClientFactory.getInstance().select(preparedQuery, params, future.completer());
     } catch (Exception e) {
       LOGGER.error("Error getting EventDescriptor by event descriptor id '{}'", e, id);
       future.fail(e);
@@ -73,7 +73,7 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
       JsonArray params = new JsonArray()
         .add(eventDescriptor.getEventType())
         .add(pojo2json(eventDescriptor));
-      pgClientFactory.createInstance().execute(query, params, future.completer());
+      pgClientFactory.getInstance().execute(query, params, future.completer());
     } catch (Exception e) {
       LOGGER.error("Error saving EventDescriptor with id '{}'", e, eventDescriptor.getEventType());
       future.fail(e);
@@ -89,12 +89,13 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
       JsonArray params = new JsonArray()
         .add(pojo2json(eventDescriptor))
         .add(eventDescriptor.getEventType());
-      pgClientFactory.createInstance().execute(query, params, future.completer());
+      pgClientFactory.getInstance().execute(query, params, future.completer());
     } catch (Exception e) {
       LOGGER.error("Error updating EventDescriptor by id '{}'", e, eventDescriptor.getEventType());
       future.fail(e);
     }
-    return future.compose(updateResult -> updateResult.getUpdated() == 1 ? Future.succeededFuture(eventDescriptor)
+    return future.compose(updateResult -> updateResult.getUpdated() == 1
+      ? Future.succeededFuture(eventDescriptor)
       : Future.failedFuture(new NotFoundException(format("EventDescriptor by id '%s' was not updated", eventDescriptor.getEventType()))));
   }
 
@@ -104,7 +105,7 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
     try {
       String query = format(DELETE_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
       JsonArray params = new JsonArray().add(id);
-      pgClientFactory.createInstance().execute(query, params, future.completer());
+      pgClientFactory.getInstance().execute(query, params, future.completer());
     } catch (Exception e) {
       LOGGER.error("Error deleting EventDescriptor with id '{}'", e, id);
       future.fail(e);

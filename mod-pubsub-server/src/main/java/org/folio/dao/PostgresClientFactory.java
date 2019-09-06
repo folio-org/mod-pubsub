@@ -26,7 +26,7 @@ public class PostgresClientFactory {
    *
    * @return Postgres Client
    */
-  public PostgresClient createInstance() {
+  public PostgresClient getInstance() {
     return PostgresClient.getInstance(vertx);
   }
 }

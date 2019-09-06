@@ -48,7 +48,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
     Future<ResultSet> future = Future.future();
     String preparedQuery = filter.isEmpty() ? format(GET_BY_SQL, MODULE_SCHEMA, TABLE_NAME)
       : format(GET_BY_SQL, MODULE_SCHEMA, TABLE_NAME) + buildWhereClause(filter);
-    pgClientFactory.createInstance().select(preparedQuery, future.completer());
+    pgClientFactory.getInstance().select(preparedQuery, future.completer());
     return future.map(this::mapResultSetToMessagingModuleList);
   }
 
@@ -57,7 +57,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
     Future<ResultSet> future = Future.future();
     String preparedQuery = format(GET_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
     JsonArray params = new JsonArray().add(id);
-    pgClientFactory.createInstance().select(preparedQuery, params, future.completer());
+    pgClientFactory.getInstance().select(preparedQuery, params, future.completer());
     return future.map(resultSet -> resultSet.getResults().isEmpty()
       ? Optional.empty() : Optional.of(mapRowJsonToMessagingModule(resultSet.getRows().get(0))));
   }
@@ -76,7 +76,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
         .add(messagingModule.getApplied());
       String subscriberCallback = messagingModule.getSubscriberCallback();
       params.add(subscriberCallback != null ? subscriberCallback : EMPTY);
-      pgClientFactory.createInstance().execute(query, params, future.completer());
+      pgClientFactory.getInstance().execute(query, params, future.completer());
     } catch (Exception e) {
       LOGGER.error("Error saving MessagingModule", e);
       future.fail(e);
@@ -98,7 +98,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
         .add(messagingModule.getApplied())
         .add(subscriberCallback != null ? subscriberCallback : EMPTY)
         .add(id);
-      pgClientFactory.createInstance().execute(query, params, future.completer());
+      pgClientFactory.getInstance().execute(query, params, future.completer());
     } catch (Exception e) {
       LOGGER.error("Error updating MessagingModule by id '{}'", e, id);
       future.fail(e);
@@ -113,7 +113,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
     Future<UpdateResult> future = Future.future();
     String query = format(DELETE_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
     JsonArray params = new JsonArray().add(id);
-    pgClientFactory.createInstance().execute(query, params, future.completer());
+    pgClientFactory.getInstance().execute(query, params, future.completer());
     return future.map(updateResult -> updateResult.getUpdated() == 1);
   }
 

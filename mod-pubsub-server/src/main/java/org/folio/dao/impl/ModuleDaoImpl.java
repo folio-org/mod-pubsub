@@ -45,7 +45,7 @@ public class ModuleDaoImpl implements ModuleDao {
   public Future<List<Module>> getAll() {
     Future<ResultSet> future = Future.future();
     String preparedQuery = format(GET_ALL_SQL, MODULE_SCHEMA, TABLE_NAME);
-    pgClientFactory.createInstance().select(preparedQuery, future.completer());
+    pgClientFactory.getInstance().select(preparedQuery, future.completer());
     return future.map(this::mapResultSetToModuleList);
   }
 
@@ -54,7 +54,7 @@ public class ModuleDaoImpl implements ModuleDao {
     Future<ResultSet> future = Future.future();
     String preparedQuery = format(GET_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
     JsonArray params = new JsonArray().add(id);
-    pgClientFactory.createInstance().select(preparedQuery, params, future.completer());
+    pgClientFactory.getInstance().select(preparedQuery, params, future.completer());
     return future.map(resultSet -> resultSet.getResults().isEmpty()
       ? Optional.empty() : Optional.of(mapRowJsonToModule(resultSet.getRows().get(0))));
   }
@@ -67,7 +67,7 @@ public class ModuleDaoImpl implements ModuleDao {
       JsonArray params = new JsonArray()
         .add(module.getId())
         .add(module.getName());
-      pgClientFactory.createInstance().execute(query, params, future.completer());
+      pgClientFactory.getInstance().execute(query, params, future.completer());
     } catch (Exception e) {
       LOGGER.error("Error saving Module", e);
       future.fail(e);
@@ -83,7 +83,7 @@ public class ModuleDaoImpl implements ModuleDao {
       JsonArray params = new JsonArray()
         .add(module.getName())
         .add(id);
-      pgClientFactory.createInstance().execute(query, params, future.completer());
+      pgClientFactory.getInstance().execute(query, params, future.completer());
     } catch (Exception e) {
       LOGGER.error("Error updating Module by id '{}'", e, id);
       future.fail(e);
@@ -97,7 +97,7 @@ public class ModuleDaoImpl implements ModuleDao {
     Future<UpdateResult> future = Future.future();
     String query = format(DELETE_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
     JsonArray params = new JsonArray().add(id);
-    pgClientFactory.createInstance().execute(query, params, future.completer());
+    pgClientFactory.getInstance().execute(query, params, future.completer());
     return future.map(updateResult -> updateResult.getUpdated() == 1);
   }
 
