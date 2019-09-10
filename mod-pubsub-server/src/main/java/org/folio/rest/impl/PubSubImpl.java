@@ -38,11 +38,6 @@ public class PubSubImpl implements Pubsub {
   }
 
   @Override
-  public void getPubsub(Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    asyncResultHandler.handle(Future.succeededFuture(GetPubsubResponse.respond200()));
-  }
-
-  @Override
   public void postPubsubEventTypes(String lang, EventDescriptor entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
       validateEventDescriptor(entity)

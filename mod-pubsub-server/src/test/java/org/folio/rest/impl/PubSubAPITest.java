@@ -15,8 +15,7 @@ import static org.hamcrest.Matchers.is;
 
 @RunWith(VertxUnitRunner.class)
 public class PubSubAPITest extends AbstractRestTest {
-
-  private static final String PUB_SUB_PATH = "/pubsub";
+  
   private static final String EVENT_TYPES_PATH = "/pubsub/event-types";
 
   private EventDescriptor eventDescriptor = new EventDescriptor()
@@ -25,16 +24,6 @@ public class PubSubAPITest extends AbstractRestTest {
     .withEventTTL(1)
     .withSigned(false);
 
-  @Test
-  public void shouldReturnOkOnGet() {
-    RestAssured.given()
-      .spec(spec)
-      .when()
-      .get(PUB_SUB_PATH)
-      .then()
-      .statusCode(HttpStatus.SC_OK);
-  }
-  
   @Test
   public void shouldReturnEmptyListOnGet() {
     RestAssured.given()
