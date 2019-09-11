@@ -18,7 +18,7 @@
  | METHOD |             URL                                | DESCRIPTION                                      |
  |--------|------------------------------------------------|--------------------------------------------------|
  | GET    | /pubsub/event-types                            | Get collection of Event Descriptors              |
- | POST   | /data-import-profiles/jobProfiles              | Create new Event Type                            |
+ | POST   | /pubsub/event-types                            | Create new Event Type                            |
  | GET    | /pubsub/event-types/{eventTypeName}            | Get Event Descriptor of particular event type    |
  | PUT    | /pubsub/event-types/{eventTypeName}            | Update Event Descriptor of particular event type |
  | DELETE | /pubsub/event-types/{eventTypeName}            | Delete event type                                |
