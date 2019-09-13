@@ -50,7 +50,7 @@
         },
         {
           "methods": ["GET"],
-          "pathPattern": "/pubsub/eventtypes/{eventTypeName}/publishers",
+          "pathPattern": "/pubsub/event-types/{eventTypeName}/publishers",
           "permissionsRequired" : [ "pubsub.publishers.get" ]
         }
       ]
