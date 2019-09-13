@@ -1,22 +1,29 @@
 package org.folio.dao.impl;
 
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.sql.ResultSet;
+import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.sql.UpdateResult;
 import javassist.NotFoundException;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.dao.MessagingModuleDao;
+import org.folio.dao.ModuleDao;
 import org.folio.dao.PostgresClientFactory;
 import org.folio.rest.jaxrs.model.MessagingModule;
 import org.folio.rest.jaxrs.model.MessagingModule.ModuleRole;
+import org.folio.rest.jaxrs.model.Module;
+import org.folio.rest.persist.PostgresClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
@@ -36,12 +43,15 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
   private static final String MODULE_SCHEMA = "pubsub_config";
   private static final String GET_BY_SQL = "SELECT * FROM %s.%s %s";
   private static final String GET_BY_ID_SQL = "SELECT * FROM %s.%s WHERE id = ?";
-  private static final String INSERT_SQL = "INSERT INTO %s.%s (id, event_type_id, module_id, tenant_id, role, is_applied, subscriber_callback) VALUES (?, ?, ?, ?, ?, ?, ?)";
+  private static final String INSERT_BATCH_SQL = "INSERT INTO %s.%s (id, event_type_id, module_id, tenant_id, role, is_applied, subscriber_callback) VALUES ";
   private static final String UPDATE_BY_ID_SQL = "UPDATE %s.%s SET event_type_id = ?, module_id = ?, tenant_id = ?, role = ?, is_applied = ?, subscriber_callback = ? WHERE id = ?";
   private static final String DELETE_BY_ID_SQL = "DELETE FROM %s.%s WHERE id = ?";
+  private static final String DELETE_BY_SQL = "DELETE FROM %s.%s %s";
 
   @Autowired
   private PostgresClientFactory pgClientFactory;
+  @Autowired
+  private ModuleDao moduleDao;
 
   @Override
   public Future<List<MessagingModule>> get(MessagingModuleFilter filter) {
@@ -62,25 +72,78 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
   }
 
   @Override
-  public Future<String> save(MessagingModule messagingModule) {
+  public Future<List<MessagingModule>> save(String moduleName, List<MessagingModule> messagingModules) {
+    Future<List<MessagingModule>> future = Future.future();
+    PostgresClient pgClient = pgClientFactory.getInstance();
+    Future<SQLConnection> tx = Future.future();
+    pgClient.startTx(tx);
+
+    tx.compose(sqlConnection -> moduleDao.getByName(moduleName, tx))
+      .compose(moduleOptional -> moduleOptional
+        .map(module -> Future.succeededFuture(module.getId()))
+        .orElseGet(() -> moduleDao.save(new Module().withName(moduleName).withId(UUID.randomUUID().toString()), tx)))
+      .map(moduleId -> setModuleId(moduleId, messagingModules))
+      .compose(messagingModulesList -> saveMessagingModuleList(messagingModulesList, tx))
+      .setHandler(saveAr -> {
+        if (saveAr.succeeded()) {
+          pgClient.endTx(tx, endTx -> future.complete(saveAr.result()));
+        } else {
+          pgClient.rollbackTx(tx, rollbackAr -> {
+            LOGGER.error("Rollback transaction. Error saving Messaging Modules list", saveAr.cause());
+            future.fail(saveAr.cause());
+          });
+        }
+      });
+    return future;
+  }
+
+  /**
+   * Sets moduleId to specified MessagingModule entities
+   * @param moduleId module id
+   * @param messagingModules MessagingModule entities
+   * @return MessagingModule entities list
+   */
+  private List<MessagingModule> setModuleId(String moduleId, List<MessagingModule> messagingModules) {
+    messagingModules.forEach(messagingModule -> messagingModule.setModuleId(moduleId));
+    return messagingModules;
+  }
+
+  /**
+   * Saves list of {@link MessagingModule} to data base with specified moduleName
+   * using specified connection.
+   *
+   * @param messagingModules list of MessagingModule entities
+   * @param sqlConnection connection to data base
+   * @return future with list of created MessagingModule entities
+   */
+  private Future<List<MessagingModule>> saveMessagingModuleList(List<MessagingModule> messagingModules,
+                                                               AsyncResult<SQLConnection> sqlConnection) {
     Future<UpdateResult> future = Future.future();
     try {
-      String query = format(INSERT_SQL, MODULE_SCHEMA, TABLE_NAME);
-      JsonArray params = new JsonArray()
-        .add(messagingModule.getId())
-        .add(messagingModule.getEventType())
-        .add(messagingModule.getModuleId())
-        .add(messagingModule.getTenantId())
-        .add(messagingModule.getModuleRole().value())
-        .add(messagingModule.getApplied());
-      String subscriberCallback = messagingModule.getSubscriberCallback();
-      params.add(subscriberCallback != null ? subscriberCallback : EMPTY);
-      pgClientFactory.getInstance().execute(query, params, future.completer());
+      StringBuilder query = new StringBuilder(format(INSERT_BATCH_SQL, MODULE_SCHEMA, TABLE_NAME));
+      JsonArray params = new JsonArray();
+      for (MessagingModule messagingModule : messagingModules) {
+        query.append(" (?, ?, ?, ?, ?, ?, ?),");
+        prepareInsertQueryParameters(messagingModule, params);
+      }
+      String preparedQuery = StringUtils.strip(query.toString(), ",");
+      pgClientFactory.getInstance().execute(sqlConnection, preparedQuery, params, future.completer());
     } catch (Exception e) {
-      LOGGER.error("Error saving MessagingModule", e);
+      LOGGER.error("Error saving Messaging Modules", e);
       future.fail(e);
     }
-    return future.map(updateResult -> messagingModule.getId());
+    return future.map(updateResult -> messagingModules);
+  }
+
+  private void prepareInsertQueryParameters(MessagingModule messagingModule, JsonArray queryParams) {
+    queryParams.add(messagingModule.getId())
+      .add(messagingModule.getEventType())
+      .add(messagingModule.getModuleId())
+      .add(messagingModule.getTenantId())
+      .add(messagingModule.getModuleRole().value())
+      .add(messagingModule.getApplied());
+    String subscriberCallback = messagingModule.getSubscriberCallback();
+    queryParams.add(subscriberCallback != null ? subscriberCallback : EMPTY);
   }
 
   @Override
@@ -113,6 +176,49 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
     String query = format(DELETE_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
     JsonArray params = new JsonArray().add(id);
     pgClientFactory.getInstance().execute(query, params, future.completer());
+    return future.map(updateResult -> updateResult.getUpdated() == 1);
+  }
+
+  @Override
+  public Future<Boolean> deleteByModuleNameAndFilter(String moduleName, MessagingModuleFilter filter) {
+    Future<Boolean> future = Future.future();
+    PostgresClient pgClient = pgClientFactory.getInstance();
+    Future<SQLConnection> tx = Future.future();
+    pgClient.startTx(tx);
+
+    tx.compose(v -> moduleDao.getByName(moduleName, tx))
+      .compose(moduleOptional -> !moduleOptional.isPresent()
+        ? Future.succeededFuture(false)
+        : deleteByModuleNameAndEventType(moduleOptional.get().getId(), filter, tx))
+      .setHandler(deleteAr -> {
+        if (deleteAr.succeeded()) {
+          pgClient.endTx(tx, endTx -> future.complete(deleteAr.result()));
+        } else {
+          pgClient.rollbackTx(tx, rollbackAr -> {
+            LOGGER.error("Rollback transaction. Error deleting Messaging Modules", deleteAr.cause());
+            future.fail(deleteAr.cause());
+          });
+        }
+      });
+    return future;
+  }
+
+  /**
+   *
+   * Deletes {@link MessagingModule} by module id and filter
+   *
+   * @param moduleId module id
+   * @param filter messagingModule filter
+   * @param sqlConnection DB connection
+   * @return future with boolean
+   */
+  private Future<Boolean> deleteByModuleNameAndEventType(String moduleId, MessagingModuleFilter filter,
+                                                        AsyncResult<SQLConnection> sqlConnection) {
+    Future<UpdateResult> future = Future.future();
+    StringBuilder query = new StringBuilder(format(DELETE_BY_SQL, MODULE_SCHEMA, TABLE_NAME, buildWhereClause(filter)));
+    query.append(" AND ")
+      .append(" module_id = '").append(moduleId).append("';");
+    pgClientFactory.getInstance().execute(sqlConnection, query.toString(), future.completer());
     return future.map(updateResult -> updateResult.getUpdated() == 1);
   }
 
@@ -159,6 +265,6 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
       conditionBuilder.append(" AND ")
         .append("subscriber_callback = '").append(filter.getSubscriberCallback()).append("'");
     }
-    return conditionBuilder.append(';').toString();
+    return conditionBuilder.toString();
   }
 }
