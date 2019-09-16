@@ -77,14 +77,12 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
 
   private String getQueryByEventTypes(List<String> eventTypes) {
     StringBuilder query = new StringBuilder(GET_ALL_SQL);
-
     if (!isEmpty(eventTypes)) {
-      query.append(" WHERE ").append("id = ")
-        .append("'").append(eventTypes.get(0)).append("'");
-      for (int i = 1; i < eventTypes.size(); i++) {
-        query.append(" OR ").append("id = ")
-          .append("'").append(eventTypes.get(i)).append("'");
-      }
+      String conditionByEventTypes = eventTypes.stream()
+        .map(eventType -> new StringBuilder("'").append(eventType).append("'"))
+        .collect(Collectors.joining(", ", "id IN (", ")"));
+
+      query.append( " WHERE ").append(conditionByEventTypes);
     }
     return query.toString();
   }
