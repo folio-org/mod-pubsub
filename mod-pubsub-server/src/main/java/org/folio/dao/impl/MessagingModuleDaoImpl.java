@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.folio.dao.MessagingModuleDao;
 import org.folio.dao.ModuleDao;
 import org.folio.dao.PostgresClientFactory;
+import org.folio.dao.util.DbUtil;
 import org.folio.rest.jaxrs.model.MessagingModule;
 import org.folio.rest.jaxrs.model.MessagingModule.ModuleRole;
 import org.folio.rest.jaxrs.model.Module;
@@ -74,28 +75,16 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
 
   @Override
   public Future<List<MessagingModule>> save(String moduleName, List<MessagingModule> messagingModules) {
-    Future<List<MessagingModule>> future = Future.future();
     PostgresClient pgClient = pgClientFactory.getInstance();
-    Future<SQLConnection> tx = Future.future();
-    pgClient.startTx(tx);
 
-    tx.compose(sqlConnection -> moduleDao.getByName(moduleName, tx))
+    return DbUtil.executeInTransaction(pgClient, connection -> moduleDao.getByName(moduleName, connection)
       .compose(moduleOptional -> moduleOptional
         .map(module -> Future.succeededFuture(module.getId()))
-        .orElseGet(() -> moduleDao.save(new Module().withName(moduleName).withId(UUID.randomUUID().toString()), tx)))
+        .orElseGet(() -> moduleDao.save(new Module().withName(moduleName).withId(UUID.randomUUID().toString()), connection)))
       .map(moduleId -> setModuleId(moduleId, messagingModules))
-      .compose(messagingModulesList -> saveMessagingModuleList(messagingModulesList, tx))
-      .setHandler(saveAr -> {
-        if (saveAr.succeeded()) {
-          pgClient.endTx(tx, endTx -> future.complete(saveAr.result()));
-        } else {
-          pgClient.rollbackTx(tx, rollbackAr -> {
-            LOGGER.error("Rollback transaction. Error saving Messaging Modules list", saveAr.cause());
-            future.fail(saveAr.cause());
-          });
-        }
-      });
-    return future;
+      .compose(messagingModulesList -> saveMessagingModuleList(messagingModulesList, connection)));
+
+
   }
 
   /**
@@ -182,26 +171,12 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
 
   @Override
   public Future<Boolean> deleteByModuleNameAndFilter(String moduleName, MessagingModuleFilter filter) {
-    Future<Boolean> future = Future.future();
     PostgresClient pgClient = pgClientFactory.getInstance();
-    Future<SQLConnection> tx = Future.future();
-    pgClient.startTx(tx);
 
-    tx.compose(v -> moduleDao.getByName(moduleName, tx))
+    return DbUtil.executeInTransaction(pgClient, connection -> moduleDao.getByName(moduleName, connection)
       .compose(moduleOptional -> !moduleOptional.isPresent()
         ? Future.succeededFuture(false)
-        : deleteByModuleNameAndEventType(moduleOptional.get().getId(), filter, tx))
-      .setHandler(deleteAr -> {
-        if (deleteAr.succeeded()) {
-          pgClient.endTx(tx, endTx -> future.complete(deleteAr.result()));
-        } else {
-          pgClient.rollbackTx(tx, rollbackAr -> {
-            LOGGER.error("Rollback transaction. Error deleting Messaging Modules", deleteAr.cause());
-            future.fail(deleteAr.cause());
-          });
-        }
-      });
-    return future;
+        : deleteByModuleIdAndFilter(moduleOptional.get().getId(), filter, connection)));
   }
 
   /**
@@ -213,8 +188,8 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
    * @param sqlConnection DB connection
    * @return future with boolean
    */
-  private Future<Boolean> deleteByModuleNameAndEventType(String moduleId, MessagingModuleFilter filter,
-                                                        AsyncResult<SQLConnection> sqlConnection) {
+  private Future<Boolean> deleteByModuleIdAndFilter(String moduleId, MessagingModuleFilter filter,
+                                                    AsyncResult<SQLConnection> sqlConnection) {
     Future<UpdateResult> future = Future.future();
     StringBuilder query = new StringBuilder(format(DELETE_BY_SQL, MODULE_SCHEMA, TABLE_NAME, buildWhereClause(filter)));
     query.append(" AND ")

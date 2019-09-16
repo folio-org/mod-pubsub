@@ -12,6 +12,7 @@ import io.vertx.ext.sql.UpdateResult;
 import javassist.NotFoundException;
 import org.folio.dao.ModuleDao;
 import org.folio.dao.PostgresClientFactory;
+import org.folio.dao.util.DbUtil;
 import org.folio.rest.jaxrs.model.Module;
 import org.folio.rest.persist.PostgresClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,22 +75,8 @@ public class ModuleDaoImpl implements ModuleDao {
 
   @Override
   public Future<String> save(Module module) {
-    Future<String> future = Future.future();
     PostgresClient pgClient = pgClientFactory.getInstance();
-    Future<SQLConnection> tx = Future.future();
-    pgClient.startTx(tx);
-
-    tx.compose(sqlConnection -> save(module, tx)).setHandler(ar -> {
-      if (ar.succeeded()) {
-        pgClient.endTx(tx, endTx -> future.complete(ar.result()));
-      } else {
-        pgClient.rollbackTx(tx, rollbackAr -> {
-          LOGGER.error("Rollback transaction. Error saving Module with name {}", module.getName(), ar.cause());
-          future.fail(ar.cause());
-        });
-      }
-    });
-    return future;
+    return DbUtil.executeInTransaction(pgClient, connection -> save(module, connection));
   }
 
   @Override
