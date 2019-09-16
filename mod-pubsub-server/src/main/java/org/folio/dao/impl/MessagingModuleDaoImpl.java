@@ -47,6 +47,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
   private static final String UPDATE_BY_ID_SQL = "UPDATE %s.%s SET event_type_id = ?, module_id = ?, tenant_id = ?, role = ?, is_applied = ?, subscriber_callback = ? WHERE id = ?";
   private static final String DELETE_BY_ID_SQL = "DELETE FROM %s.%s WHERE id = ?";
   private static final String DELETE_BY_SQL = "DELETE FROM %s.%s %s";
+  public static final String TABLE_COLUMNS_PLACEHOLDER = " (?, ?, ?, ?, ?, ?, ?),";
 
   @Autowired
   private PostgresClientFactory pgClientFactory;
@@ -123,7 +124,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
       StringBuilder query = new StringBuilder(format(INSERT_BATCH_SQL, MODULE_SCHEMA, TABLE_NAME));
       JsonArray params = new JsonArray();
       for (MessagingModule messagingModule : messagingModules) {
-        query.append(" (?, ?, ?, ?, ?, ?, ?),");
+        query.append(TABLE_COLUMNS_PLACEHOLDER);
         prepareInsertQueryParameters(messagingModule, params);
       }
       String preparedQuery = StringUtils.strip(query.toString(), ",");
