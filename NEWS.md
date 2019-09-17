@@ -23,6 +23,6 @@
  | GET    | /pubsub/event-types/{eventTypeName}                                                     | Get Event Descriptor of particular event type    |
  | PUT    | /pubsub/event-types/{eventTypeName}                                                     | Update Event Descriptor of particular event type |
  | DELETE | /pubsub/event-types/{eventTypeName}                                                     | Delete event type                                | 
- | POST    | pubsub/event-types/declare/publisher                                                   | Create publisher                                 |
- | DELETE  | pubsub/event-types/declare/publisher?moduleName={moduleName}&eventType={eventTypeName} | Delete publisher declaration                     |
- | GET     | /pubsub/event-types/{eventTypeName}/publishers                                         | Get collection of Publishers                     |
+ | POST   | /pubsub/event-types/declare/publisher                                                   | Create publisher                                 |
+ | DELETE | /pubsub/event-types/{eventTypeName}/declare/publisher?moduleName={moduleName}           | Delete publisher declaration                     |
+ | GET    | /pubsub/event-types/{eventTypeName}/publishers                                          | Get collection of Publishers                     |

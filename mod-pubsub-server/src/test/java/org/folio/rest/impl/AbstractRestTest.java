@@ -32,7 +32,7 @@ public abstract class AbstractRestTest {
   private static final String MESSAGING_MODULE_TABLE = "messaging_module";
 
   protected static final String EVENT_TYPES_PATH = "/pubsub/event-types";
-  protected static final String DECLARE_PUBLISHER_PATH = "/pubsub/event-types/declare/publisher";
+  protected static final String DECLARE_PUBLISHER_PATH = "/declare/publisher";
   protected static final String PUBLISHERS_PATH = "/publishers";
 
   static RequestSpecification spec;

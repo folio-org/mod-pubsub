@@ -55,7 +55,7 @@ public class PublishersApiTest extends AbstractRestTest {
       .spec(spec)
       .body(publisherDescriptor1)
       .when()
-      .post(DECLARE_PUBLISHER_PATH)
+      .post(EVENT_TYPES_PATH + DECLARE_PUBLISHER_PATH)
       .then().log().all()
       .statusCode(HttpStatus.SC_CREATED);
 
@@ -67,7 +67,7 @@ public class PublishersApiTest extends AbstractRestTest {
       .spec(spec)
       .body(publisherDescriptor2)
       .when()
-      .post(DECLARE_PUBLISHER_PATH)
+      .post(EVENT_TYPES_PATH + DECLARE_PUBLISHER_PATH)
       .then().log().all()
       .statusCode(HttpStatus.SC_CREATED);
 
@@ -94,7 +94,7 @@ public class PublishersApiTest extends AbstractRestTest {
       .spec(spec)
       .body(publisherDescriptor)
       .when()
-      .post(DECLARE_PUBLISHER_PATH)
+      .post(EVENT_TYPES_PATH + DECLARE_PUBLISHER_PATH)
       .then().log().all()
       .statusCode(HttpStatus.SC_CREATED);
 
@@ -117,7 +117,7 @@ public class PublishersApiTest extends AbstractRestTest {
       .spec(spec)
       .body(publisherDescriptor)
       .when()
-      .post(DECLARE_PUBLISHER_PATH)
+      .post(EVENT_TYPES_PATH + DECLARE_PUBLISHER_PATH)
       .then().log().all()
       .statusCode(HttpStatus.SC_BAD_REQUEST)
       .body("total_records", is(1))
@@ -136,7 +136,7 @@ public class PublishersApiTest extends AbstractRestTest {
       .spec(spec)
       .body(publisherDescriptor)
       .when()
-      .post(DECLARE_PUBLISHER_PATH)
+      .post(EVENT_TYPES_PATH + DECLARE_PUBLISHER_PATH)
       .then().log().all()
       .statusCode(HttpStatus.SC_BAD_REQUEST)
       .body("total_records", is(1))
@@ -157,7 +157,7 @@ public class PublishersApiTest extends AbstractRestTest {
       .spec(spec)
       .body(publisherDescriptor)
       .when()
-      .post(DECLARE_PUBLISHER_PATH)
+      .post(EVENT_TYPES_PATH + DECLARE_PUBLISHER_PATH)
       .then().log().all()
       .statusCode(HttpStatus.SC_BAD_REQUEST)
       .body("total_records", is(1))
@@ -178,7 +178,7 @@ public class PublishersApiTest extends AbstractRestTest {
       .spec(spec)
       .body(publisherDescriptor)
       .when()
-      .post(DECLARE_PUBLISHER_PATH)
+      .post(EVENT_TYPES_PATH + DECLARE_PUBLISHER_PATH)
       .then().log().all()
       .statusCode(HttpStatus.SC_BAD_REQUEST)
       .body("total_records", is(2))
@@ -198,7 +198,7 @@ public class PublishersApiTest extends AbstractRestTest {
       .spec(spec)
       .body(publisherDescriptor)
       .when()
-      .post(DECLARE_PUBLISHER_PATH)
+      .post(EVENT_TYPES_PATH + DECLARE_PUBLISHER_PATH)
       .then().log().all()
       .statusCode(HttpStatus.SC_CREATED);
 
@@ -207,7 +207,7 @@ public class PublishersApiTest extends AbstractRestTest {
       .queryParam("moduleName", publisherDescriptor.getModuleName())
       .queryParam("eventType", createdEventDescriptor.getEventType())
       .when()
-      .delete(DECLARE_PUBLISHER_PATH)
+      .delete(EVENT_TYPES_PATH + "/" + createdEventDescriptor.getEventType() + "/declare/publisher")
       .then().log().all()
       .statusCode(HttpStatus.SC_NO_CONTENT);
 

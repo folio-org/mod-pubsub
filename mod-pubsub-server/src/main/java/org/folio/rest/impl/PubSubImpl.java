@@ -152,14 +152,30 @@ public class PubSubImpl implements Pubsub {
     }
   }
 
+//  @Override
+//  public void deletePubsubEventTypesDeclarePublisher(String moduleName, String eventType, Map<String, String> okapiHeaders,
+//                                                     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+//    try {
+//      MessagingModuleFilter filter = getMessagingModuleFilter(eventType, PUBLISHER, tenantId);
+//      messagingModuleService.deleteByModuleNameAndFilter(moduleName, filter)
+//        .map(DeletePubsubEventTypesDeclarePublisherResponse.respond204WithTextPlain(
+//          format("Publisher for event type '%s' was successfully deleted", eventType)))
+//        .map(Response.class::cast)
+//        .otherwise(ExceptionHelper::mapExceptionToResponse)
+//        .setHandler(asyncResultHandler);
+//    } catch (Exception e) {
+//      LOGGER.error("Failed to delete publisher", e);
+//      asyncResultHandler.handle(Future.succeededFuture(ExceptionHelper.mapExceptionToResponse(e)));
+//    }
+//  }
+
   @Override
-  public void deletePubsubEventTypesDeclarePublisher(String moduleName, String eventType, Map<String, String> okapiHeaders,
-                                                     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void deletePubsubEventTypesDeclarePublisherByEventTypeName(String eventTypeName, String moduleName, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
-      MessagingModuleFilter filter = getMessagingModuleFilter(eventType, PUBLISHER, tenantId);
+      MessagingModuleFilter filter = getMessagingModuleFilter(eventTypeName, PUBLISHER, tenantId);
       messagingModuleService.deleteByModuleNameAndFilter(moduleName, filter)
-        .map(DeletePubsubEventTypesDeclarePublisherResponse.respond204WithTextPlain(
-          format("Publisher for event type '%s' was successfully deleted", eventType)))
+        .map(DeletePubsubEventTypesDeclarePublisherByEventTypeNameResponse.respond204WithTextPlain(
+          format("Publisher for event type '%s' was successfully deleted", eventTypeName)))
         .map(Response.class::cast)
         .otherwise(ExceptionHelper::mapExceptionToResponse)
         .setHandler(asyncResultHandler);

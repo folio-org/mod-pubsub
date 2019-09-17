@@ -76,6 +76,18 @@ resourceTypes:
               body:
                 application/json:
                   schema: messagingModuleCollection
+      /declare/publisher:
+          delete:
+            description: Remove publisher declaration for certain event type
+            queryParameters:
+              moduleName:
+                description: Publisher module name
+                required: true
+                type: string
+            responses:
+              204:
+                body:
+                  text/plain: !!null
     /declare:
       /publisher:
         displayName: Publishers
@@ -96,18 +108,3 @@ resourceTypes:
               body:
                 text/plain:
                   example: "Internal server error"
-        delete:
-          description: Remove publisher declaration for certain event type
-          queryParameters:
-            moduleName:
-              description: Publisher module name
-              required: true
-              type: string
-            eventType:
-              description: Publisher event type
-              required: true
-              type: string
-          responses:
-            204:
-              body:
-                text/plain: !!null
