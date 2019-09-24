@@ -69,13 +69,26 @@ resourceTypes:
               text/plain: !!null
       /publishers:
         displayName: Publishers
-        description: API to retrieve registered Publishers
+        description: API for managing Publishers
         get:
+          description: API to retrieve registered Publishers
           responses:
             200:
               body:
                 application/json:
                   schema: messagingModuleCollection
+        delete:
+          description: Remove publisher declaration for certain event type
+          queryParameters:
+            moduleName:
+              description: Publisher module name
+              required: true
+              type: string
+          responses:
+            204:
+              body:
+                text/plain: !!null
+
       /subscribers:
         displayName: Subscribers
         description: API for managing Subscribers
@@ -97,19 +110,6 @@ resourceTypes:
             204:
               body:
                 text/plain: !!null
-      /declare:
-        /publisher:
-          delete:
-            description: Remove publisher declaration for certain event type
-            queryParameters:
-              moduleName:
-                description: Publisher module name
-                required: true
-                type: string
-            responses:
-              204:
-                body:
-                  text/plain: !!null
     /declare:
       /publisher:
         displayName: Publishers

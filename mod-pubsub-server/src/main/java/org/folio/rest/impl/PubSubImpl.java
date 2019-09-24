@@ -155,11 +155,11 @@ public class PubSubImpl implements Pubsub {
   }
 
   @Override
-  public void deletePubsubEventTypesDeclarePublisherByEventTypeName(String eventTypeName, String moduleName, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  public void deletePubsubEventTypesPublishersByEventTypeName(String eventTypeName, String moduleName, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
       MessagingModuleFilter filter = getMessagingModuleFilter(eventTypeName, PUBLISHER, tenantId);
       messagingModuleService.deleteByModuleNameAndFilter(moduleName, filter)
-        .map(DeletePubsubEventTypesDeclarePublisherByEventTypeNameResponse.respond204WithTextPlain(
+        .map(DeletePubsubEventTypesPublishersByEventTypeNameResponse.respond204WithTextPlain(
           format("Publisher for event type '%s' was successfully deleted", eventTypeName)))
         .map(Response.class::cast)
         .otherwise(ExceptionHelper::mapExceptionToResponse)

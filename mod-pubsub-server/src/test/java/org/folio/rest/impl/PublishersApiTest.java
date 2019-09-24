@@ -206,7 +206,7 @@ public class PublishersApiTest extends AbstractRestTest {
       .spec(spec)
       .queryParam("moduleName", publisherDescriptor.getModuleName())
       .when()
-      .delete(EVENT_TYPES_PATH + "/" + createdEventDescriptor.getEventType() + DECLARE_PUBLISHER_PATH)
+      .delete(EVENT_TYPES_PATH + "/" + createdEventDescriptor.getEventType() + PUBLISHERS_PATH)
       .then().log().all()
       .statusCode(HttpStatus.SC_NO_CONTENT);
 

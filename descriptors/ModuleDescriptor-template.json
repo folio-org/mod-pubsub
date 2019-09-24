@@ -45,7 +45,7 @@
         },
         {
           "methods": ["DELETE"],
-          "pathPattern": "/pubsub/event-types/declare/publisher",
+          "pathPattern": "/pubsub/event-types/{eventTypeName}/publishers",
           "permissionsRequired" : [ "pubsub.publishers.delete" ]
         },
         {
