@@ -15,6 +15,7 @@
 * Added DAO component for tenant schema
 * Added API for Event Types managing
 * Added API for Publishers managing
+* Added API for Subscribers managing
 
  | METHOD |             URL                                                                         | DESCRIPTION                                      |
  |--------|-----------------------------------------------------------------------------------------|--------------------------------------------------|
@@ -26,3 +27,6 @@
  | POST   | /pubsub/event-types/declare/publisher                                                   | Create publisher                                 |
  | DELETE | /pubsub/event-types/{eventTypeName}/declare/publisher?moduleName={moduleName}           | Delete publisher declaration                     |
  | GET    | /pubsub/event-types/{eventTypeName}/publishers                                          | Get collection of Publishers                     |
+ | POST   | /pubsub/event-types/declare/subscriber                                                  | Create subscriber                                |
+ | DELETE | /pubsub/event-types/{eventTypeName}/subscribers?moduleName={moduleName}                 | Delete subscriber declaration                    |
+ | GET    | /pubsub/event-types/{eventTypeName}/subscribers                                         | Get collection of Subscribers                    |
