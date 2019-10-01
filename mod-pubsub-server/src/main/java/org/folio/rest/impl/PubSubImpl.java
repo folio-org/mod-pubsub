@@ -29,7 +29,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
@@ -284,20 +283,21 @@ public class PubSubImpl implements Pubsub {
     if (startDate == null || endDate == null) {
       throw new BadRequestException("Start date and End date are required query parameters");
     }
-    String[] dateFormats = {DateFormatUtils.ISO_DATE_FORMAT.getPattern(),
-      DateFormatUtils.ISO_DATETIME_FORMAT.getPattern(), DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.getPattern()};
-    Date start;
-    Date end;
+    String[] dateFormats = {
+      DateFormatUtils.ISO_DATE_FORMAT.getPattern(),
+      DateFormatUtils.ISO_DATETIME_FORMAT.getPattern(),
+      DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.getPattern()
+    };
     try {
-      start = DateUtils.parseDate(startDate, dateFormats);
-      end = DateUtils.parseDate(endDate, dateFormats);
+      Date start = DateUtils.parseDate(startDate, dateFormats);
+      Date end = DateUtils.parseDate(endDate, dateFormats);
+      return new AuditMessageFilter(start, end)
+        .withEventId(eventId)
+        .withEventType(eventType)
+        .withCorrelationId(correlationId);
     } catch (Exception e) {
       LOGGER.error("Error parsing date", e);
       throw new BadRequestException(format("Supported date formats %s, %s, %s", dateFormats[0], dateFormats[1], dateFormats[2]));
     }
-    return new AuditMessageFilter(start, end)
-      .withEventId(eventId)
-      .withEventType(eventType)
-      .withCorrelationId(correlationId);
   }
 }
