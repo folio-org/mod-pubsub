@@ -168,28 +168,22 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
   private String buildWhereClause(MessagingModuleFilter filter) {
     StringBuilder conditionBuilder = new StringBuilder("WHERE TRUE");
     if (filter.getEventType() != null) {
-      conditionBuilder.append(" AND ")
-        .append("event_type_id = '").append(filter.getEventType()).append("'");
+      conditionBuilder.append(" AND event_type_id = '").append(filter.getEventType()).append("'");
     }
     if (filter.getModuleId() != null) {
-      conditionBuilder.append(" AND ")
-        .append("module_id = '").append(filter.getModuleId()).append("'");
+      conditionBuilder.append(" AND module_id = '").append(filter.getModuleId()).append("'");
     }
     if (filter.getTenantId() != null) {
-      conditionBuilder.append(" AND ")
-        .append("tenant_id = '").append(filter.getTenantId()).append("'");
+      conditionBuilder.append(" AND tenant_id = '").append(filter.getTenantId()).append("'");
     }
     if (filter.getModuleRole() != null) {
-      conditionBuilder.append(" AND ")
-        .append("role = '").append(filter.getModuleRole()).append("'");
+      conditionBuilder.append(" AND role = '").append(filter.getModuleRole()).append("'");
     }
     if (filter.getApplied() != null) {
-      conditionBuilder.append(" AND ")
-        .append("is_applied = '").append(filter.getApplied()).append("'");
+      conditionBuilder.append(" AND is_applied = '").append(filter.getApplied()).append("'");
     }
     if (filter.getSubscriberCallback() != null) {
-      conditionBuilder.append(" AND ")
-        .append("subscriber_callback = '").append(filter.getSubscriberCallback()).append("'");
+      conditionBuilder.append(" AND subscriber_uscallback = '").append(filter.getSubscriberCallback()).append("'");
     }
     return conditionBuilder.toString();
   }
