@@ -42,6 +42,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
   private static final String MODULE_SCHEMA = "pubsub_config";
   private static final String GET_BY_SQL = "SELECT * FROM %s.%s %s";
   private static final String INSERT_BATCH_SQL = "INSERT INTO %s.%s (id, event_type_id, module_id, tenant_id, role, is_applied, subscriber_callback) VALUES ";
+  private static final String DELETE_BY_ID_SQL = "DELETE FROM %s.%s WHERE id = ?";
   private static final String DELETE_BY_SQL = "DELETE FROM %s.%s %s";
   private static final String TABLE_COLUMNS_PLACEHOLDER = " (?, ?, ?, ?, ?, ?, ?),";
 
@@ -117,6 +118,15 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
       .add(messagingModule.getApplied());
     String subscriberCallback = messagingModule.getSubscriberCallback();
     queryParams.add(subscriberCallback != null ? subscriberCallback : EMPTY);
+  }
+
+  @Override
+  public Future<Boolean> delete(String id) {
+    Future<UpdateResult> future = Future.future();
+    String query = format(DELETE_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
+    JsonArray params = new JsonArray().add(id);
+    pgClientFactory.getInstance().execute(query, params, future.completer());
+    return future.map(updateResult -> updateResult.getUpdated() == 1);
   }
 
   @Override

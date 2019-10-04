@@ -15,7 +15,9 @@ import org.folio.rest.jaxrs.model.Module;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 
@@ -31,11 +33,21 @@ public class ModuleDaoImpl implements ModuleDao {
 
   private static final String TABLE_NAME = "module";
   private static final String MODULE_SCHEMA = "pubsub_config";
+  private static final String GET_ALL_SQL = "SELECT * FROM %s.%s";
   private static final String GET_BY_NAME_SQL = "SELECT * FROM %s.%s WHERE name = ?";
   private static final String INSERT_SQL = "INSERT INTO %s.%s (id, name) VALUES (?, ?)";
+  private static final String DELETE_BY_ID_SQL = "DELETE FROM %s.%s WHERE id = ?";
 
   @Autowired
   private PostgresClientFactory pgClientFactory;
+
+  @Override
+  public Future<List<Module>> getAll() {
+    Future<ResultSet> future = Future.future();
+    String preparedQuery = format(GET_ALL_SQL, MODULE_SCHEMA, TABLE_NAME);
+    pgClientFactory.getInstance().select(preparedQuery, future.completer());
+    return future.map(this::mapResultSetToModuleList);
+  }
 
   public Future<Optional<Module>> getByName(String name, AsyncResult<SQLConnection> sqlConnection) {
     Future<ResultSet> future = Future.future();
@@ -62,6 +74,15 @@ public class ModuleDaoImpl implements ModuleDao {
     return future.map(updateResult -> module.getId());
   }
 
+  @Override
+  public Future<Boolean> delete(String id) {
+    Future<UpdateResult> future = Future.future();
+    String query = format(DELETE_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
+    JsonArray params = new JsonArray().add(id);
+    pgClientFactory.getInstance().execute(query, params, future.completer());
+    return future.map(updateResult -> updateResult.getUpdated() == 1);
+  }
+
   private Module mapRowJsonToModule(JsonObject rowAsJson) {
     Module module = new Module();
     module.setId(rowAsJson.getString("id"));
@@ -69,4 +90,9 @@ public class ModuleDaoImpl implements ModuleDao {
     return module;
   }
 
+  private List<Module> mapResultSetToModuleList(ResultSet resultSet) {
+    return resultSet.getRows().stream()
+      .map(this::mapRowJsonToModule)
+      .collect(Collectors.toList());
+  }
 }
