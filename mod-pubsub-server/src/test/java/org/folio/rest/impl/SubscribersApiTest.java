@@ -66,8 +66,8 @@ public class SubscribersApiTest extends AbstractRestTest {
     SubscriberDescriptor subscriberDescriptor2 = new SubscriberDescriptor()
       .withSubscriptionDefinitions(Collections.singletonList(new SubscriptionDefinition()
           .withEventType(createdEventDescriptor2.getEventType())
-          .withCallbackAddress("")))
-      .withModuleName("test-module");
+          .withCallbackAddress("/callback-path2")))
+      .withModuleName("test-module2");
 
     RestAssured.given()
       .spec(spec)

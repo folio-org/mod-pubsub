@@ -84,7 +84,6 @@ public class ModuleDaoImplUnitTest {
   @Test
   public void shouldReturnFutureWithEmptyListOfModuleWhenResultSetReturnsEmptyListOfRows() {
     // given
-    JsonArray rowAsJsonArray = new JsonArray().add(module.getId()).add(module.getName());
     ResultSet resultSet = new ResultSet();
     resultSet.setColumnNames(Arrays.asList("id", "name"));
     resultSet.setResults(Collections.emptyList());
@@ -97,7 +96,7 @@ public class ModuleDaoImplUnitTest {
       .when(pgClient).select(anyString(), any(Handler.class));
     // when
     moduleDao.getAll()
-      // then
+    // then
       .setHandler(ar -> {
         Assert.assertTrue(ar.succeeded());
         List<Module> moduleList = ar.result();
