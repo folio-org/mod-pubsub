@@ -102,9 +102,7 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
       .map(EventDescriptor::getEventType).collect(Collectors.toList());
     List<MessagingModule> messagingModules = createMessagingModules(eventTypes, PUBLISHER, tenantId);
 
-    return clearPreviousMessagingModulesInfo(publisherDescriptor.getModuleName(), PUBLISHER, tenantId)
-      .compose(deleted ->  messagingModuleDao.save(publisherDescriptor.getModuleName(), messagingModules))
-      .map(true);
+    return messagingModuleDao.save(publisherDescriptor.getModuleName(), messagingModules).map(true);
   }
 
   @Override
@@ -118,26 +116,8 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
       .collect(Collectors.toMap(SubscriptionDefinition::getEventType, SubscriptionDefinition::getCallbackAddress));
     messagingModules.forEach(module -> module.setSubscriberCallback(subscriberCallbacksMap.get(module.getEventType())));
 
-    return clearPreviousMessagingModulesInfo(subscriberDescriptor.getModuleName(), SUBSCRIBER, tenantId)
-      .compose(deleted ->  messagingModuleDao.save(subscriberDescriptor.getModuleName(), messagingModules))
-      .map(true);
+    return messagingModuleDao.save(subscriberDescriptor.getModuleName(), messagingModules).map(true);
   }
-
-  /**
-   * Deletes previously created messaging modules with specified moduleName and role by tenant id
-   *
-   * @param moduleName module name
-   * @param role       module role
-   * @param tenantId   tenant id
-   * @return future with true if succeeded
-   */
-  private Future<Boolean> clearPreviousMessagingModulesInfo(String moduleName, ModuleRole role, String tenantId) {
-    MessagingModuleFilter messagingModuleFilter = new MessagingModuleFilter();
-    messagingModuleFilter.byModuleRole(role);
-    messagingModuleFilter.byTenantId(tenantId);
-    return messagingModuleDao.deleteByModuleNameAndFilter(moduleName, messagingModuleFilter);
-  }
-
 
   /**
    * Creates Messaging Modules by event type and role

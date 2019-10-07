@@ -21,6 +21,7 @@ public interface MessagingModuleDao {
 
   /**
    * Saves in transaction list of {@link MessagingModule} to data base with specified moduleName
+   * Deletes previous messaging modules with same module name, event type and tenant id as in specified messagingModules
    *
    * @param moduleName  module name
    * @param messagingModules list of Messaging Module entities

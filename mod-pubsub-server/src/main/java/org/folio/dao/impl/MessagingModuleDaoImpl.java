@@ -65,10 +65,34 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
 
     return DbUtil.executeInTransaction(pgClient, connection -> moduleDao.getByName(moduleName, connection)
       .compose(moduleOptional -> moduleOptional
-        .map(module -> Future.succeededFuture(module.getId()))
+        .map(module -> {
+          ModuleRole moduleRole = messagingModules.get(0).getModuleRole();
+          String tenantId = messagingModules.get(0).getTenantId();
+          return clearPreviousMessagingModulesInfo(module.getId(), moduleRole, tenantId, connection)
+            .map(module.getId());
+        })
         .orElseGet(() -> moduleDao.save(new Module().withName(moduleName).withId(UUID.randomUUID().toString()), connection)))
       .map(moduleId -> setModuleId(moduleId, messagingModules))
       .compose(messagingModulesList -> saveMessagingModuleList(messagingModulesList, connection)));
+  }
+
+
+  /**
+   * Deletes previously created messaging modules with specified moduleId and role by tenant id
+   * in specified connection
+   *
+   * @param moduleId      module id
+   * @param role          module role
+   * @param tenantId      tenant id
+   * @param sqlConnection DB connection
+   * @return future with true if succeeded
+   */
+  private Future<Boolean> clearPreviousMessagingModulesInfo(String moduleId, ModuleRole role,
+                                                            String tenantId, AsyncResult<SQLConnection> sqlConnection) {
+    MessagingModuleFilter messagingModuleFilter = new MessagingModuleFilter();
+    messagingModuleFilter.byModuleRole(role);
+    messagingModuleFilter.byTenantId(tenantId);
+    return deleteByModuleIdAndFilter(moduleId, messagingModuleFilter, sqlConnection);
   }
 
   /**
