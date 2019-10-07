@@ -5,6 +5,9 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.ext.sql.UpdateResult;
+import io.vertx.ext.unit.Async;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.folio.dao.PostgresClientFactory;
 import org.folio.rest.jaxrs.model.MessagingModule;
 import org.folio.rest.persist.PostgresClient;
@@ -14,7 +17,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.MockitoAnnotations;
 
 import java.util.UUID;
 
@@ -25,7 +28,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(VertxUnitRunner.class)
 public class MessagingModuleDaoImplUnitTest {
 
   private MessagingModule messagingModule = new MessagingModule()
@@ -42,13 +45,15 @@ public class MessagingModuleDaoImplUnitTest {
 
   @Before
   public void setUp() {
+    MockitoAnnotations.initMocks(this);
     when(postgresClientFactory.getInstance())
       .thenReturn(pgClient);
   }
 
   @Test
-  public void shouldReturnFutureWithTrueOnSuccessfulDeletionById() {
+  public void shouldReturnFutureWithTrueOnSuccessfulDeletionById(TestContext context) {
     // given
+    Async async = context.async();
     int updatedRowsNumber = 1;
     UpdateResult updateResult = new UpdateResult();
     updateResult.setUpdated(updatedRowsNumber);
@@ -67,12 +72,14 @@ public class MessagingModuleDaoImplUnitTest {
         Assert.assertTrue(ar.succeeded());
         Assert.assertEquals(true, ar.result());
         verify(pgClient).execute(anyString(), eq(queryParams), any(Handler.class));
+        async.complete();
       });
   }
 
   @Test
-  public void shouldReturnFutureWithFalseWhenEntityWithSpecifiedIdNotFound() {
+  public void shouldReturnFutureWithFalseWhenEntityWithSpecifiedIdNotFound(TestContext context) {
     // given
+    Async async = context.async();
     int updatedRowsNumber = 0;
     UpdateResult updateResult = new UpdateResult();
     updateResult.setUpdated(updatedRowsNumber);
@@ -91,6 +98,7 @@ public class MessagingModuleDaoImplUnitTest {
         Assert.assertTrue(ar.succeeded());
         Assert.assertEquals(false, ar.result());
         verify(pgClient).execute(anyString(), eq(queryParams), any(Handler.class));
+        async.complete();
       });
   }
 }
