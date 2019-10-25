@@ -90,7 +90,10 @@ public abstract class AbstractRestTest {
 
     TenantClient tenantClient = new TenantClient(okapiUrl, TENANT_ID, TOKEN);
 
-    final DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put(HTTP_PORT, port));
+    final DeploymentOptions options = new DeploymentOptions()
+      .setConfig(new JsonObject()
+        .put(HTTP_PORT, port)
+        .put("spring.configuration", "org.folio.spring.config.TestConfig"));
     vertx.deployVerticle(RestVerticle.class.getName(), options, res -> {
       try {
         TenantAttributes tenantAttributes = null;
