@@ -22,8 +22,8 @@ import java.util.Map;
 public class ApplicationConfig {
 
   @Bean
-  public KafkaProducer kafkaProducer(@Autowired KafkaConfig config) {
-    return KafkaProducer.createShared(Vertx.vertx(), "pub-sub-producer", config.getProducerProps());
+  public KafkaProducer kafkaProducer(@Autowired Vertx vertx, @Autowired KafkaConfig config) {
+    return KafkaProducer.createShared(vertx, "pub-sub-producer", config.getProducerProps());
   }
 
   @Bean

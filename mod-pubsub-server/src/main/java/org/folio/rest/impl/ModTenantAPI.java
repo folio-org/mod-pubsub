@@ -49,14 +49,14 @@ public class ModTenantAPI extends TenantAPI {
         handler.handle(postTenantAr);
       } else {
         String tenantId = headers.get(RestVerticle.OKAPI_HEADER_TENANT);
-        // Create stub topic and stub consumer
-        createTopics(tenantId);
-        createKafkaConsumer(tenantId, context.owner());
         Vertx vertx = context.owner();
         vertx.executeBlocking(
           blockingFuture -> {
             LiquibaseUtil.initializeSchemaForTenant(vertx, tenantId);
             blockingFuture.complete();
+            // Create stub topic and stub consumer
+            createTopics(tenantId);
+            createKafkaConsumer(tenantId, context.owner());
           },
           result -> handler.handle(postTenantAr)
         );
