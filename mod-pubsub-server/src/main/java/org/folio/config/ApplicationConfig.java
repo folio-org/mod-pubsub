@@ -1,4 +1,4 @@
-package org.folio.spring.config;
+package org.folio.config;
 
 import io.vertx.core.Vertx;
 import io.vertx.kafka.client.producer.KafkaProducer;

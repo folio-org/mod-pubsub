@@ -1,4 +1,4 @@
-package org.folio.spring.config;
+package org.folio.config;
 
 import org.springframework.context.annotation.Import;
 

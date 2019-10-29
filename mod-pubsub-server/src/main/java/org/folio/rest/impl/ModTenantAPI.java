@@ -53,10 +53,10 @@ public class ModTenantAPI extends TenantAPI {
         vertx.executeBlocking(
           blockingFuture -> {
             LiquibaseUtil.initializeSchemaForTenant(vertx, tenantId);
-            blockingFuture.complete();
             // Create stub topic and stub consumer
             createTopics(tenantId);
             createKafkaConsumer(tenantId, context.owner());
+            blockingFuture.complete();
           },
           result -> handler.handle(postTenantAr)
         );

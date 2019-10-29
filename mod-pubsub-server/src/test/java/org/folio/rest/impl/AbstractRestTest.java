@@ -109,7 +109,7 @@ public abstract class AbstractRestTest {
     final DeploymentOptions options = new DeploymentOptions()
       .setConfig(new JsonObject()
         .put(HTTP_PORT, port)
-        .put("spring.configuration", "org.folio.spring.config.TestConfig"));
+        .put("spring.configuration", "org.folio.config.TestConfig"));
     vertx.deployVerticle(RestVerticle.class.getName(), options, res -> {
       try {
         TenantAttributes tenantAttributes = null;
