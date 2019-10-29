@@ -55,7 +55,7 @@ public class ModTenantAPI extends TenantAPI {
             LiquibaseUtil.initializeSchemaForTenant(vertx, tenantId);
             // Create stub topic and stub consumer
             createTopics(tenantId);
-            createKafkaConsumer(tenantId, context.owner());
+            createKafkaConsumer(tenantId, vertx);
             blockingFuture.complete();
           },
           result -> handler.handle(postTenantAr)
