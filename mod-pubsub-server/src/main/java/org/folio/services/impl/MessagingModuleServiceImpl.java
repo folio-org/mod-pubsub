@@ -35,6 +35,8 @@ import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
 @Component
 public class MessagingModuleServiceImpl implements MessagingModuleService {
 
+  private static final int NUMBER_OF_PARTITIONS = 1;
+  private static final short REPLICATION_FACTOR = 1;
   private MessagingModuleDao messagingModuleDao;
   private EventDescriptorDao eventDescriptorDao;
   private KafkaTopicService kafkaTopicService;
@@ -107,7 +109,7 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
     List<MessagingModule> messagingModules = createMessagingModules(eventTypes, PUBLISHER, tenantId);
 
     return messagingModuleDao.save(publisherDescriptor.getModuleName(), messagingModules)
-      .compose(ar -> kafkaTopicService.createTopics(eventTypes, tenantId, 1, 1));
+      .compose(ar -> kafkaTopicService.createTopics(eventTypes, tenantId, NUMBER_OF_PARTITIONS, REPLICATION_FACTOR));
   }
 
   @Override
@@ -122,7 +124,7 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
     messagingModules.forEach(module -> module.setSubscriberCallback(subscriberCallbacksMap.get(module.getEventType())));
 
     return messagingModuleDao.save(subscriberDescriptor.getModuleName(), messagingModules)
-      .compose(ar -> kafkaTopicService.createTopics(eventTypes, tenantId, 1, 1));
+      .compose(ar -> kafkaTopicService.createTopics(eventTypes, tenantId, NUMBER_OF_PARTITIONS, REPLICATION_FACTOR));
   }
 
   /**
