@@ -1,7 +1,7 @@
 package org.folio.dao;
 
 import io.vertx.core.Future;
-import org.folio.dao.impl.MessagingModuleFilter;
+import org.folio.rest.util.MessagingModuleFilter;
 import org.folio.rest.jaxrs.model.MessagingModule;
 
 import java.util.List;
@@ -33,16 +33,15 @@ public interface MessagingModuleDao {
    * Deletes {@link MessagingModule} by id
    *
    * @param id messagingModule id
-   * @return future with boolean
+   * @return future with true if succeeded
    */
   Future<Boolean> delete(String id);
 
   /**
-   * Deletes {@link MessagingModule} by module name and filter
+   * Deletes {@link MessagingModule} matching filter criteria
    *
-   * @param moduleName module name
    * @param filter messagingModule filter
-   * @return future with boolean
+   * @return future with true if succeeded
    */
-  Future<Boolean> deleteByModuleNameAndFilter(String moduleName, MessagingModuleFilter filter);
+  Future<Boolean> delete(MessagingModuleFilter filter);
 }

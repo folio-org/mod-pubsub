@@ -42,15 +42,6 @@
           "permissionsRequired": [
             "pubsub.event-types.put"
           ]
-        },
-        {
-          "methods": [
-            "DELETE"
-          ],
-          "pathPattern": "/pubsub/event-types/{eventTypeName}",
-          "permissionsRequired": [
-            "pubsub.event-types.delete"
-          ]
         }
       ]
     },
