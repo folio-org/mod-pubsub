@@ -23,11 +23,10 @@ public interface MessagingModuleDao {
    * Saves in transaction list of {@link MessagingModule} to data base with specified moduleName
    * Deletes previous messaging modules with same module name, event type and tenant id as in specified messagingModules
    *
-   * @param moduleName  module name
    * @param messagingModules list of Messaging Module entities
    * @return future with list of created Messaging Module entities
    */
-  Future<List<MessagingModule>> save(String moduleName, List<MessagingModule> messagingModules);
+  Future<List<MessagingModule>> save(List<MessagingModule> messagingModules);
 
   /**
    * Deletes {@link MessagingModule} by id

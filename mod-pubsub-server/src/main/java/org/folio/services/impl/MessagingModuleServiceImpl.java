@@ -93,7 +93,7 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
       .map(EventDescriptor::getEventType).collect(Collectors.toList());
     List<MessagingModule> messagingModules = createMessagingModules(publisherDescriptor.getModuleId(), eventTypes, PUBLISHER, tenantId);
 
-    return messagingModuleDao.save(publisherDescriptor.getModuleId(), messagingModules)
+    return messagingModuleDao.save(messagingModules)
       .compose(ar -> kafkaTopicService.createTopics(eventTypes, tenantId, NUMBER_OF_PARTITIONS, REPLICATION_FACTOR));
   }
 
@@ -108,7 +108,7 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
       .collect(Collectors.toMap(SubscriptionDefinition::getEventType, SubscriptionDefinition::getCallbackAddress));
     messagingModules.forEach(module -> module.setSubscriberCallback(subscriberCallbacksMap.get(module.getEventType())));
 
-    return messagingModuleDao.save(subscriberDescriptor.getModuleId(), messagingModules)
+    return messagingModuleDao.save(messagingModules)
       .compose(ar -> kafkaTopicService.createTopics(eventTypes, tenantId, NUMBER_OF_PARTITIONS, REPLICATION_FACTOR));
   }
 

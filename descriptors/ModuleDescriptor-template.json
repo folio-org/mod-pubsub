@@ -187,11 +187,6 @@
       "description": "Put Event Descriptor"
     },
     {
-      "permissionName": "pubsub.event-types.delete",
-      "displayName": "PubSub - delete Event Type",
-      "description": "Delete Event Descriptor"
-    },
-    {
       "permissionName": "pubsub.publishers.post",
       "displayName": "PubSub - declare publisher",
       "description": "Post Publisher Descriptor"

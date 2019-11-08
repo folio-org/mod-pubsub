@@ -56,12 +56,14 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
   }
 
   @Override
-  public Future<List<MessagingModule>> save(String moduleName, List<MessagingModule> messagingModules) {
+  public Future<List<MessagingModule>> save(List<MessagingModule> messagingModules) {
     PostgresClient pgClient = pgClientFactory.getInstance();
     return DbUtil.executeInTransaction(pgClient, connection ->
-      delete(new MessagingModuleFilter().withModuleId(moduleName).withTenantId(messagingModules.get(0).getTenantId()), connection)
+      delete(new MessagingModuleFilter()
+        .withModuleId(messagingModules.get(0).getModuleId())
+        .withModuleRole(messagingModules.get(0).getModuleRole())
+        .withTenantId(messagingModules.get(0).getTenantId()), connection)
         .compose(ar -> saveMessagingModuleList(messagingModules, connection)));
-
   }
 
   /**

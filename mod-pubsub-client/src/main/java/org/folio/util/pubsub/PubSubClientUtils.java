@@ -54,7 +54,7 @@ public class PubSubClientUtils {
             .withModuleId(PomReader.INSTANCE.getModuleName() + "-" + PomReader.INSTANCE.getVersion())
             .withEventDescriptors(messagingDescriptor.getPublications()))
         .withSubscriberDescriptor(new SubscriberDescriptor()
-          .withModuleId(PomReader.INSTANCE.getModuleName()+ "-" + PomReader.INSTANCE.getVersion())
+          .withModuleId(PomReader.INSTANCE.getModuleName() + "-" + PomReader.INSTANCE.getVersion())
           .withSubscriptionDefinitions(messagingDescriptor.getSubscriptions()));
     } catch (JsonParseException | JsonMappingException e) {
       String errorMessage = "Can not read messaging descriptor, cause: " + e.getMessage();
