@@ -27,9 +27,9 @@ import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.PUBLISHER;
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
 
 @Component
-public class PublishingServiceImpl implements PublishingService {
+public class KafkaPublishingServiceImpl implements PublishingService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(PublishingServiceImpl.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(KafkaPublishingServiceImpl.class);
 
   @Autowired
   private KafkaProducer<String, String> producer;
