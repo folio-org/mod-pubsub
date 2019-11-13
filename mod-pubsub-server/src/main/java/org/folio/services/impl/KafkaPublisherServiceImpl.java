@@ -13,7 +13,7 @@ import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.util.MessagingModuleFilter;
 import org.folio.services.AuditMessageService;
 import org.folio.services.MessagingModuleService;
-import org.folio.services.PublishingService;
+import org.folio.services.PublisherService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -27,16 +27,21 @@ import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.PUBLISHER;
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
 
 @Component
-public class KafkaPublishingServiceImpl implements PublishingService {
+public class KafkaPublisherServiceImpl implements PublisherService {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(KafkaPublishingServiceImpl.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(KafkaPublisherServiceImpl.class);
 
-  @Autowired
   private KafkaProducer<String, String> producer;
-  @Autowired
-  private AuditMessageService auditMessageService;
-  @Autowired
   private MessagingModuleService messagingModuleService;
+  private AuditMessageService auditMessageService;
+
+  public KafkaPublisherServiceImpl(@Autowired KafkaProducer<String, String> producer,
+                                   @Autowired MessagingModuleService messagingModuleService,
+                                   @Autowired AuditMessageService auditMessageService) {
+    this.producer = producer;
+    this.messagingModuleService = messagingModuleService;
+    this.auditMessageService = auditMessageService;
+  }
 
   @Override
   public Future<Boolean> publishEvent(Event event, String tenantId) {
@@ -67,7 +72,7 @@ public class KafkaPublishingServiceImpl implements PublishingService {
           LOGGER.error(errorMessage);
           saveAuditMessage(event, tenantId, AuditMessage.State.REJECTED);
           return Future.failedFuture(new BadRequestException(errorMessage));
-        } else if (!messagingModuleCollection.getMessagingModules().get(0).getActivated()) {
+        } else if (Boolean.FALSE.equals(messagingModuleCollection.getMessagingModules().get(0).getActivated())) {
           String error = format("Event type %s is not activated for tenant %s", event.getEventType(), tenantId);
           LOGGER.error(error);
           saveAuditMessage(event, tenantId, AuditMessage.State.REJECTED);
