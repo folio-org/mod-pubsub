@@ -18,6 +18,7 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.util.AuditMessageFilter;
 import org.folio.rest.util.ExceptionHelper;
 import org.folio.rest.util.MessagingModuleFilter;
+import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.services.AuditMessageService;
 import org.folio.services.EventDescriptorService;
 import org.folio.services.MessagingModuleService;
@@ -226,10 +227,11 @@ public class PubSubImpl implements Pubsub {
   @Override
   public void postPubsubEventTypesDeclareSubscriber(SubscriberDescriptor entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
+      OkapiConnectionParams params = new OkapiConnectionParams(okapiHeaders);
       messagingModuleService.validateSubscriberDescriptor(entity)
         .compose(errors -> errors.getTotalRecords() > 0
           ? Future.succeededFuture(PostPubsubEventTypesDeclareSubscriberResponse.respond400WithApplicationJson(errors))
-          : messagingModuleService.saveSubscriber(entity, tenantId, okapiHeaders)
+          : messagingModuleService.saveSubscriber(entity, params)
           .map(v -> PostPubsubEventTypesDeclareSubscriberResponse.respond201()))
         .map(Response.class::cast)
         .otherwise(ExceptionHelper::mapExceptionToResponse)

@@ -15,9 +15,10 @@ import org.folio.rest.jaxrs.model.MessagingModuleCollection;
 import org.folio.rest.jaxrs.model.PublisherDescriptor;
 import org.folio.rest.jaxrs.model.SubscriberDescriptor;
 import org.folio.rest.jaxrs.model.SubscriptionDefinition;
+import org.folio.rest.util.OkapiConnectionParams;
+import org.folio.services.MessagingModuleService;
 import org.folio.services.ConsumerService;
 import org.folio.services.KafkaTopicService;
-import org.folio.services.MessagingModuleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -30,9 +31,9 @@ import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.PUBLISHER;
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
 
 /**
- * Implementation for Messaging Module service
+ * Implementation for Messaging Module services
  *
- * @see org.folio.services.MessagingModuleService
+ * @see MessagingModuleService
  */
 @Component
 public class MessagingModuleServiceImpl implements MessagingModuleService {
@@ -103,19 +104,19 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
   }
 
   @Override
-  public Future<Boolean> saveSubscriber(SubscriberDescriptor subscriberDescriptor, String tenantId, Map<String, String> okapiHeaders) {
+  public Future<Boolean> saveSubscriber(SubscriberDescriptor subscriberDescriptor, OkapiConnectionParams params) {
     List<String> eventTypes = subscriberDescriptor.getSubscriptionDefinitions().stream()
       .map(SubscriptionDefinition::getEventType)
       .collect(Collectors.toList());
-    List<MessagingModule> messagingModules = createMessagingModules(subscriberDescriptor.getModuleId(), eventTypes, SUBSCRIBER, tenantId);
+    List<MessagingModule> messagingModules = createMessagingModules(subscriberDescriptor.getModuleId(), eventTypes, SUBSCRIBER, params.getTenantId());
 
     Map<String, String> subscriberCallbacksMap = subscriberDescriptor.getSubscriptionDefinitions().stream()
       .collect(Collectors.toMap(SubscriptionDefinition::getEventType, SubscriptionDefinition::getCallbackAddress));
     messagingModules.forEach(module -> module.setSubscriberCallback(subscriberCallbacksMap.get(module.getEventType())));
 
     return messagingModuleDao.save(messagingModules)
-      .compose(ar -> kafkaTopicService.createTopics(eventTypes, tenantId, NUMBER_OF_PARTITIONS, REPLICATION_FACTOR))
-      .compose(ar -> consumerService.subscribe(subscriberDescriptor.getModuleId(), eventTypes, tenantId, okapiHeaders));
+      .compose(ar -> kafkaTopicService.createTopics(eventTypes, params.getTenantId(), NUMBER_OF_PARTITIONS, REPLICATION_FACTOR))
+      .compose(ar -> consumerService.subscribe(subscriberDescriptor.getModuleId(), eventTypes, params));
   }
 
   @Override

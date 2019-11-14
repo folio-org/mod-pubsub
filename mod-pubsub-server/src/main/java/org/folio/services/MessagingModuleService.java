@@ -6,11 +6,12 @@ import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.MessagingModuleCollection;
 import org.folio.rest.jaxrs.model.PublisherDescriptor;
 import org.folio.rest.jaxrs.model.SubscriberDescriptor;
+import org.folio.rest.util.OkapiConnectionParams;
 
 import java.util.Map;
 
 /**
- * Messaging Module service
+ * Messaging Module services
  */
 public interface MessagingModuleService {
 
@@ -47,11 +48,10 @@ public interface MessagingModuleService {
    * before creating a new subscriber
    *
    * @param subscriberDescriptor subscriber descriptor
-   * @param tenantId             tenant id
-   * @param okapiHeaders         okapi headers
+   * @param params               Okapi connection params
    * @return future with boolean
    */
-  Future<Boolean> saveSubscriber(SubscriberDescriptor subscriberDescriptor, String tenantId, Map<String, String> okapiHeaders);
+  Future<Boolean> saveSubscriber(SubscriberDescriptor subscriberDescriptor, OkapiConnectionParams params);
 
   /**
    * Deletes module matching filter criteria

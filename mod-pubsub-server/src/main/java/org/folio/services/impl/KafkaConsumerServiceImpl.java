@@ -18,6 +18,7 @@ import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.folio.HttpStatus;
 import org.folio.dao.MessagingModuleDao;
 import org.folio.kafka.KafkaConfig;
 import org.folio.kafka.PubSubConfig;
@@ -25,6 +26,7 @@ import org.folio.rest.jaxrs.model.AuditMessage;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.MessagingModule;
 import org.folio.rest.util.MessagingModuleFilter;
+import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.services.AuditMessageService;
 import org.folio.services.ConsumerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,13 +65,13 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
   }
 
   @Override
-  public Future<Boolean> subscribe(String moduleId, List<String> eventTypes, String tenantId, Map<String, String> okapiHeaders) {
+  public Future<Boolean> subscribe(String moduleId, List<String> eventTypes, OkapiConnectionParams params) {
     Future<Boolean> future = Future.future();
     Set<String> topics = eventTypes.stream()
-      .map(eventType -> new PubSubConfig(tenantId, eventType).getTopicName())
+      .map(eventType -> new PubSubConfig(params.getTenantId(), eventType).getTopicName())
       .collect(Collectors.toSet());
     Map<String, String> consumerProps = kafkaConfig.getConsumerProps();
-    consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, tenantId + "." + moduleId);
+    consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, params.getTenantId() + "." + moduleId);
     KafkaConsumer.<String, String>create(vertx, consumerProps)
       .subscribe(topics, ar -> {
         if (ar.succeeded()) {
@@ -79,27 +81,27 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
           LOGGER.error("Could not subscribe to some of the topics [{}]", ar.cause(), StringUtils.join(topics, ","));
           future.fail(ar.cause());
         }
-      }).handler(getEventReceivedHandler(tenantId, okapiHeaders));
+      }).handler(getEventReceivedHandler(params));
     return future;
   }
 
-  private Handler<KafkaConsumerRecord<String, String>> getEventReceivedHandler(String tenantId, Map<String, String> okapiHeaders) {
+  private Handler<KafkaConsumerRecord<String, String>> getEventReceivedHandler(OkapiConnectionParams params) {
     return record -> {
       try {
         String value = record.value();
         LOGGER.info("Received event {}", value);
         Event event = new JsonObject(value).mapTo(Event.class);
-        saveAuditMessage(event, tenantId, AuditMessage.State.RECEIVED);
-        deliverEvent(event, tenantId, okapiHeaders);
+        saveAuditMessage(event, params.getTenantId(), AuditMessage.State.RECEIVED);
+        deliverEvent(event, params);
       } catch (Exception e) {
         LOGGER.error("Error reading event value", e);
       }
     };
   }
 
-  private void deliverEvent(Event event, String tenantId, Map<String, String> okapiHeaders) {
-    messagingModuleDao.get(new MessagingModuleFilter()
-      .withTenantId(tenantId)
+  protected Future<Void> deliverEvent(Event event, OkapiConnectionParams params) {
+    return messagingModuleDao.get(new MessagingModuleFilter()
+      .withTenantId(params.getTenantId())
       .withModuleRole(SUBSCRIBER)
       .withEventType(event.getEventType()))
       .compose(messagingModuleList -> {
@@ -107,9 +109,9 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
           String errorMessage = format("There is no SUBSCRIBERS registered for event type %s. Event %s will not be delivered", event.getEventType(), event.getId());
           LOGGER.error(errorMessage);
         } else {
-          messagingModuleList
-            .forEach(subscriber -> doRequest(event, subscriber.getSubscriberCallback(), okapiHeaders)
-              .setHandler(getEventDeliveredHandler(event, tenantId, subscriber)));
+          messagingModuleList.parallelStream()
+            .forEach(subscriber -> doRequest(event, subscriber.getSubscriberCallback(), params)
+              .setHandler(getEventDeliveredHandler(event, params.getTenantId(), subscriber)));
         }
         return Future.succeededFuture();
       });
@@ -120,7 +122,9 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
       if (ar.failed()) {
         LOGGER.error("Event {} was not delivered to {}", ar.cause(), event.getId(), subscriber.getSubscriberCallback());
         saveAuditMessage(event, tenantId, AuditMessage.State.REJECTED);
-      } else if (ar.result().statusCode() != 200 && ar.result().statusCode() != 201 && ar.result().statusCode() != 204) {
+      } else if (ar.result().statusCode() != HttpStatus.HTTP_OK.toInt()
+        && ar.result().statusCode() != HttpStatus.HTTP_CREATED.toInt()
+        && ar.result().statusCode() != HttpStatus.HTTP_NO_CONTENT.toInt()) {
         LOGGER.error("Error delivering event {} to {}, response status code is {}, {}",
           event.getId(), subscriber.getSubscriberCallback(), ar.result().statusCode(), ar.result().statusMessage());
         saveAuditMessage(event, tenantId, AuditMessage.State.REJECTED);
@@ -131,14 +135,13 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
     };
   }
 
-  private Future<HttpClientResponse> doRequest(Event event, String callbackPath, Map<String, String> okapiHeaders) {
+  private Future<HttpClientResponse> doRequest(Event event, String callbackPath, OkapiConnectionParams params) {
     Future<HttpClientResponse> future = Future.future();
     try {
-      String okapiUrl = okapiHeaders.getOrDefault("x-okapi-url", "localhost");
-      HttpClientRequest request = getHttpClient().requestAbs(HttpMethod.POST, okapiUrl + callbackPath);
+      HttpClientRequest request = getHttpClient().requestAbs(HttpMethod.POST, params.getOkapiUrl() + callbackPath);
 
       CaseInsensitiveHeaders headers = new CaseInsensitiveHeaders();
-      headers.addAll(okapiHeaders);
+      headers.addAll(params.getHeaders());
       headers.add("Content-type", "application/json").add("Accept", "application/json, text/plain");
       headers.entries().forEach(header -> request.putHeader(header.getKey(), header.getValue()));
 
