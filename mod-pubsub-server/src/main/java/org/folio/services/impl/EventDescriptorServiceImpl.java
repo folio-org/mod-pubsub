@@ -81,16 +81,16 @@ public class EventDescriptorServiceImpl implements EventDescriptorService {
     return eventDescriptorDao.getByEventType(eventType)
       .compose(eventDescriptorOptional -> eventDescriptorOptional
         .map(eventDescriptor -> messagingModuleService.get(new MessagingModuleFilter().withEventType(eventType))
-            .compose(messagingModuleCollection -> {
-              if(messagingModuleCollection.getTotalRecords() == 0) {
-                return eventDescriptorDao.delete(eventType);
-              } else {
-                List<String> modules = messagingModuleCollection.getMessagingModules().stream().map(MessagingModule::getModuleId).collect(Collectors.toList());
-                return Future.failedFuture(new BadRequestException(
-                  format("Event type %s cannot be deleted. Modules [%s] are registered as publishers or subscribers for this event type.", eventType,
-                    StringUtils.join(modules, ","))));
-              }
-            })
+          .compose(messagingModuleCollection -> {
+            if (messagingModuleCollection.getTotalRecords() == 0) {
+              return eventDescriptorDao.delete(eventType);
+            } else {
+              List<String> modules = messagingModuleCollection.getMessagingModules().stream().map(MessagingModule::getModuleId).collect(Collectors.toList());
+              return Future.failedFuture(new BadRequestException(
+                format("Event type %s cannot be deleted. Modules [%s] are registered as publishers or subscribers for this event type.", eventType,
+                  StringUtils.join(modules, ","))));
+            }
+          })
         )
         .orElse(Future.failedFuture(new NotFoundException(format("EventDescriptor with event type name '%s' was not found", eventType)))));
   }
