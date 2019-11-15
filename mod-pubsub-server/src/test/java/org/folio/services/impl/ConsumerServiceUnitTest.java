@@ -169,6 +169,9 @@ public class ConsumerServiceUnitTest {
   public void shouldSendRequestToFoundSubscribers(TestContext context) {
     Async async = context.async();
 
+    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS)
+      .willReturn(WireMock.noContent()));
+
     Event event = new Event()
       .withId(UUID.randomUUID().toString())
       .withEventType(EVENT_TYPE)
@@ -177,7 +180,11 @@ public class ConsumerServiceUnitTest {
         .withEventTTL(30)
         .withPublishedBy("mod-very-important-1.0.0"));
 
-    OkapiConnectionParams params = new OkapiConnectionParams(headers);
+    OkapiConnectionParams params = new OkapiConnectionParams();
+    params.setHeaders(headers);
+    params.setOkapiUrl(headers.getOrDefault("x-okapi-url", "localhost"));
+    params.setTenantId(headers.getOrDefault("x-okapi-tenant", TENANT));
+    params.setToken(headers.getOrDefault("x-okapi-token", TOKEN));
 
     List<MessagingModule> messagingModuleList = new ArrayList<>();
     messagingModuleList.add(new MessagingModule()

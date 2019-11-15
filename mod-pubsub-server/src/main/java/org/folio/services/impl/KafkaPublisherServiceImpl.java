@@ -6,6 +6,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.impl.KafkaProducerRecordImpl;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.kafka.PubSubConfig;
 import org.folio.rest.jaxrs.model.AuditMessage;
 import org.folio.rest.jaxrs.model.AuditMessagePayload;
@@ -129,7 +130,7 @@ public class KafkaPublisherServiceImpl implements PublisherService {
   }
 
   private Future<Boolean> saveAuditMessagePayload(Event event, String tenantId) {
-    if (event.getEventPayload() != null) {
+    if (StringUtils.isNotEmpty(event.getEventPayload())) {
       return auditMessageService
         .saveAuditMessagePayload(new AuditMessagePayload()
           .withEventId(event.getId())

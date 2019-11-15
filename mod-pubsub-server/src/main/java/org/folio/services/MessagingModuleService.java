@@ -1,14 +1,12 @@
 package org.folio.services;
 
 import io.vertx.core.Future;
-import org.folio.rest.util.MessagingModuleFilter;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.MessagingModuleCollection;
 import org.folio.rest.jaxrs.model.PublisherDescriptor;
 import org.folio.rest.jaxrs.model.SubscriberDescriptor;
+import org.folio.rest.util.MessagingModuleFilter;
 import org.folio.rest.util.OkapiConnectionParams;
-
-import java.util.Map;
 
 /**
  * Messaging Module services
