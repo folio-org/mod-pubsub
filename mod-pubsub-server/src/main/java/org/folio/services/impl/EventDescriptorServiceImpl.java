@@ -87,7 +87,7 @@ public class EventDescriptorServiceImpl implements EventDescriptorService {
               } else {
                 List<String> modules = messagingModuleCollection.getMessagingModules().stream().map(MessagingModule::getModuleId).collect(Collectors.toList());
                 return Future.failedFuture(new BadRequestException(
-                  format("Event type %s cannot be deleted. Modules [%s] are registered as publishers of subscribers for this event type.", eventType,
+                  format("Event type %s cannot be deleted. Modules [%s] are registered as publishers or subscribers for this event type.", eventType,
                     StringUtils.join(modules, ","))));
               }
             })
