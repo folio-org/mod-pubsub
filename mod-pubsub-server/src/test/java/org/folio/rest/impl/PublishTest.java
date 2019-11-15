@@ -19,6 +19,7 @@ import java.util.UUID;
 
 import static java.lang.String.format;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
 
 @RunWith(VertxUnitRunner.class)
@@ -118,7 +119,7 @@ public class PublishTest extends AbstractRestTest {
       .get(HISTORY_PATH + query)
       .then()
       .statusCode(HttpStatus.SC_OK)
-      .body("auditMessages*.state", containsInAnyOrder("CREATED", "PUBLISHED"));
+      .body("auditMessages*.state", hasItems("CREATED", "PUBLISHED"));
   }
 
   @Test
@@ -146,9 +147,7 @@ public class PublishTest extends AbstractRestTest {
       .get(HISTORY_PATH + query)
       .then()
       .statusCode(HttpStatus.SC_OK)
-      .body("totalRecords", is(2))
-      .body("auditMessages.size()", is(2))
-      .body("auditMessages*.state", containsInAnyOrder("CREATED", "PUBLISHED"));
+      .body("auditMessages*.state", hasItems("CREATED", "PUBLISHED"));
 
     String eventId = EVENT.getString("id");
     RestAssured.given()
