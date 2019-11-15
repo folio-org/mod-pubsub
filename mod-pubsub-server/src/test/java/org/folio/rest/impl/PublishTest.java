@@ -118,8 +118,6 @@ public class PublishTest extends AbstractRestTest {
       .get(HISTORY_PATH + query)
       .then()
       .statusCode(HttpStatus.SC_OK)
-      .body("totalRecords", is(2))
-      .body("auditMessages.size()", is(2))
       .body("auditMessages*.state", containsInAnyOrder("CREATED", "PUBLISHED"));
   }
 
