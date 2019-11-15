@@ -135,7 +135,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
     };
   }
 
-  private Future<HttpClientResponse> doRequest(Event event, String callbackPath, OkapiConnectionParams params) {
+  protected Future<HttpClientResponse> doRequest(Event event, String callbackPath, OkapiConnectionParams params) {
     Future<HttpClientResponse> future = Future.future();
     try {
       HttpClientRequest request = getHttpClient().requestAbs(HttpMethod.POST, params.getOkapiUrl() + callbackPath);
