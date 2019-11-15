@@ -3,6 +3,10 @@ package org.folio.rest.util;
 import java.util.Map;
 
 public final class OkapiConnectionParams {
+
+  private static final String OKAPI_URL_HEADER = "x-okapi-url";
+  private static final String OKAPI_TENANT_HEADER = "x-okapi-tenant";
+  private static final String OKAPI_TOKEN_HEADER = "x-okapi-token";
   private String okapiUrl;
   private String tenantId;
   private String token;
@@ -12,9 +16,9 @@ public final class OkapiConnectionParams {
   }
 
   public OkapiConnectionParams(Map<String, String> okapiHeaders) {
-    this.okapiUrl = okapiHeaders.getOrDefault("x-okapi-url", "localhost");
-    this.tenantId = okapiHeaders.getOrDefault("x-okapi-tenant", "");
-    this.token = okapiHeaders.getOrDefault("x-okapi-token", "dummy");
+    this.okapiUrl = okapiHeaders.getOrDefault(OKAPI_URL_HEADER, "localhost");
+    this.tenantId = okapiHeaders.getOrDefault(OKAPI_TENANT_HEADER, "");
+    this.token = okapiHeaders.getOrDefault(OKAPI_TOKEN_HEADER, "dummy");
     this.headers = okapiHeaders;
   }
 

@@ -9,7 +9,7 @@ import org.folio.rest.util.MessagingModuleFilter;
 import org.folio.rest.util.OkapiConnectionParams;
 
 /**
- * Messaging Module services
+ * Messaging Module service
  */
 public interface MessagingModuleService {
 

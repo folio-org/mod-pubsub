@@ -31,7 +31,7 @@ import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.PUBLISHER;
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
 
 /**
- * Implementation for Messaging Module services
+ * Implementation for Messaging Module service
  *
  * @see MessagingModuleService
  */
