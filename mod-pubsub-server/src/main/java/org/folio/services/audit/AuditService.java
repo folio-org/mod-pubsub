@@ -10,7 +10,7 @@ import org.folio.rest.jaxrs.model.AuditMessagePayload;
  * Audit Service Interface
  */
 @ProxyGen
-public interface AuditService {
+public interface AuditService { //NOSONAR
 
   String AUDIT_SERVICE_ADDRESS = "audit-service.queue";  //NOSONAR
 

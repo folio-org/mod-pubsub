@@ -119,12 +119,12 @@ public class KafkaPublisherServiceImpl implements PublisherService {
     producer.write(new KafkaProducerRecordImpl<>(config.getTopicName(), JsonObject.mapFrom(event).encode()), done -> {
       if (done.succeeded()) {
         LOGGER.info("Sent event to topic {}", config.getTopicName());
-        future.complete(true);
         saveAuditMessage(event, tenantId, AuditMessage.State.PUBLISHED);
+        future.complete(true);
       } else {
         LOGGER.error("Event was not sent", done.cause());
-        future.fail(done.cause());
         saveAuditMessage(event, tenantId, AuditMessage.State.REJECTED);
+        future.fail(done.cause());
       }
     });
     return future;

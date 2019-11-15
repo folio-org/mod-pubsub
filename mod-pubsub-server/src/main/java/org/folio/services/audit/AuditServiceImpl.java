@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class AuditServiceImpl implements AuditService {
 
   @Autowired
-  AuditMessageDao auditMessageDao;
+  private AuditMessageDao auditMessageDao;
 
   public AuditServiceImpl() {
     SpringContextUtil.autowireDependencies(this, Vertx.currentContext());
