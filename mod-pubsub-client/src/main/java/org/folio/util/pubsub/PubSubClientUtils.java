@@ -7,16 +7,23 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.folio.HttpStatus;
 import org.folio.rest.client.PubsubClient;
+import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventDescriptor;
 import org.folio.rest.jaxrs.model.MessagingDescriptor;
 import org.folio.rest.jaxrs.model.PublisherDescriptor;
 import org.folio.rest.jaxrs.model.SubscriberDescriptor;
 import org.folio.rest.tools.PomReader;
+import org.folio.util.pubsub.exceptions.EventSendingException;
+import org.folio.util.pubsub.exceptions.MessagingDescriptorNotFoundException;
+import org.folio.util.pubsub.exceptions.ModuleRegistrationException;
+import org.folio.util.pubsub.support.DescriptorHolder;
+import org.folio.util.pubsub.support.OkapiConnectionParams;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -36,20 +43,41 @@ public class PubSubClientUtils {
   private PubSubClientUtils() {
   }
 
-  public static CompletableFuture<Void> registerModule(String okapiUrl, String tenantId, String token) {
-    CompletableFuture<Void> result = new CompletableFuture<>();
+  public static CompletableFuture<Boolean> sendEventMessage(Event eventMessage, OkapiConnectionParams params) {
+    PubsubClient client = new PubsubClient(params.getOkapiUrl(), params.getTenantId(), params.getToken());
+    CompletableFuture<Boolean> result = new CompletableFuture<>();
     try {
-      PubsubClient client = new PubsubClient(okapiUrl, tenantId, token);
+      client.postPubsubPublish(eventMessage, ar -> {
+        if (ar.statusCode() == HttpStatus.HTTP_NO_CONTENT.toInt()) {
+          result.complete(true);
+        } else {
+          String message = format("Error during publishing Event Message in PubSub. Status code: %s . Status message: %s ", ar.statusCode(), ar.statusMessage());
+          LOGGER.error(message);
+          result.completeExceptionally(new EventSendingException(message));
+        }
+      });
+    } catch (Exception e) {
+      result.completeExceptionally(e);
+      return result;
+    }
+    return result;
+  }
+
+
+  public static CompletableFuture<Boolean> registerModule(OkapiConnectionParams params) {
+    CompletableFuture<Boolean> result = CompletableFuture.completedFuture(false);
+    try {
+      PubsubClient client = new PubsubClient(params.getOkapiUrl(), params.getTenantId(), params.getToken());
       LOGGER.info("Reading MessagingDescriptor.json");
       DescriptorHolder descriptorHolder = readMessagingDescriptor();
       if (descriptorHolder.getPublisherDescriptor() != null) {
         LOGGER.info("Registering events for publishers");
         List<EventDescriptor> eventDescriptors = descriptorHolder.getPublisherDescriptor().getEventDescriptors();
-        result.thenCompose(ar -> registerEvents(client, eventDescriptors))
+        result = result.thenCompose(ar -> registerEvents(client, eventDescriptors))
           .thenCompose(ar -> registerPublishers(client, descriptorHolder.getPublisherDescriptor()));
       }
       if (descriptorHolder.getSubscriberDescriptor() != null) {
-        result.thenCompose(ar -> registerSubscribers(client, descriptorHolder.getSubscriberDescriptor()));
+        result = result.thenCompose(ar -> registerSubscribers(client, descriptorHolder.getSubscriberDescriptor()));
       }
       return result;
     } catch (Exception e) {
@@ -58,27 +86,29 @@ public class PubSubClientUtils {
     }
   }
 
-  private static CompletableFuture<Boolean> registerEvents(PubsubClient client, List<EventDescriptor> events) {
-    CompletableFuture<Boolean> eventsResult = new CompletableFuture<>();
+  private static CompletableFuture<Void> registerEvents(PubsubClient client, List<EventDescriptor> events) {
+    List<CompletableFuture<Boolean>> list = new ArrayList<>();
     try {
       for (EventDescriptor eventDescriptor : events) {
         client.postPubsubEventTypes(null, eventDescriptor, ar -> {
           if (ar.statusCode() == HttpStatus.HTTP_CREATED.toInt()) {
-            eventsResult.thenCompose(s -> CompletableFuture.completedFuture(true));
+            list.add(CompletableFuture.completedFuture(true));
           } else {
             CompletableFuture<Boolean> future = new CompletableFuture<>();
             String message = format("EventDescriptor was not registered for eventType: %s . Status code: %s", eventDescriptor.getEventType(), ar.statusCode());
             LOGGER.error(message);
             future.completeExceptionally(new ModuleRegistrationException(message));
-            eventsResult.thenCompose(s -> future);
+            list.add(future);
           }
         });
       }
     } catch (Exception e) {
+      CompletableFuture<Void> future = new CompletableFuture<>();
       LOGGER.error("Module's events were not registered in PubSub.", e);
-      eventsResult.completeExceptionally(e);
+      future.completeExceptionally(e);
+      return future;
     }
-    return eventsResult;
+    return CompletableFuture.allOf(list.toArray(new CompletableFuture[list.size()]));
   }
 
   private static CompletableFuture<Boolean> registerSubscribers(PubsubClient client, SubscriberDescriptor descriptor) {

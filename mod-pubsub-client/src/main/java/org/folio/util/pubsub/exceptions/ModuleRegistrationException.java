@@ -1,4 +1,4 @@
-package org.folio.util.pubsub;
+package org.folio.util.pubsub.exceptions;
 
 /**
  * Signals that some errors were occurred during module registration in PubSub.
