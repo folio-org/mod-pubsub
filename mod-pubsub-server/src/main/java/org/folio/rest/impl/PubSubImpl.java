@@ -5,14 +5,10 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.kafka.client.producer.KafkaProducer;
-import io.vertx.kafka.client.producer.impl.KafkaProducerRecordImpl;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.lang.time.DateUtils;
-import org.folio.kafka.PubSubConfig;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventDescriptor;
 import org.folio.rest.jaxrs.model.PublisherDescriptor;
@@ -22,9 +18,11 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.util.AuditMessageFilter;
 import org.folio.rest.util.ExceptionHelper;
 import org.folio.rest.util.MessagingModuleFilter;
+import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.services.AuditMessageService;
 import org.folio.services.EventDescriptorService;
 import org.folio.services.MessagingModuleService;
+import org.folio.services.PublisherService;
 import org.folio.spring.SpringContextUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -50,7 +48,7 @@ public class PubSubImpl implements Pubsub {
   @Autowired
   private AuditMessageService auditMessageService;
   @Autowired
-  private KafkaProducer<String, String> producer;
+  private PublisherService publishingService;
 
   public PubSubImpl(Vertx vertx, String tenantId) {  //NOSONAR
     SpringContextUtil.autowireDependencies(this, Vertx.currentContext());
@@ -182,15 +180,11 @@ public class PubSubImpl implements Pubsub {
   @Override
   public void postPubsubPublish(Event entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
-      PubSubConfig config = new PubSubConfig(tenantId, entity.getEventType());
-      producer.write(new KafkaProducerRecordImpl<>(config.getTopicName(), JsonObject.mapFrom(entity).encode()), done -> {
-        if (done.succeeded()) {
-          LOGGER.info("Sent event to topic {}", config.getTopicName());
-        } else {
-          LOGGER.error("Event was not sent", done.cause());
-        }
-      });
-      asyncResultHandler.handle(Future.succeededFuture(PostPubsubPublishResponse.respond204()));
+      publishingService.publishEvent(entity, tenantId)
+        .map(PostPubsubPublishResponse.respond204())
+        .map(Response.class::cast)
+        .otherwise(ExceptionHelper::mapExceptionToResponse)
+        .setHandler(asyncResultHandler);
     } catch (Exception e) {
       LOGGER.error("Error publishing event", e);
       asyncResultHandler.handle(Future.succeededFuture(ExceptionHelper.mapExceptionToResponse(e)));
@@ -233,10 +227,11 @@ public class PubSubImpl implements Pubsub {
   @Override
   public void postPubsubEventTypesDeclareSubscriber(SubscriberDescriptor entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
     try {
+      OkapiConnectionParams params = new OkapiConnectionParams(okapiHeaders);
       messagingModuleService.validateSubscriberDescriptor(entity)
         .compose(errors -> errors.getTotalRecords() > 0
           ? Future.succeededFuture(PostPubsubEventTypesDeclareSubscriberResponse.respond400WithApplicationJson(errors))
-          : messagingModuleService.saveSubscriber(entity, tenantId)
+          : messagingModuleService.saveSubscriber(entity, params)
           .map(v -> PostPubsubEventTypesDeclareSubscriberResponse.respond201()))
         .map(Response.class::cast)
         .otherwise(ExceptionHelper::mapExceptionToResponse)
