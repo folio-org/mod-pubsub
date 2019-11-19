@@ -28,8 +28,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import static java.lang.String.format;
-
 /**
  * Util class for reading module messaging descriptor
  */
@@ -43,6 +41,13 @@ public class PubSubClientUtils {
   private PubSubClientUtils() {
   }
 
+  /**
+   * Common method for sending async messages through PubSub module
+   *
+   * @param eventMessage - message with payload and metadata to send
+   * @param params       - okapi connection params
+   * @return - async result with boolean value. True if message was sanded successfully
+   */
   public static CompletableFuture<Boolean> sendEventMessage(Event eventMessage, OkapiConnectionParams params) {
     PubsubClient client = new PubsubClient(params.getOkapiUrl(), params.getTenantId(), params.getToken());
     CompletableFuture<Boolean> result = new CompletableFuture<>();
@@ -51,7 +56,7 @@ public class PubSubClientUtils {
         if (ar.statusCode() == HttpStatus.HTTP_NO_CONTENT.toInt()) {
           result.complete(true);
         } else {
-          String message = format("Error during publishing Event Message in PubSub. Status code: %s . Status message: %s ", ar.statusCode(), ar.statusMessage());
+          String message = String.format("Error during publishing Event Message in PubSub. Status code: %s . Status message: %s ", ar.statusCode(), ar.statusMessage());
           LOGGER.error(message);
           result.completeExceptionally(new EventSendingException(message));
         }
@@ -63,7 +68,12 @@ public class PubSubClientUtils {
     return result;
   }
 
-
+  /**
+   * Common method for registering external module in PubSub.
+   *
+   * @param params - okapi connection params
+   * @return - async result with boolean value. True if module was registered successfully
+   */
   public static CompletableFuture<Boolean> registerModule(OkapiConnectionParams params) {
     CompletableFuture<Boolean> result = CompletableFuture.completedFuture(false);
     try {
@@ -95,7 +105,7 @@ public class PubSubClientUtils {
             list.add(CompletableFuture.completedFuture(true));
           } else {
             CompletableFuture<Boolean> future = new CompletableFuture<>();
-            String message = format("EventDescriptor was not registered for eventType: %s . Status code: %s", eventDescriptor.getEventType(), ar.statusCode());
+            String message = String.format("EventDescriptor was not registered for eventType: %s . Status code: %s", eventDescriptor.getEventType(), ar.statusCode());
             LOGGER.error(message);
             future.completeExceptionally(new ModuleRegistrationException(message));
             list.add(future);

@@ -13,15 +13,9 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <ramlfiles_path>${project.parent.basedir}/ramls</ramlfiles_path>
   </properties>
 
   <dependencies>
-    <dependency>
-      <groupId>org.folio</groupId>
-      <artifactId>mod-pubsub-server</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
-    </dependency>
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>domain-models-runtime</artifactId>
@@ -88,6 +82,11 @@
       </exclusions>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>mod-pubsub-server</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -132,7 +131,7 @@
             <phase>initialize</phase>
             <configuration>
               <sources>
-                <source>${project.parent.relativePath}/mod-pubsub-server/target/generated-sources/raml-jaxrs</source>
+                <source>${project.parent.basedir}/mod-pubsub-server/target/generated-sources/raml-jaxrs</source>
               </sources>
             </configuration>
           </execution>
