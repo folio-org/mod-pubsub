@@ -10,7 +10,7 @@ import org.folio.rest.jaxrs.model.EventDescriptor;
 import org.folio.rest.jaxrs.model.PublisherDescriptor;
 import org.folio.rest.jaxrs.model.SubscriberDescriptor;
 import org.folio.rest.jaxrs.model.SubscriptionDefinition;
-import org.folio.util.pubsub.support.OkapiConnectionParams;
+import org.folio.rest.util.OkapiConnectionParams;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

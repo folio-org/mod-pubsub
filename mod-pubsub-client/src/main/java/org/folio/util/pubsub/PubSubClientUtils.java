@@ -13,11 +13,11 @@ import org.folio.rest.jaxrs.model.MessagingDescriptor;
 import org.folio.rest.jaxrs.model.PublisherDescriptor;
 import org.folio.rest.jaxrs.model.SubscriberDescriptor;
 import org.folio.rest.tools.PomReader;
+import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.util.pubsub.exceptions.EventSendingException;
 import org.folio.util.pubsub.exceptions.MessagingDescriptorNotFoundException;
 import org.folio.util.pubsub.exceptions.ModuleRegistrationException;
 import org.folio.util.pubsub.support.DescriptorHolder;
-import org.folio.util.pubsub.support.OkapiConnectionParams;
 
 import java.io.File;
 import java.io.IOException;
