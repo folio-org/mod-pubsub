@@ -29,7 +29,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Util class for reading module messaging descriptor
+ * Util class for reading module messaging descriptors, sending messages using PubSub and register module in PubSub
  */
 public class PubSubClientUtils {
 
@@ -56,12 +56,13 @@ public class PubSubClientUtils {
         if (ar.statusCode() == HttpStatus.HTTP_NO_CONTENT.toInt()) {
           result.complete(true);
         } else {
-          String message = String.format("Error during publishing Event Message in PubSub. Status code: %s . Status message: %s ", ar.statusCode(), ar.statusMessage());
-          LOGGER.error(message);
-          result.completeExceptionally(new EventSendingException(message));
+          EventSendingException exception = new EventSendingException(String.format("Error during publishing Event Message in PubSub. Status code: %s . Status message: %s ", ar.statusCode(), ar.statusMessage()));
+          LOGGER.error(exception);
+          result.completeExceptionally(exception);
         }
       });
     } catch (Exception e) {
+      LOGGER.error("Error during sending event message to PubSub", e);
       result.completeExceptionally(e);
       return result;
     }
@@ -83,7 +84,7 @@ public class PubSubClientUtils {
       if (descriptorHolder.getPublisherDescriptor() != null) {
         LOGGER.info("Registering events for publishers");
         List<EventDescriptor> eventDescriptors = descriptorHolder.getPublisherDescriptor().getEventDescriptors();
-        result = result.thenCompose(ar -> registerEvents(client, eventDescriptors))
+        result = result.thenCompose(ar -> registerEventTypes(client, eventDescriptors))
           .thenCompose(ar -> registerPublishers(client, descriptorHolder.getPublisherDescriptor()));
       }
       if (descriptorHolder.getSubscriberDescriptor() != null) {
@@ -91,26 +92,27 @@ public class PubSubClientUtils {
       }
       return result;
     } catch (Exception e) {
+      LOGGER.error("Error during registration module in PubSub", e);
       result.completeExceptionally(e);
       return result;
     }
   }
 
-  private static CompletableFuture<Void> registerEvents(PubsubClient client, List<EventDescriptor> events) {
+  private static CompletableFuture<Void> registerEventTypes(PubsubClient client, List<EventDescriptor> events) {
     List<CompletableFuture<Boolean>> list = new ArrayList<>();
     try {
       for (EventDescriptor eventDescriptor : events) {
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
         client.postPubsubEventTypes(null, eventDescriptor, ar -> {
           if (ar.statusCode() == HttpStatus.HTTP_CREATED.toInt()) {
-            list.add(CompletableFuture.completedFuture(true));
+            future.complete(true);
           } else {
-            CompletableFuture<Boolean> future = new CompletableFuture<>();
-            String message = String.format("EventDescriptor was not registered for eventType: %s . Status code: %s", eventDescriptor.getEventType(), ar.statusCode());
-            LOGGER.error(message);
-            future.completeExceptionally(new ModuleRegistrationException(message));
-            list.add(future);
+            ModuleRegistrationException exception = new ModuleRegistrationException(String.format("EventDescriptor was not registered for eventType: %s . Status code: %s", eventDescriptor.getEventType(), ar.statusCode()));
+            LOGGER.error(exception);
+            future.completeExceptionally(exception);
           }
         });
+        list.add(future);
       }
     } catch (Exception e) {
       CompletableFuture<Void> future = new CompletableFuture<>();
@@ -130,9 +132,9 @@ public class PubSubClientUtils {
           LOGGER.info("Module's subscribers were successfully registered");
           subscribersResult.complete(true);
         } else {
-          String message = "Module's subscribers were not registered in PubSub. HTTP status: " + ar.statusCode();
-          LOGGER.error(message);
-          subscribersResult.completeExceptionally(new ModuleRegistrationException(message));
+          ModuleRegistrationException exception = new ModuleRegistrationException("Module's subscribers were not registered in PubSub. HTTP status: " + ar.statusCode());
+          LOGGER.error(exception);
+          subscribersResult.completeExceptionally(exception);
         }
       });
     } catch (Exception e) {
@@ -151,9 +153,9 @@ public class PubSubClientUtils {
           LOGGER.info("Module's publishers were successfully registered");
           publishersResult.complete(true);
         } else {
-          String message = "Module's publishers were not registered in PubSub. HTTP status: " + ar.statusCode();
-          LOGGER.error(message);
-          publishersResult.completeExceptionally(new ModuleRegistrationException(message));
+          ModuleRegistrationException exception = new ModuleRegistrationException("Module's publishers were not registered in PubSub. HTTP status: " + ar.statusCode());
+          LOGGER.error(exception);
+          publishersResult.completeExceptionally(exception);
         }
       });
     } catch (Exception e) {

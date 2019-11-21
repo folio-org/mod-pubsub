@@ -1,5 +1,8 @@
 package org.folio.util.pubsub;
 
+import com.github.tomakehurst.wiremock.common.Slf4jNotifier;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
@@ -21,6 +24,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Rule;
 
 import static java.lang.String.format;
 import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
@@ -43,12 +47,20 @@ public abstract class AbstractRestTest {
 
   static RequestSpecification spec;
   private static int port;
+  private static int stubPort;
   private static String useExternalDatabase;
   private static Vertx vertx;
   protected static String okapiUrl;
+  protected static String okapiUrlStub;
 
   @ClassRule
   public static EmbeddedKafkaCluster cluster = provisionWith(useDefaults());
+
+  @Rule
+  public WireMockRule mockServer = new WireMockRule(
+    WireMockConfiguration.wireMockConfig()
+      .port(stubPort)
+      .notifier(new Slf4jNotifier(true)));
 
   @BeforeClass
   public static void setUpClass(final TestContext context) throws Exception {
@@ -94,7 +106,8 @@ public abstract class AbstractRestTest {
     Async async = context.async();
     port = NetworkUtils.nextFreePort();
     okapiUrl = "http://localhost:" + port;
-
+    stubPort = NetworkUtils.nextFreePort();
+    okapiUrlStub = "http://localhost:" + stubPort;
     TenantClient tenantClient = new TenantClient(okapiUrl, TENANT_ID, TOKEN);
 
     final DeploymentOptions options = new DeploymentOptions()

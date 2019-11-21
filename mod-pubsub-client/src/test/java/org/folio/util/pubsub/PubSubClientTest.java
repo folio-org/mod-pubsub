@@ -1,5 +1,6 @@
 package org.folio.util.pubsub;
 
+import com.github.tomakehurst.wiremock.client.WireMock;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.vertx.core.json.JsonObject;
@@ -19,12 +20,16 @@ import org.junit.runner.RunWith;
 import java.util.Collections;
 import java.util.UUID;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.badRequest;
+import static com.github.tomakehurst.wiremock.client.WireMock.created;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static org.hamcrest.Matchers.is;
 
 @RunWith(VertxUnitRunner.class)
 public class PubSubClientTest extends AbstractRestTest {
 
   private static OkapiConnectionParams params = new OkapiConnectionParams();
+  private static OkapiConnectionParams fakeParams = new OkapiConnectionParams();
   private static final EventDescriptor EVENT_DESCRIPTOR = new EventDescriptor()
     .withEventType("record_created")
     .withDescription("Created SRS Marc Bibliographic Record with order data in 9xx fields")
@@ -46,11 +51,44 @@ public class PubSubClientTest extends AbstractRestTest {
     params.setToken(TOKEN);
     params.setOkapiUrl(okapiUrl);
     params.setTenantId(TENANT_ID);
+    fakeParams.setOkapiUrl(okapiUrlStub);
+    fakeParams.setTenantId(TENANT_ID);
+    fakeParams.setToken(TOKEN);
   }
 
   @Test
-  public void RegisterModuleSuccessfully() throws Exception {
+  public void registerModuleSuccessfully() throws Exception {
     Assert.assertTrue(PubSubClientUtils.registerModule(params).get());
+  }
+
+  @Test
+  public void shouldNotRegisterPublishers() {
+    WireMock.stubFor(post("/pubsub/event-types/declare/publisher")
+      .willReturn(badRequest()));
+    WireMock.stubFor(post("/pubsub/event-types")
+      .willReturn(created()));
+    try {
+      PubSubClientUtils.registerModule(fakeParams).get();
+      Assert.fail();
+    } catch (Exception e) {
+      Assert.assertTrue(true);
+    }
+  }
+
+  @Test
+  public void shouldNotRegisterSubscribers() throws Exception {
+    WireMock.stubFor(post("/pubsub/event-types/declare/publisher")
+      .willReturn(created()));
+    WireMock.stubFor(post("/pubsub/event-types")
+      .willReturn(created()));
+    WireMock.stubFor(post("/pubsub/event-types/declare/subscriber")
+      .willReturn(badRequest()));
+    try {
+      PubSubClientUtils.registerModule(fakeParams).get();
+      Assert.fail();
+    } catch (Exception e) {
+      Assert.assertTrue(true);
+    }
   }
 
   @Test

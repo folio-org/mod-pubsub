@@ -87,6 +87,18 @@
       <artifactId>mod-pubsub-server</artifactId>
       <version>0.0.1-SNAPSHOT</version>
     </dependency>
+    <dependency>
+      <groupId>com.github.tomakehurst</groupId>
+      <artifactId>wiremock</artifactId>
+      <version>2.19.0</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>net.sf.jopt-simple</groupId>
+          <artifactId>jopt-simple</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
   </dependencies>
 
   <build>
