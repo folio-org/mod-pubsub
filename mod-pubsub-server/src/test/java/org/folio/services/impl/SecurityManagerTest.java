@@ -42,7 +42,7 @@ public class SecurityManagerTest {
 
   @InjectMocks
   private PubSubUserDao pubSubUserDao = new PubSubUserDaoImpl();
-
+  @Spy
   private SecurityManagerImpl securityManager = new SecurityManagerImpl(pubSubUserDao);
 
   private Vertx vertx = Vertx.vertx();
@@ -74,18 +74,18 @@ public class SecurityManagerTest {
     params.setTenantId(TENANT);
     params.setToken(TOKEN);
 
-    Future<Boolean> loginFuture = securityManager.loginPubSubUser(params);
+    Future<String> future = securityManager.loginPubSubUser(params)
+      .compose(ar -> securityManager.getJWTToken(params.getTenantId()));
 
-    loginFuture.setHandler(ar -> {
+    future.setHandler(ar -> {
       assertTrue(ar.succeeded());
-      assertTrue(ar.result());
+      assertEquals(pubSubToken, ar.result());
       List<LoggedRequest> requests = WireMock.findAll(RequestPatternBuilder.allRequests());
       assertEquals(1, requests.size());
       assertEquals(LOGIN_URL, requests.get(0).getUrl());
       assertEquals("POST", requests.get(0).getMethod().getName());
       async.complete();
     });
-
   }
 
 }
