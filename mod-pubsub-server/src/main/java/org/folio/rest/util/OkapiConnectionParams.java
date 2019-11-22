@@ -16,6 +16,8 @@ public final class OkapiConnectionParams {
   private Vertx vertx;
   private int timeout = 2000;
 
+  public OkapiConnectionParams() {}
+
   public OkapiConnectionParams(Vertx vertx) {
     this.vertx = vertx;
   }
@@ -33,7 +35,6 @@ public final class OkapiConnectionParams {
   }
 
   public void setOkapiUrl(String okapiUrl) {
-    headers.put(OKAPI_URL_HEADER, okapiUrl);
     this.okapiUrl = okapiUrl;
   }
 
@@ -42,7 +43,6 @@ public final class OkapiConnectionParams {
   }
 
   public void setTenantId(String tenantId) {
-    headers.put(OKAPI_TENANT_HEADER, tenantId);
     this.tenantId = tenantId;
   }
 
@@ -51,7 +51,6 @@ public final class OkapiConnectionParams {
   }
 
   public void setToken(String token) {
-    headers.put(OKAPI_TOKEN_HEADER, token);
     this.token = token;
   }
 
@@ -60,9 +59,6 @@ public final class OkapiConnectionParams {
   }
 
   public void setHeaders(Map<String, String> headers) {
-    this.okapiUrl = headers.getOrDefault(OKAPI_URL_HEADER, "localhost");
-    this.tenantId = headers.getOrDefault(OKAPI_TENANT_HEADER, "");
-    this.token = headers.getOrDefault(OKAPI_TOKEN_HEADER, "dummy");
     this.headers = headers;
   }
 
