@@ -14,6 +14,7 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.folio.dao.PostgresClientFactory;
 import org.folio.dao.PubSubUserDao;
 import org.folio.dao.impl.PubSubUserDaoImpl;
+import org.folio.rest.impl.AbstractRestTest;
 import org.folio.rest.util.OkapiConnectionParams;
 import org.junit.Before;
 import org.junit.Rule;
@@ -31,7 +32,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(VertxUnitRunner.class)
-public class SecurityManagerTest {
+public class SecurityManagerTest extends AbstractRestTest {
 
   private static final String LOGIN_URL = "/authn/login";
   private static final String TENANT = "diku";
@@ -39,13 +40,10 @@ public class SecurityManagerTest {
 
   @Spy
   PostgresClientFactory postgresClientFactory = new PostgresClientFactory(Vertx.vertx());
-
   @InjectMocks
   private PubSubUserDao pubSubUserDao = new PubSubUserDaoImpl();
   @Spy
   private SecurityManagerImpl securityManager = new SecurityManagerImpl(pubSubUserDao);
-
-  private Vertx vertx = Vertx.vertx();
 
   @Rule
   public WireMockRule mockServer = new WireMockRule(
@@ -70,7 +68,6 @@ public class SecurityManagerTest {
     OkapiConnectionParams params = new OkapiConnectionParams();
     params.setVertx(vertx);
     params.setOkapiUrl("http://localhost:" + mockServer.port());
-    params.setTimeout(2000);
     params.setTenantId(TENANT);
     params.setToken(TOKEN);
 
