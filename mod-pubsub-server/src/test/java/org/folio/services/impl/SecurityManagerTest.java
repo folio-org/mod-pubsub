@@ -86,11 +86,6 @@ public class SecurityManagerTest {
       async.complete();
     });
 
-    Future<String> tokenFuture = securityManager.getJWTToken(params.getTenantId());
-    tokenFuture.setHandler(ar -> {
-      assertTrue(ar.succeeded());
-      assertEquals(pubSubToken, ar.result());
-    });
   }
 
 }
