@@ -16,7 +16,8 @@ public final class OkapiConnectionParams {
   private Vertx vertx;
   private int timeout = 2000;
 
-  public OkapiConnectionParams() {}
+  public OkapiConnectionParams() {
+  }
 
   public OkapiConnectionParams(Vertx vertx) {
     this.vertx = vertx;

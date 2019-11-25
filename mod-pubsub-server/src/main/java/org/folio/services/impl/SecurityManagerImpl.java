@@ -28,16 +28,16 @@ public class SecurityManagerImpl implements SecurityManager {
 
   @Override
   public Future<Boolean> loginPubSubUser(OkapiConnectionParams params) {
-     return pubSubUserDao.getPubSubUserCredentials(params.getTenantId())
-       .compose(userCredentials -> doRequest(userCredentials.encode(), LOGIN_URL, params))
-       .compose(response -> {
-         if(response.statusCode() == HttpStatus.HTTP_CREATED.toInt()) {
-           LOGGER.info("Logged in pub-sub user");
-           return pubSubUserDao.savePubSubJWTToken(response.getHeader(OKAPI_TOKEN_HEADER), params.getTenantId());
-         }
-         LOGGER.error("pub-sub user was not logged in, received status {}", response.statusCode());
-         return Future.succeededFuture(false);
-       });
+    return pubSubUserDao.getPubSubUserCredentials(params.getTenantId())
+      .compose(userCredentials -> doRequest(userCredentials.encode(), LOGIN_URL, params))
+      .compose(response -> {
+        if (response.statusCode() == HttpStatus.HTTP_CREATED.toInt()) {
+          LOGGER.info("Logged in pub-sub user");
+          return pubSubUserDao.savePubSubJWTToken(response.getHeader(OKAPI_TOKEN_HEADER), params.getTenantId());
+        }
+        LOGGER.error("pub-sub user was not logged in, received status {}", response.statusCode());
+        return Future.succeededFuture(false);
+      });
   }
 
   @Override
