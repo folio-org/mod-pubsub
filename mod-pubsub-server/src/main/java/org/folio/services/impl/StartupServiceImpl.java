@@ -1,6 +1,5 @@
 package org.folio.services.impl;
 
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import org.folio.dao.MessagingModuleDao;
@@ -13,9 +12,7 @@ import org.folio.services.StartupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
 
@@ -44,18 +41,16 @@ public class StartupServiceImpl implements StartupService {
   public void initSubscribers() {
     messagingModuleDao.get(new MessagingModuleFilter().withModuleRole(SUBSCRIBER).withActivated(true))
       .compose(messagingModules -> {
-        List<Future> futures = new ArrayList<>();
         messagingModules.parallelStream().forEach(messagingModule ->
-          futures.add(
-            securityManager.getJWTToken(messagingModule.getTenantId())
-              .compose(token -> {
-                OkapiConnectionParams params = new OkapiConnectionParams(vertx);
-                params.setOkapiUrl(kafkaConfig.getOkapiUrl());
-                params.setTenantId(messagingModule.getTenantId());
-                params.setToken(token);
-                return consumerService.subscribe(messagingModule.getModuleId(), Collections.singletonList(messagingModule.getEventType()), params);
-              })));
-        return CompositeFuture.all(futures);
+          securityManager.getJWTToken(messagingModule.getTenantId())
+            .compose(token -> {
+              OkapiConnectionParams params = new OkapiConnectionParams(vertx);
+              params.setOkapiUrl(kafkaConfig.getOkapiUrl());
+              params.setTenantId(messagingModule.getTenantId());
+              params.setToken(token);
+              return consumerService.subscribe(messagingModule.getModuleId(), Collections.singletonList(messagingModule.getEventType()), params);
+            }));
+        return Future.succeededFuture();
       });
   }
 }
