@@ -41,7 +41,7 @@ public class StartupServiceImpl implements StartupService {
   public void initSubscribers() {
     messagingModuleDao.get(new MessagingModuleFilter().withModuleRole(SUBSCRIBER).withActivated(true))
       .compose(messagingModules -> {
-        messagingModules.parallelStream().forEach(messagingModule ->
+        messagingModules.forEach(messagingModule ->
           securityManager.getJWTToken(messagingModule.getTenantId())
             .compose(token -> {
               OkapiConnectionParams params = new OkapiConnectionParams(vertx);
