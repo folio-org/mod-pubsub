@@ -8,6 +8,7 @@ import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -35,6 +36,10 @@ import static org.junit.Assert.assertTrue;
 public class SecurityManagerTest extends AbstractRestTest {
 
   private static final String LOGIN_URL = "/authn/login";
+  private static final String USERS_URL = "/users";
+  private static final String USERS_URL_WITH_QUERY = "/users?query=username=pub-sub";
+  private static final String CREDENTIALS_URL = "/authn/credentials";
+  private static final String PERMISSIONS_URL = "/perms/users";
   private static final String TENANT = "diku";
   private static final String TOKEN = "token";
 
@@ -81,6 +86,70 @@ public class SecurityManagerTest extends AbstractRestTest {
       assertEquals(1, requests.size());
       assertEquals(LOGIN_URL, requests.get(0).getUrl());
       assertEquals("POST", requests.get(0).getMethod().getName());
+      async.complete();
+    });
+  }
+
+  @Test
+  public void shouldNotCreatePubSubUserIfItExists(TestContext context) {
+    Async async = context.async();
+
+    WireMock.stubFor(WireMock.get(USERS_URL_WITH_QUERY)
+      .willReturn(WireMock.ok().withBody(new JsonObject().put("totalRecords", 1).encode())));
+
+    OkapiConnectionParams params = new OkapiConnectionParams();
+    params.setVertx(vertx);
+    params.setOkapiUrl("http://localhost:" + mockServer.port());
+    params.setTenantId(TENANT);
+    params.setToken(TOKEN);
+
+    Future<Boolean> future = securityManager.createPubSubUser(params);
+
+    future.setHandler(ar -> {
+      assertTrue(ar.succeeded());
+      assertTrue(ar.result());
+      List<LoggedRequest> requests = WireMock.findAll(RequestPatternBuilder.allRequests());
+      assertEquals(1, requests.size());
+      assertEquals(USERS_URL_WITH_QUERY, requests.get(0).getUrl());
+      assertEquals("GET", requests.get(0).getMethod().getName());
+      async.complete();
+    });
+  }
+
+  @Test
+  public void shouldNotCreatePubSubUser(TestContext context) {
+    Async async = context.async();
+
+    WireMock.stubFor(WireMock.get(USERS_URL_WITH_QUERY)
+      .willReturn(WireMock.ok().withBody(new JsonObject().put("totalRecords", 0).encode())));
+    WireMock.stubFor(WireMock.post(USERS_URL)
+      .willReturn(WireMock.created()));
+    WireMock.stubFor(WireMock.post(CREDENTIALS_URL)
+      .willReturn(WireMock.created()));
+    WireMock.stubFor(WireMock.post(PERMISSIONS_URL)
+      .willReturn(WireMock.created()));
+
+    OkapiConnectionParams params = new OkapiConnectionParams();
+    params.setVertx(vertx);
+    params.setOkapiUrl("http://localhost:" + mockServer.port());
+    params.setTenantId(TENANT);
+    params.setToken(TOKEN);
+
+    Future<Boolean> future = securityManager.createPubSubUser(params);
+
+    future.setHandler(ar -> {
+      assertTrue(ar.succeeded());
+      assertTrue(ar.result());
+      List<LoggedRequest> requests = WireMock.findAll(RequestPatternBuilder.allRequests());
+      assertEquals(4, requests.size());
+      assertEquals(USERS_URL_WITH_QUERY, requests.get(0).getUrl());
+      assertEquals("GET", requests.get(0).getMethod().getName());
+      assertEquals(USERS_URL, requests.get(1).getUrl());
+      assertEquals("POST", requests.get(1).getMethod().getName());
+      assertEquals(CREDENTIALS_URL, requests.get(2).getUrl());
+      assertEquals("POST", requests.get(2).getMethod().getName());
+      assertEquals(PERMISSIONS_URL, requests.get(3).getUrl());
+      assertEquals("POST", requests.get(3).getMethod().getName());
       async.complete();
     });
   }
