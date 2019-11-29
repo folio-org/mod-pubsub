@@ -38,7 +38,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(VertxUnitRunner.class)
-public class SecurityManagerTest {
+public class SecurityManagerTest extends AbstractRestTest {
 
   private static final String LOGIN_URL = "/authn/login";
   private static final String USERS_URL = "/users";
@@ -52,7 +52,7 @@ public class SecurityManagerTest {
   private Vertx vertx = Vertx.vertx();
 
   @Spy
-  PostgresClientFactory postgresClientFactory = new PostgresClientFactory(Vertx.vertx());
+  PostgresClientFactory postgresClientFactory = new PostgresClientFactory(vertx);
   @InjectMocks
   private PubSubUserDao pubSubUserDao = new PubSubUserDaoImpl();
   @Spy
