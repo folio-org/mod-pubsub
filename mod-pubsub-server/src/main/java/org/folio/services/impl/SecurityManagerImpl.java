@@ -33,7 +33,8 @@ public class SecurityManagerImpl implements SecurityManager {
   private static final String USERS_URL = "/users";
   private static final String CREDENTIALS_URL = "/authn/credentials";
   private static final String PERMISSIONS_URL = "/perms/users";
-  private static final String PERMISSIONS_FILE_PATH = "src/main/resources/permissions/pubsub-user-permissions.txt";
+  private static final String PERMISSIONS_FILE_PATH = "src/main/resources/permissions/pubsub-user-permissions.csv";
+  private static final String PUB_SUB_USERNAME = "pub-sub";
 
   private PubSubUserDao pubSubUserDao;
 
@@ -75,7 +76,7 @@ public class SecurityManagerImpl implements SecurityManager {
   }
 
   private Future<Boolean> existsPubSubUser(OkapiConnectionParams params) {
-    String query = "?query=username=pub-sub";
+    String query = "?query=username=" + PUB_SUB_USERNAME;
     return doRequest(null, USERS_URL + query, HttpMethod.GET, params)
       .compose(response -> {
         Future<Boolean> future = Future.future();
@@ -96,7 +97,7 @@ public class SecurityManagerImpl implements SecurityManager {
     String id = UUID.randomUUID().toString();
     JsonObject body = new JsonObject()
       .put("id", id)
-      .put("username", "pub-sub")
+      .put("username", PUB_SUB_USERNAME)
       .put("active", true);
     return doRequest(body.encode(), USERS_URL, HttpMethod.POST, params)
       .compose(response -> {
