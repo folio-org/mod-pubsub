@@ -21,9 +21,9 @@ public class PubSubUserDaoImpl implements PubSubUserDao {
   private static final Logger LOGGER = LoggerFactory.getLogger(PubSubUserDaoImpl.class);
 
   private static final String USER_TABLE_NAME = "user";
-  public static final String USERNAME = "pub-sub";
-  private static final String SET_JWT_TOKEN = "UPDATE %s.%s SET token = ? WHERE username = '" + USERNAME + "'";
-  private static final String GET_JWT_TOKEN = "SELECT token FROM %s.%s WHERE username = '" + USERNAME + "'";
+  private static final String USERNAME = "'pub-sub'";
+  private static final String SET_JWT_TOKEN = "UPDATE %s.%s SET token = ? WHERE username = " + USERNAME;
+  private static final String GET_JWT_TOKEN = "SELECT token FROM %s.%s WHERE username = " + USERNAME;
   private static final String GET_CREDENTIALS = "SELECT username, password FROM %s.%s";
 
   @Autowired

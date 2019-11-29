@@ -25,15 +25,20 @@ import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TOKEN;
+import static org.folio.rest.util.OkapiConnectionParams.OKAPI_TENANT_HEADER;
+import static org.folio.rest.util.OkapiConnectionParams.OKAPI_TOKEN_HEADER;
+import static org.folio.rest.util.OkapiConnectionParams.OKAPI_URL_HEADER;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(VertxUnitRunner.class)
-public class SecurityManagerTest extends AbstractRestTest {
+public class SecurityManagerTest {
 
   private static final String LOGIN_URL = "/authn/login";
   private static final String USERS_URL = "/users";
@@ -42,6 +47,9 @@ public class SecurityManagerTest extends AbstractRestTest {
   private static final String PERMISSIONS_URL = "/perms/users";
   private static final String TENANT = "diku";
   private static final String TOKEN = "token";
+
+  private Map<String, String> headers = new HashMap<>();
+  private Vertx vertx = Vertx.vertx();
 
   @Spy
   PostgresClientFactory postgresClientFactory = new PostgresClientFactory(Vertx.vertx());
@@ -59,6 +67,9 @@ public class SecurityManagerTest extends AbstractRestTest {
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
+    headers.put(OKAPI_URL_HEADER, "http://localhost:" + mockServer.port());
+    headers.put(OKAPI_TENANT_HEADER, TENANT);
+    headers.put(OKAPI_TOKEN_HEADER, TOKEN);
   }
 
   @Test
@@ -72,7 +83,7 @@ public class SecurityManagerTest extends AbstractRestTest {
 
     OkapiConnectionParams params = new OkapiConnectionParams();
     params.setVertx(vertx);
-    params.setOkapiUrl("http://localhost:" + mockServer.port());
+    params.setOkapiUrl(headers.get(OKAPI_URL_HEADER));
     params.setTenantId(TENANT);
     params.setToken(TOKEN);
 
@@ -97,11 +108,7 @@ public class SecurityManagerTest extends AbstractRestTest {
     WireMock.stubFor(WireMock.get(USERS_URL_WITH_QUERY)
       .willReturn(WireMock.ok().withBody(new JsonObject().put("totalRecords", 1).encode())));
 
-    OkapiConnectionParams params = new OkapiConnectionParams();
-    params.setVertx(vertx);
-    params.setOkapiUrl("http://localhost:" + mockServer.port());
-    params.setTenantId(TENANT);
-    params.setToken(TOKEN);
+    OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
     Future<Boolean> future = securityManager.createPubSubUser(params);
 
@@ -117,7 +124,7 @@ public class SecurityManagerTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldNotCreatePubSubUser(TestContext context) {
+  public void shouldCreatePubSubUser(TestContext context) {
     Async async = context.async();
 
     WireMock.stubFor(WireMock.get(USERS_URL_WITH_QUERY)
@@ -129,11 +136,7 @@ public class SecurityManagerTest extends AbstractRestTest {
     WireMock.stubFor(WireMock.post(PERMISSIONS_URL)
       .willReturn(WireMock.created()));
 
-    OkapiConnectionParams params = new OkapiConnectionParams();
-    params.setVertx(vertx);
-    params.setOkapiUrl("http://localhost:" + mockServer.port());
-    params.setTenantId(TENANT);
-    params.setToken(TOKEN);
+    OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
     Future<Boolean> future = securityManager.createPubSubUser(params);
 
