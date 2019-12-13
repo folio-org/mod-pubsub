@@ -75,6 +75,7 @@ provides, and how to deploy it.
 
 Next we need to deploy the module. There is a deployment descriptor in
 `target/DeploymentDescriptor.json`. It tells Okapi to start the module on 'localhost'.
+Make sure Kafka is up and running on 9092 port before deployment.
 
 Deploy it via Okapi discovery:
 
