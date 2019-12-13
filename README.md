@@ -112,7 +112,7 @@ Scripts should be named using following format:
 Each "changeset" should be uniquely identified by the `"author"` and `"id"` attributes. It is advised to use the Github username as `"author"` attribute. 
 The `"id"` attribute value should be defined in the same format as the script file name.  
 
-If neede database schema name can be obtained using Liquibase context property `${database.defaultSchemaName}`.
+If needed, database schema name can be obtained using Liquibase context property `${database.defaultSchemaName}`.
 
 Liquibase scripts are stored in `/resources/liquibase/` directory. 
 Scripts files for module and tenant schemas are stored separately in `/resources/liquibase/module/scripts` and `/resources/liquibase/tenant/scripts` respectively. 
