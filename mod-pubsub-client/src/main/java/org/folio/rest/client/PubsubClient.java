@@ -16,6 +16,7 @@ import java.net.URLEncoder;
  * Auto-generated code - based on class org.folio.rest.jaxrs.resource.Pubsub
  *
  */
+@SuppressWarnings({"squid:CallToDeprecatedMethod", "squid:S1192", "common-java:DuplicatedBlocks"})
 public class PubsubClient {
 
     private final static String GLOBAL_PATH = "/pubsub";

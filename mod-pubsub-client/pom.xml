@@ -12,6 +12,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <ramlfiles_path>${project.parent.basedir}/ramls</ramlfiles_path>
+    <sonar.coverage.exclusions>**/rest/client/PubsubClient.java</sonar.coverage.exclusions>
   </properties>
 
   <dependencies>
