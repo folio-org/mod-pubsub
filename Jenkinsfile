@@ -8,7 +8,7 @@ buildMvn {
     buildJavaDocker {
       publishMaster = 'yes'
       healthChk = 'yes'
-      healthChkCmd = '--health-timeout=10s --health-retries=5 curl -S --fail -o /dev/null  http://localhost:8081/apidocs/ || exit 1'
+      healthChkCmd = 'curl -S --fail -o /dev/null  http://localhost:8081/ || exit 1'
     }
   }
 }
