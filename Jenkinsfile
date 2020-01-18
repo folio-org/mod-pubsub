@@ -13,10 +13,9 @@ def dockerDeploy() {
       sh "docker build --no-cache=true --pull=true -t ${env.name}:${env.version} ."
 
       // Test container using container healthcheck
-      if ((config.healthChk ==~ /(?i)(Y|YES|T|TRUE)/) && (config.healthChkCmd)) {
 
         def runArgs = config.runArgs ?: ' '
-        def healthChkCmd = config.healthChkCmd
+        def healthChkCmd = 'curl -sS --fail -o /dev/null  http://localhost:8081/apidocs/ || exit 1'
         def dockerImage = "${env.name}:${env.version}"
         def health = dockerContainerHealthCheck(dockerImage,healthChkCmd,runArgs)
 
@@ -27,10 +26,6 @@ def dockerDeploy() {
         else {
           echo "Container health check passed."
         }
-      }
-      else {
-        echo "No health check configured. Skipping container health check."
-      }
 
       // publish image if master branch
 
