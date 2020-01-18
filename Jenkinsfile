@@ -41,7 +41,6 @@ def healthPing() {
     echo "Testing $dockerImage image. Starting container..."
     echo "Timeout: ${timeout}"
     echo "retries: ${retries}"
-    echo "checkCmd: ${checkCmd}"
     echo "cidfile: ${cidFile}"
     echo "dockerImage: ${dockerImage}"
     echo "runArgs: ${runArgs}"
@@ -50,7 +49,7 @@ def healthPing() {
     // exit 1 since 'docker run' can return a variety of non-zero status codes.
     sh """
         docker run -d --health-timeout=${timeout} --health-retries=${retries} \
-               --health-cmd='${checkCmd}' --cidfile $cidFile $dockerImage $runArgs || exit 1
+               --health-cmd='curl -sS --fail -o /dev/null  http://localhost:8081/apidocs/ || exit 1' --cidfile $cidFile $dockerImage $runArgs || exit 1
        """
 
     def cid = readFile(cidFile)
