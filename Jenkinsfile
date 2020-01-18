@@ -39,6 +39,13 @@ def healthPing() {
 
   try {
     echo "Testing $dockerImage image. Starting container..."
+    echo "Timeout: ${timeout}"
+    echo "retries: ${retries}"
+    echo "checkCmd: ${checkCmd}"
+    echo "cidfile: ${cidFile}"
+    echo "dockerImage: ${dockerImage}"
+    echo "runArgs: ${runArgs}"
+
 
     // exit 1 since 'docker run' can return a variety of non-zero status codes.
     sh """
@@ -56,9 +63,10 @@ def healthPing() {
       echo "Current Status: $health"
 
       if (health == 'starting') {
-        sleep 1
+        sleep 3
       }
       else {
+        echo "New status: $health"
         break
       }
     }
