@@ -80,7 +80,7 @@ def dockerContainerHealthCheck(String dockerImage, String checkCmd, String runAr
 
     // exit 1 since 'docker run' can return a variety of non-zero status codes.
     sh """
-      docker run -d --interval=50s --health-timeout=${timeout} --health-retries=${retries} \
+      docker run -d --health-interval=50s --health-timeout=${timeout} --health-retries=${retries} \
              --health-cmd='${checkCmd}' --cidfile $cidFile $dockerImage $runArgs || exit 1
      """
 
