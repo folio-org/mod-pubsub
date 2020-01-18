@@ -12,6 +12,10 @@ buildMvn {
     }
   }
 
+
+}
+
+stage('Health Check'){
   healthPing()
 }
 
@@ -69,4 +73,6 @@ def healthPing() {
     return health
   }
 }
+
+
 
