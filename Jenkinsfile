@@ -8,7 +8,7 @@ buildMvn {
     buildJavaDocker {
       publishMaster = 'yes'
       healthChk = 'yes'
-      healthChkCmd = 'curl --fail http://localhost:8081/apidocs || exit 1'
+      healthChkCmd = 'curl --fail http://localhost/ || exit 1'
     }
   }
 }
