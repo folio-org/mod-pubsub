@@ -1,4 +1,4 @@
-def run() {
+node() {
   def config = [:]
 
   def doLintRamlCop = false
@@ -20,167 +20,155 @@ def run() {
     daysToKeepStr: '',
     numToKeepStr: '30'))])
 
+  timeout(60) {
 
-  node(buildNode) {
-    timeout(60) {
+    try {
+      stage('Checkout') {
+        deleteDir()
+        currentBuild.displayName = "#${env.BUILD_NUMBER}-${env.JOB_BASE_NAME}"
+        sendNotifications 'STARTED'
 
-      try {
-        stage('Checkout') {
-          deleteDir()
-          currentBuild.displayName = "#${env.BUILD_NUMBER}-${env.JOB_BASE_NAME}"
-          sendNotifications 'STARTED'
+        checkout([
+          $class: 'GitSCM',
+          branches: scm.branches,
+          extensions: scm.extensions + [[$class: 'SubmoduleOption',
+                                         disableSubmodules: false,
+                                         parentCredentials: false,
+                                         recursiveSubmodules: true,
+                                         reference: '',
+                                         trackingSubmodules: false]],
+          userRemoteConfigs: scm.userRemoteConfigs
+        ])
 
-          checkout([
-            $class: 'GitSCM',
-            branches: scm.branches,
-            extensions: scm.extensions + [[$class: 'SubmoduleOption',
-                                           disableSubmodules: false,
-                                           parentCredentials: false,
-                                           recursiveSubmodules: true,
-                                           reference: '',
-                                           trackingSubmodules: false]],
-            userRemoteConfigs: scm.userRemoteConfigs
-          ])
+        echo "Checked out branch: $env.BRANCH_NAME"
+      }
 
-          echo "Checked out branch: $env.BRANCH_NAME"
+      stage('Set Environment') {
+        setEnvMvn()
+      }
+
+      if (doLintRamlCop) {
+        stage('Lint raml-cop') {
+          runLintRamlCop()
         }
+      }
+      stage('Maven Build') {
+        echo "Building Maven artifact: ${env.name} Version: ${env.version}"
+        withMaven(jdk: 'openjdk-8-jenkins-slave-all',
+          maven: 'maven3-jenkins-slave-all',
+          mavenSettingsConfig: 'folioci-maven-settings') {
 
-        stage('Set Environment') {
-          setEnvMvn()
-        }
-
-        if (doLintRamlCop) {
-          stage('Lint raml-cop') {
-            runLintRamlCop()
-          }
-        }
-        stage('Maven Build') {
-          echo "Building Maven artifact: ${env.name} Version: ${env.version}"
-          withMaven(jdk: 'openjdk-8-jenkins-slave-all',
-            maven: 'maven3-jenkins-slave-all',
-            mavenSettingsConfig: 'folioci-maven-settings') {
-
-            // Check to see if we have snapshot deps in release
-            if (env.isRelease) {
-              def snapshotDeps = foliociLib.checkMvnReleaseDeps()
-              if (snapshotDeps) {
-                echo "$snapshotDeps"
-                error('Snapshot dependencies found in release')
-              }
+          // Check to see if we have snapshot deps in release
+          if (env.isRelease) {
+            def snapshotDeps = foliociLib.checkMvnReleaseDeps()
+            if (snapshotDeps) {
+              echo "$snapshotDeps"
+              error('Snapshot dependencies found in release')
             }
-            sh 'mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install ' \
+          }
+          sh 'mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install ' \
                 + 'org.jacoco:jacoco-maven-plugin:report'
-            if ( fileExists(modDescriptor) ) {
-              foliociLib.updateModDescriptor(modDescriptor)
+          if ( fileExists(modDescriptor) ) {
+            foliociLib.updateModDescriptor(modDescriptor)
+          }
+        }
+      }
+
+      // Run Sonarqube
+      stage('SonarQube Analysis') {
+        sonarqubeMvn()
+      }
+
+      if ( env.isRelease && fileExists(modDescriptor) ) {
+        stage('Dependency Check') {
+          okapiModDepCheck(modDescriptor)
+        }
+      }
+
+      // Docker stuff
+      stage('Docker Build and Health Check') {
+        echo "Building Docker image for $env.name:$env.version"
+        dockerDeploy()
+      }
+
+      // master branch or tagged releases
+      if (( env.BRANCH_NAME == 'master' ) || ( env.isRelease )) {
+
+        // publish MD must come before maven deploy
+        if (publishModDescriptor) {
+          stage('Publish Module Descriptor') {
+            echo "Publishing Module Descriptor to FOLIO registry"
+            postModuleDescriptor(modDescriptor)
+          }
+        }
+        if (mvnDeploy) {
+          stage('Maven Deploy') {
+            echo "Deploying artifacts to Maven repository"
+            withMaven(jdk: 'openjdk-8-jenkins-slave-all',
+              maven: 'maven3-jenkins-slave-all',
+              mavenSettingsConfig: 'folioci-maven-settings') {
+              sh 'mvn -DskipTests deploy'
             }
           }
         }
-
-        // Run Sonarqube
-        stage('SonarQube Analysis') {
-          sonarqubeMvn()
+        if (publishAPI) {
+          stage('Publish API Docs') {
+            echo "Publishing API docs"
+            sh "python3 /usr/local/bin/generate_api_docs.py -r $env.projectName -l info -o folio-api-docs"
+            withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+                              accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                              credentialsId: 'jenkins-aws',
+                              secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+              sh 'aws s3 sync folio-api-docs s3://foliodocs/api'
+            }
+          }
         }
-
-        if ( env.isRelease && fileExists(modDescriptor) ) {
-          stage('Dependency Check') {
-            okapiModDepCheck(modDescriptor)
-          }
-        }
-
-        // Docker stuff
-          stage('Docker Build and Health Check') {
-            echo "Building Docker image for $env.name:$env.version"
-            dockerDeploy()
-            config.doDocker.delegate = this
-            config.doDocker.resolveStrategy = Closure.DELEGATE_FIRST
-            config.doDocker.call()
-          }
-
-        // master branch or tagged releases
-        if (( env.BRANCH_NAME == 'master' ) || ( env.isRelease )) {
-
-          // publish MD must come before maven deploy
-          if (publishModDescriptor) {
-            stage('Publish Module Descriptor') {
-              echo "Publishing Module Descriptor to FOLIO registry"
-              postModuleDescriptor(modDescriptor)
-            }
-          }
-          if (mvnDeploy) {
-            stage('Maven Deploy') {
-              echo "Deploying artifacts to Maven repository"
-              withMaven(jdk: 'openjdk-8-jenkins-slave-all',
-                maven: 'maven3-jenkins-slave-all',
-                mavenSettingsConfig: 'folioci-maven-settings') {
-                sh 'mvn -DskipTests deploy'
-              }
-            }
-          }
-          if (publishAPI) {
-            stage('Publish API Docs') {
-              echo "Publishing API docs"
-              sh "python3 /usr/local/bin/generate_api_docs.py -r $env.projectName -l info -o folio-api-docs"
-              withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
-                                accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                                credentialsId: 'jenkins-aws',
-                                secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-                sh 'aws s3 sync folio-api-docs s3://foliodocs/api'
-              }
-            }
-          }
-          if (doKubeDeploy) {
-            stage('Kubernetes Deploy') {
-              echo "Deploying to kubernetes cluster"
-              kubeDeploy('folio-default',
-                "[{" +
-                  "\"name\" : \"${env.name}\"," +
-                  "\"version\" : \"${env.version}\"," +
-                  "\"deploy\":true" +
-                  "}]")
-            }
-          }
-        } else if (env.CHANGE_ID && publishPreview) {
-          stage('Publish Preview Module Descriptor') {
-            echo "Publishing preview module descriptor to CI preview okapi"
-            postPreviewMD()
-          }
+        if (doKubeDeploy) {
           stage('Kubernetes Deploy') {
-            def previewId = "${env.bareVersion}.${env.CHANGE_ID}.${env.BUILD_NUMBER}"
             echo "Deploying to kubernetes cluster"
-            kubeDeploy('folio-preview',
+            kubeDeploy('folio-default',
               "[{" +
                 "\"name\" : \"${env.name}\"," +
-                "\"version\" : \"${previewId}\"," +
+                "\"version\" : \"${env.version}\"," +
                 "\"deploy\":true" +
                 "}]")
           }
         }
-
-
-        if (doLintRamlCop) {
-          stage('Lint raml schema') {
-            runLintRamlSchema()
-          }
+      } else if (env.CHANGE_ID && publishPreview) {
+        stage('Publish Preview Module Descriptor') {
+          echo "Publishing preview module descriptor to CI preview okapi"
+          postPreviewMD()
         }
-      } // end try
-      catch (Exception err) {
-        currentBuild.result = 'FAILED'
-        println(err.getMessage());
-        echo "Build Result: $currentBuild.result"
-        throw err
+        stage('Kubernetes Deploy') {
+          def previewId = "${env.bareVersion}.${env.CHANGE_ID}.${env.BUILD_NUMBER}"
+          echo "Deploying to kubernetes cluster"
+          kubeDeploy('folio-preview',
+            "[{" +
+              "\"name\" : \"${env.name}\"," +
+              "\"version\" : \"${previewId}\"," +
+              "\"deploy\":true" +
+              "}]")
+        }
       }
-      finally {
-        sendNotifications currentBuild.result
+
+
+      if (doLintRamlCop) {
+        stage('Lint raml schema') {
+          runLintRamlSchema()
+        }
       }
-    } //end timeout
-  } // end node
-}
-
-
-
-
-
-
+    } // end try
+    catch (Exception err) {
+      currentBuild.result = 'FAILED'
+      println(err.getMessage());
+      echo "Build Result: $currentBuild.result"
+      throw err
+    }
+    finally {
+      sendNotifications currentBuild.result
+    }
+  } //end timeout
+} // end node
 
 
 
@@ -269,6 +257,5 @@ def dockerDeploy() {
 }
 
 
-run()
 
 
