@@ -1,19 +1,78 @@
 def dockerDeploy() {
-
   def config = [:]
+
+
   // Defaults if not defined.
   def dockerfile = config.dockerfile ?: 'Dockerfile'
   def buildContext = config.dockerDir ?: '.'
   def publishMaster = config.publishMaster ?: 'yes'
 
-  def runArgs = config.runArgs ?: ' '
+  try {
+    dir("${env.WORKSPACE}/${buildContext}") {
+      // build docker image
+      sh "docker build --no-cache=true --pull=true -t ${env.name}:${env.version} ."
 
-  def dockerImage = "${env.name}:${env.version}"
+      // Test container using container healthcheck
+      if ((config.healthChk ==~ /(?i)(Y|YES|T|TRUE)/) && (config.healthChkCmd)) {
+
+        def runArgs = config.runArgs ?: ' '
+        def healthChkCmd = config.healthChkCmd
+        def dockerImage = "${env.name}:${env.version}"
+        def health = dockerContainerHealthCheck(dockerImage,healthChkCmd,runArgs)
+
+        if (health != 'healthy') {
+          echo "Container health check failed: $health"
+          sh 'exit 1'
+        }
+        else {
+          echo "Container health check passed."
+        }
+      }
+      else {
+        echo "No health check configured. Skipping container health check."
+      }
+
+      // publish image if master branch
+
+      if ((env.BRANCH_NAME == 'master') ||
+        (env.isRelease) &&
+        (publishMaster ==~ /(?i)(Y|YES|T|TRUE)/)) {
+        // publish images to ci docker repo
+        echo "Publishing Docker images"
+        docker.withRegistry('https://index.docker.io/v1/', 'DockerHubIDJenkins') {
+          sh "docker tag ${env.name}:${env.version} ${env.dockerRepo}/${env.name}:${env.version}"
+          sh "docker tag ${env.name}:${env.version} ${env.dockerRepo}/${env.name}:latest"
+          sh "docker push ${env.dockerRepo}/${env.name}:${env.version}"
+          sh "docker push ${env.dockerRepo}/${env.name}:latest"
+        }
+      }
+
+    } // end dir()
+
+  } // end try
+
+  catch (Exception err) {
+    println(err.getMessage());
+    throw err
+  }
+
+  finally {
+    echo "Clean up any temporary docker artifacts"
+    sh "docker rmi ${env.name}:${env.version} || exit 0"
+    sh "docker rmi ${env.name}:latest || exit 0"
+    sh "docker rmi ${env.dockerRepo}/${env.name}:${env.version} || exit 0"
+    sh "docker rmi ${env.dockerRepo}/${env.name}:latest || exit 0"
+  }
+
+}
+
+
+def dockerContainerHealthCheck(String dockerImage, String checkCmd, String runArgs) {
 
   def timeout = '5s'
   def retries = 5
   def cidFile = "${dockerImage}-${env.BUILD_NUMBER}.cid"
-  def maxStartupWait = 60
+  def maxStartupWait = 80
   def health = ''
 
   try {
@@ -24,12 +83,11 @@ def dockerDeploy() {
     echo "dockerImage: ${dockerImage}"
     echo "runArgs: ${runArgs}"
 
-
     // exit 1 since 'docker run' can return a variety of non-zero status codes.
     sh """
-        docker run -d --health-timeout=${timeout} --health-retries=${retries} \
-               --health-cmd='curl -sS --fail -o /dev/null  http://localhost:8081/apidocs/ || exit 1' --cidfile $cidFile $dockerImage $runArgs || exit 1
-       """
+      docker run -d --health-timeout=${timeout} --health-retries=${retries} \
+             --health-cmd='${checkCmd}' --cidfile $cidFile $dockerImage $runArgs || exit 1
+     """
 
     def cid = readFile(cidFile)
 
@@ -41,7 +99,7 @@ def dockerDeploy() {
       echo "Current Status: $health"
 
       if (health == 'starting') {
-        sleep 3
+        sleep 5
       }
       else {
         echo "New status: $health"
@@ -59,7 +117,6 @@ def dockerDeploy() {
     return health
   }
 }
-
 
 node('jenkins-slave-all') {
 
