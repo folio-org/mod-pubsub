@@ -1,3 +1,20 @@
+buildMvn {
+  publishModDescriptor = 'yes'
+  publishAPI = 'yes'
+  mvnDeploy = 'yes'
+  runLintRamlCop = 'yes'
+
+  doDocker = {
+    buildJavaDocker {
+      publishMaster = 'yes'
+      healthChk = 'no'
+      healthChkCmd = 'curl -sS --fail -o /dev/null  http://localhost:8081/apidocs/ || exit 1'
+    }
+  }
+
+  healthPing()
+}
+
 def healthPing() {
 
   def config = [:]
@@ -52,23 +69,4 @@ def healthPing() {
     return health
   }
 }
-
-buildMvn {
-  publishModDescriptor = 'yes'
-  publishAPI = 'yes'
-  mvnDeploy = 'yes'
-  runLintRamlCop = 'yes'
-
-  doDocker = {
-    buildJavaDocker {
-      publishMaster = 'yes'
-      healthChk = 'no'
-      healthChkCmd = 'curl -sS --fail -o /dev/null  http://localhost:8081/apidocs/ || exit 1'
-    }
-  }
-
-  healthPing()
-}
-
-
 
