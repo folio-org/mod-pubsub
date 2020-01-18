@@ -13,11 +13,12 @@ buildMvn {
   }
 
 
+  stage('Health Check'){
+    healthPing()
+  }
+
 }
 
-stage('Health Check'){
-  healthPing()
-}
 
 def healthPing() {
 
