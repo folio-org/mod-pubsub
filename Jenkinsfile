@@ -64,10 +64,10 @@ def dockerDeploy() {
 
 def dockerContainerHealthCheck(String dockerImage, String checkCmd, String runArgs) {
 
-  def timeout = '5s'
+  def timeout = '50s'
   def retries = 5
   def cidFile = "${dockerImage}-${env.BUILD_NUMBER}.cid"
-  def maxStartupWait = 80
+  def maxStartupWait = 100
   def health = ''
 
   try {
@@ -80,7 +80,7 @@ def dockerContainerHealthCheck(String dockerImage, String checkCmd, String runAr
 
     // exit 1 since 'docker run' can return a variety of non-zero status codes.
     sh """
-      docker run -d --health-timeout=${timeout} --health-retries=${retries} \
+      docker run -d --interval=50s --health-timeout=${timeout} --health-retries=${retries} \
              --health-cmd='${checkCmd}' --cidfile $cidFile $dockerImage $runArgs || exit 1
      """
 
@@ -94,7 +94,7 @@ def dockerContainerHealthCheck(String dockerImage, String checkCmd, String runAr
       echo "Current Status: $health"
 
       if (health == 'starting') {
-        sleep 5
+        sleep 10
       }
       else {
         echo "New status: $health"
