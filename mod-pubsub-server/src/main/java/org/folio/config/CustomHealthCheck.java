@@ -26,7 +26,7 @@ public class CustomHealthCheck extends AdminAPI {
     }, vertxContext);
   }
 
-  @Override
+/*  @Override
   public void getAdminModuleStats(Map<String, String> okapiHeaders,
                                   Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
@@ -37,5 +37,5 @@ public class CustomHealthCheck extends AdminAPI {
       System.out.println(" --- this is an over ride of the Module Stats API by the config module ");
       asyncResultHandler.handle(io.vertx.core.Future.succeededFuture(GetAdminModuleStatsResponse.respond200WithTextPlain("smth")));
     }, vertxContext);
-  }
+  }*/
 }
