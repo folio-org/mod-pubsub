@@ -194,6 +194,7 @@
           ],
           "pathPattern": "/admin/health",
           "permissionsRequired": [
+            "pubsub.health.get"
           ]
         }
       ]
@@ -264,6 +265,11 @@
       "permissionName": "pubsub.publish.post",
       "displayName": "PubSub - publish event",
       "description": "Publish event"
+    },
+    {
+      "permissionName": "pubsub.health.get",
+      "displayName": "PubSub - health check",
+      "description": "Get health"
     }
   ],
   "launchDescriptor": {
