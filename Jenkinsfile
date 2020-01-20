@@ -15,7 +15,7 @@ def dockerDeploy() {
       // Test container using container healthcheck
 
         def runArgs = config.runArgs ?: ' '
-        def healthChkCmd = 'curl -sS --fail -o /dev/null  http://localhost:8081/apidocs/ || exit 1'
+        def healthChkCmd = 'curl -sS --fail -o /dev/null  http://localhost:8081/admin/health || exit 1'
         def dockerImage = "${env.name}:${env.version}"
         def health = dockerContainerHealthCheck(dockerImage,healthChkCmd,runArgs)
 
