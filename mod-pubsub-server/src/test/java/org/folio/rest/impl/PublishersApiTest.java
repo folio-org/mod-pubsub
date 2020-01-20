@@ -42,16 +42,6 @@ public class PublishersApiTest extends AbstractRestTest {
       .body("totalRecords", is(0));
   }
 
-
-  @Test
-  public void shouldBeAValidEnpoint(){
-    RestAssured.given()
-      .spec(spec)
-      .get("admin/health")
-      .then().log().all()
-      .statusCode(HttpStatus.SC_CREATED);
-  }
-
   @Test
   public void shouldReturnPublisherOnGetByEventType() {
     EventDescriptor createdEventDescriptor1 = postEventDescriptor(eventDescriptor);
