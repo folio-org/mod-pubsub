@@ -183,6 +183,20 @@
           "pathPattern": "/_/tenant"
         }
       ]
+    },
+    {
+      "id": "admin",
+      "version": "0.1",
+      "handlers": [
+        {
+          "methods": [
+            "GET"
+          ],
+          "pathPattern": "/admin/health",
+          "permissionsRequired": [
+          ]
+        }
+      ]
     }
   ],
   "permissionSets": [
