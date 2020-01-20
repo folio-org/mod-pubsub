@@ -183,7 +183,7 @@
           "pathPattern": "/_/tenant"
         }
       ]
-    },
+    }
   ],
   "permissionSets": [
     {
