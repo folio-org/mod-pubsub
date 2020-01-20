@@ -8,7 +8,7 @@ buildMvn {
     buildJavaDocker {
       publishMaster = 'yes'
       healthChk = 'yes'
-      healthChkCmd = 'curl -sS --fail -o /dev/null  http://localhost:8081/admin//module_stats || exit 1'
+      healthChkCmd = 'curl -sS --fail -o /dev/null  http://localhost:8081/health || exit 1'
     }
   }
 }
