@@ -16,6 +16,8 @@ import org.folio.services.audit.AuditService;
 import org.folio.spring.SpringContextUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.sun.glass.ui.SystemClipboard;
+
 public class InitAPIImpl implements InitAPI {
 
   @Autowired
@@ -25,7 +27,7 @@ public class InitAPIImpl implements InitAPI {
   public void init(Vertx vertx, Context context, Handler<AsyncResult<Boolean>> handler) {
     vertx.executeBlocking(
       blockingFuture -> {
-        if(Objects.isNull(context.get("TEST_DEPLOY"))){
+        if(Objects.isNull(System.getenv("TEST_DEPLOY"))){
         SpringContextUtil.init(vertx, context, ApplicationConfig.class);
         SpringContextUtil.autowireDependencies(this, context);
         LiquibaseUtil.initializeSchemaForModule(vertx);

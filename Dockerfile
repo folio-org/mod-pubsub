@@ -5,7 +5,7 @@ ENV VERTICLE_FILE mod-pubsub-server-fat.jar
 # Set the location of the verticles
 ENV VERTICLE_HOME /usr/verticles
 
-ENV TEST_DEPLOY true
+ENV TEST_DEPLOY=true
 
 # Copy your fat jar to the container
 COPY mod-pubsub-server/target/${VERTICLE_FILE} ${VERTICLE_HOME}/${VERTICLE_FILE}
