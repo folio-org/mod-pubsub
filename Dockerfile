@@ -11,4 +11,4 @@ COPY mod-pubsub-server/target/${VERTICLE_FILE} ${VERTICLE_HOME}/${VERTICLE_FILE}
 # Expose this port locally in the container.
 EXPOSE 8081
 
-ENV environmentDeploy=false
+ENV testDeploy=true
