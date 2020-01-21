@@ -23,24 +23,25 @@ public class InitAPIImpl implements InitAPI {
 
   @Override
   public void init(Vertx vertx, Context context, Handler<AsyncResult<Boolean>> handler) {
-    vertx.executeBlocking(
-      blockingFuture -> {
-        if(Objects.isNull(System.getenv("TEST_DEPLOY"))){
-        SpringContextUtil.init(vertx, context, ApplicationConfig.class);
-        SpringContextUtil.autowireDependencies(this, context);
-        LiquibaseUtil.initializeSchemaForModule(vertx);
-        startupService.initSubscribers();
-        blockingFuture.complete();
-        }
-      },
-      result -> {
-        if (result.succeeded()) {
-          initAuditService(vertx);
-          handler.handle(Future.succeededFuture(true));
-        } else {
-          handler.handle(Future.failedFuture(result.cause()));
-        }
-      });
+    if(Objects.isNull(System.getenv("TEST_DEPLOY"))) {
+      vertx.executeBlocking(
+        blockingFuture -> {
+
+          SpringContextUtil.init(vertx, context, ApplicationConfig.class);
+          SpringContextUtil.autowireDependencies(this, context);
+          LiquibaseUtil.initializeSchemaForModule(vertx);
+          startupService.initSubscribers();
+          blockingFuture.complete();
+        },
+        result -> {
+          if (result.succeeded()) {
+            initAuditService(vertx);
+            handler.handle(Future.succeededFuture(true));
+          } else {
+            handler.handle(Future.failedFuture(result.cause()));
+          }
+        });
+    }
   }
 
   private void initAuditService(Vertx vertx) {
