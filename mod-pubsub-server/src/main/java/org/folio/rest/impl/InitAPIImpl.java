@@ -1,5 +1,7 @@
 package org.folio.rest.impl;
 
+import java.util.Objects;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -23,11 +25,13 @@ public class InitAPIImpl implements InitAPI {
   public void init(Vertx vertx, Context context, Handler<AsyncResult<Boolean>> handler) {
     vertx.executeBlocking(
       blockingFuture -> {
+        if(Objects.equals(context.get("env"), true)){
         SpringContextUtil.init(vertx, context, ApplicationConfig.class);
         SpringContextUtil.autowireDependencies(this, context);
         LiquibaseUtil.initializeSchemaForModule(vertx);
         startupService.initSubscribers();
         blockingFuture.complete();
+        }
       },
       result -> {
         if (result.succeeded()) {
