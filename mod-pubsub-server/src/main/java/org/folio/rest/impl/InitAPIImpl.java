@@ -25,8 +25,8 @@ public class InitAPIImpl implements InitAPI {
       blockingFuture -> {
         SpringContextUtil.init(vertx, context, ApplicationConfig.class);
         SpringContextUtil.autowireDependencies(this, context);
-        LiquibaseUtil.initializeSchemaForModule(vertx);
-        startupService.initSubscribers();
+        //LiquibaseUtil.initializeSchemaForModule(vertx);
+        //startupService.initSubscribers();
         blockingFuture.complete();
       },
       result -> {
