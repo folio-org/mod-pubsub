@@ -16,8 +16,6 @@ import org.folio.services.audit.AuditService;
 import org.folio.spring.SpringContextUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.sun.glass.ui.SystemClipboard;
-
 public class InitAPIImpl implements InitAPI {
 
   @Autowired
