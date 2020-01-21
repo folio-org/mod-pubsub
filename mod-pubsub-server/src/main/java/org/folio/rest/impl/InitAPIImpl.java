@@ -25,7 +25,7 @@ public class InitAPIImpl implements InitAPI {
   public void init(Vertx vertx, Context context, Handler<AsyncResult<Boolean>> handler) {
     vertx.executeBlocking(
       blockingFuture -> {
-        if(Objects.equals(context.get("env"), true)){
+        if(Objects.equals(context.get("environmentDeploy"), true)){
         SpringContextUtil.init(vertx, context, ApplicationConfig.class);
         SpringContextUtil.autowireDependencies(this, context);
         LiquibaseUtil.initializeSchemaForModule(vertx);
