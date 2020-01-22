@@ -1,7 +1,5 @@
 package org.folio.rest.impl;
 
-import java.util.Objects;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Future;
@@ -23,25 +21,22 @@ public class InitAPIImpl implements InitAPI {
 
   @Override
   public void init(Vertx vertx, Context context, Handler<AsyncResult<Boolean>> handler) {
-    if(Objects.isNull(System.getenv("TEST_DEPLOY"))) {
-      vertx.executeBlocking(
-        blockingFuture -> {
-
-          SpringContextUtil.init(vertx, context, ApplicationConfig.class);
-          SpringContextUtil.autowireDependencies(this, context);
-          LiquibaseUtil.initializeSchemaForModule(vertx);
-          startupService.initSubscribers();
-          blockingFuture.complete();
-        },
-        result -> {
-          if (result.succeeded()) {
-            initAuditService(vertx);
-            handler.handle(Future.succeededFuture(true));
-          } else {
-            handler.handle(Future.failedFuture(result.cause()));
-          }
-        });
-    }
+    vertx.executeBlocking(
+      blockingFuture -> {
+        SpringContextUtil.init(vertx, context, ApplicationConfig.class);
+        SpringContextUtil.autowireDependencies(this, context);
+        LiquibaseUtil.initializeSchemaForModule(vertx);
+        startupService.initSubscribers();
+        blockingFuture.complete();
+      },
+      result -> {
+        if (result.succeeded()) {
+          initAuditService(vertx);
+          handler.handle(Future.succeededFuture(true));
+        } else {
+          handler.handle(Future.failedFuture(result.cause()));
+        }
+      });
   }
 
   private void initAuditService(Vertx vertx) {
