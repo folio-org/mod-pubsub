@@ -21,7 +21,7 @@ public class InitAPIImpl implements InitAPI {
   private StartupService startupService;
 
   @Autowired
-  private EmbeddedKafkaCluster embeddedKafkaCluster;
+  private static EmbeddedKafkaCluster embeddedKafkaCluster;
 
   @Override
   public void init(Vertx vertx, Context context, Handler<AsyncResult<Boolean>> handler) {
@@ -32,9 +32,7 @@ public class InitAPIImpl implements InitAPI {
         LiquibaseUtil.initializeSchemaForModule(vertx);
         boolean isEmbeddedKafka = Boolean.parseBoolean(context.config().getString("embedded_kafka", "false"));
         if(isEmbeddedKafka) {
-          String[] hostAndPort = embeddedKafkaCluster.getBrokerList().split(":");
-          System.setProperty("KAFKA_HOST", hostAndPort[0]);
-          System.setProperty("KAFKA_PORT", hostAndPort[1]);
+
         }
         startupService.initSubscribers();
         blockingFuture.complete();
