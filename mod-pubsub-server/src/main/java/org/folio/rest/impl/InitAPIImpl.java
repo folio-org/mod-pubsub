@@ -20,9 +20,6 @@ public class InitAPIImpl implements InitAPI {
   @Autowired
   private StartupService startupService;
 
-  @Autowired
-  private static EmbeddedKafkaCluster embeddedKafkaCluster;
-
   @Override
   public void init(Vertx vertx, Context context, Handler<AsyncResult<Boolean>> handler) {
     vertx.executeBlocking(
@@ -34,7 +31,7 @@ public class InitAPIImpl implements InitAPI {
         if(isEmbeddedKafka) {
 
         }*/
-        startupService.initSubscribers(context);
+        startupService.initSubscribers();
         blockingFuture.complete();
       },
       result -> {

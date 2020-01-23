@@ -1,7 +1,5 @@
 package org.folio.services;
 
-import io.vertx.core.Context;
-
 /**
  * Startup Service Interface
  */
