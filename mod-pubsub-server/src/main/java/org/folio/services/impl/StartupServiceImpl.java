@@ -51,11 +51,11 @@ public class StartupServiceImpl implements StartupService {
           securityManager.getJWTToken(messagingModule.getTenantId())
             .compose(token -> {
               OkapiConnectionParams params = new OkapiConnectionParams(vertx);
-              boolean isEmbeddedKafka = Boolean.parseBoolean(context.config().getString("embedded_kafka", "false"));
+          /*    boolean isEmbeddedKafka = Boolean.parseBoolean(context.config().getString("embedded_kafka", "false"));
               if(isEmbeddedKafka){
                 String[] hostAndPort = embeddedKafkaCluster.getBrokerList().split(":");
                 kafkaConfig.changeConfigViaEmbeddedKafka(hostAndPort[1], hostAndPort[0]);
-              }
+              }*/
               params.setOkapiUrl(kafkaConfig.getOkapiUrl());
               params.setTenantId(messagingModule.getTenantId());
               params.setToken(token);

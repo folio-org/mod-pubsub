@@ -11,9 +11,9 @@ import java.util.Map;
 @Component
 public class KafkaConfig {
 
-  @Value("${KAFKA_HOST}")
+  @Value("${KAFKA_HOST:10.0.2.15}")
   private String kafkaHost;
-  @Value("${KAFKA_PORT}")
+  @Value("${KAFKA_PORT:9092}")
   private String kafkaPort;
   @Value("${OKAPI_URL}")
   private String okapiUrl;
@@ -53,8 +53,8 @@ public class KafkaConfig {
     return kafkaHost + ":" + kafkaPort;
   }
 
-  public void changeConfigViaEmbeddedKafka(String kafkaPort, String kafkaHost){
+/*  public void changeConfigViaEmbeddedKafka(String kafkaPort, String kafkaHost){
     this.kafkaHost = kafkaHost;
     this.kafkaPort = kafkaPort;
-  }
+  }*/
 }
