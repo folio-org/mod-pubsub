@@ -37,8 +37,8 @@ public class ApplicationConfig {
     return KafkaAdminClient.create(vertx, configs);
   }
 
-  @Bean
+/*  @Bean
   public EmbeddedKafkaCluster embeddedKafkaCluster(@Autowired Vertx vertx, @Autowired KafkaConfig config) {
     return provisionWith(useDefaults());
-  }
+  }*/
 }
