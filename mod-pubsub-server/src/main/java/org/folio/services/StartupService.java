@@ -10,5 +10,5 @@ public interface StartupService {
   /**
    * Initializes all registered active subscribers
    */
-  void initSubscribers(Context context);
+  void initSubscribers();
 }

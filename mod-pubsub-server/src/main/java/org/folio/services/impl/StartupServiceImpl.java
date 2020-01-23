@@ -28,9 +28,6 @@ public class StartupServiceImpl implements StartupService {
   private ConsumerService consumerService;
   private SecurityManager securityManager;
 
-  @Autowired
-  private EmbeddedKafkaCluster embeddedKafkaCluster;
-
   public StartupServiceImpl(@Autowired Vertx vertx,
                             @Autowired KafkaConfig kafkaConfig,
                             @Autowired MessagingModuleDao messagingModuleDao,
@@ -44,7 +41,7 @@ public class StartupServiceImpl implements StartupService {
   }
 
   @Override
-  public void initSubscribers(Context context) {
+  public void initSubscribers() {
     messagingModuleDao.get(new MessagingModuleFilter().withModuleRole(SUBSCRIBER).withActivated(true))
       .compose(messagingModules -> {
         messagingModules.forEach(messagingModule ->
