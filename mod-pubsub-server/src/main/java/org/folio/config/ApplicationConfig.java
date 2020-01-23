@@ -1,8 +1,5 @@
 package org.folio.config;
 
-import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
-import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.useDefaults;
-
 import io.vertx.core.Vertx;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.admin.KafkaAdminClient;
@@ -12,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import net.mguenther.kafka.junit.EmbeddedKafkaCluster;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,8 +33,4 @@ public class ApplicationConfig {
     return KafkaAdminClient.create(vertx, configs);
   }
 
-/*  @Bean
-  public EmbeddedKafkaCluster embeddedKafkaCluster(@Autowired Vertx vertx, @Autowired KafkaConfig config) {
-    return provisionWith(useDefaults());
-  }*/
 }
