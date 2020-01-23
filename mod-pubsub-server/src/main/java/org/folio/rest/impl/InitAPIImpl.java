@@ -6,6 +6,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.serviceproxy.ServiceBinder;
+import net.mguenther.kafka.junit.EmbeddedKafkaCluster;
 import org.folio.config.ApplicationConfig;
 import org.folio.dao.util.LiquibaseUtil;
 import org.folio.rest.resource.interfaces.InitAPI;
@@ -19,6 +20,9 @@ public class InitAPIImpl implements InitAPI {
   @Autowired
   private StartupService startupService;
 
+  @Autowired
+  private EmbeddedKafkaCluster embeddedKafkaCluster;
+
   @Override
   public void init(Vertx vertx, Context context, Handler<AsyncResult<Boolean>> handler) {
     vertx.executeBlocking(
@@ -26,6 +30,12 @@ public class InitAPIImpl implements InitAPI {
         SpringContextUtil.init(vertx, context, ApplicationConfig.class);
         SpringContextUtil.autowireDependencies(this, context);
         LiquibaseUtil.initializeSchemaForModule(vertx);
+        boolean isEmbeddedKafka = Boolean.parseBoolean(context.config().getString("embedded_kafka", "false"));
+        if(isEmbeddedKafka) {
+          String[] hostAndPort = embeddedKafkaCluster.getBrokerList().split(":");
+          System.setProperty("KAFKA_HOST", hostAndPort[0]);
+          System.setProperty("KAFKA_PORT", hostAndPort[1]);
+        }
         startupService.initSubscribers();
         blockingFuture.complete();
       },

@@ -118,7 +118,6 @@
           <artifactId>jackson-module-scala_2.11</artifactId>
         </exclusion>
       </exclusions>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.github.tomakehurst</groupId>
