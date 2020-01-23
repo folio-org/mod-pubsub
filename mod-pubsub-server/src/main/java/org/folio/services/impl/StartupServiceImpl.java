@@ -1,7 +1,10 @@
 package org.folio.services.impl;
 
+import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import net.mguenther.kafka.junit.EmbeddedKafkaCluster;
+
 import org.folio.dao.MessagingModuleDao;
 import org.folio.kafka.KafkaConfig;
 import org.folio.rest.util.MessagingModuleFilter;
@@ -25,6 +28,9 @@ public class StartupServiceImpl implements StartupService {
   private ConsumerService consumerService;
   private SecurityManager securityManager;
 
+  @Autowired
+  private EmbeddedKafkaCluster embeddedKafkaCluster;
+
   public StartupServiceImpl(@Autowired Vertx vertx,
                             @Autowired KafkaConfig kafkaConfig,
                             @Autowired MessagingModuleDao messagingModuleDao,
@@ -38,13 +44,18 @@ public class StartupServiceImpl implements StartupService {
   }
 
   @Override
-  public void initSubscribers() {
+  public void initSubscribers(Context context) {
     messagingModuleDao.get(new MessagingModuleFilter().withModuleRole(SUBSCRIBER).withActivated(true))
       .compose(messagingModules -> {
         messagingModules.forEach(messagingModule ->
           securityManager.getJWTToken(messagingModule.getTenantId())
             .compose(token -> {
               OkapiConnectionParams params = new OkapiConnectionParams(vertx);
+              boolean isEmbeddedKafka = Boolean.parseBoolean(context.config().getString("embedded_kafka", "false"));
+              if(isEmbeddedKafka){
+                String[] hostAndPort = embeddedKafkaCluster.getBrokerList().split(":");
+                kafkaConfig.changeConfigViaEmbeddedKafka(hostAndPort[1], hostAndPort[0]);
+              }
               params.setOkapiUrl(kafkaConfig.getOkapiUrl());
               params.setTenantId(messagingModule.getTenantId());
               params.setToken(token);

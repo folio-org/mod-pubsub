@@ -30,11 +30,11 @@ public class InitAPIImpl implements InitAPI {
         SpringContextUtil.init(vertx, context, ApplicationConfig.class);
         SpringContextUtil.autowireDependencies(this, context);
         LiquibaseUtil.initializeSchemaForModule(vertx);
-        boolean isEmbeddedKafka = Boolean.parseBoolean(context.config().getString("embedded_kafka", "false"));
+/*        boolean isEmbeddedKafka = Boolean.parseBoolean(context.config().getString("embedded_kafka", "false"));
         if(isEmbeddedKafka) {
 
-        }
-        startupService.initSubscribers();
+        }*/
+        startupService.initSubscribers(context);
         blockingFuture.complete();
       },
       result -> {

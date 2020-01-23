@@ -38,11 +38,7 @@ public class ApplicationConfig {
   }
 
   @Bean
-  public static EmbeddedKafkaCluster embeddedKafkaCluster(@Autowired Vertx vertx, @Autowired KafkaConfig config) {
-    EmbeddedKafkaCluster embeddedKafkaCluster = provisionWith(useDefaults());
-    String[] hostAndPort = embeddedKafkaCluster.getBrokerList().split(":");
-    System.setProperty("KAFKA_HOST", hostAndPort[0]);
-    System.setProperty("KAFKA_PORT", hostAndPort[1]);
+  public EmbeddedKafkaCluster embeddedKafkaCluster(@Autowired Vertx vertx, @Autowired KafkaConfig config) {
     return provisionWith(useDefaults());
   }
 }
