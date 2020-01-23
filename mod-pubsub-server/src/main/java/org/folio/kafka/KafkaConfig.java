@@ -52,9 +52,4 @@ public class KafkaConfig {
   public String getKafkaUrl() {
     return kafkaHost + ":" + kafkaPort;
   }
-
-/*  public void changeConfigViaEmbeddedKafka(String kafkaPort, String kafkaHost){
-    this.kafkaHost = kafkaHost;
-    this.kafkaPort = kafkaPort;
-  }*/
 }

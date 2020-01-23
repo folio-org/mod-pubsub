@@ -6,7 +6,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.serviceproxy.ServiceBinder;
-import net.mguenther.kafka.junit.EmbeddedKafkaCluster;
 import org.folio.config.ApplicationConfig;
 import org.folio.dao.util.LiquibaseUtil;
 import org.folio.rest.resource.interfaces.InitAPI;
@@ -27,10 +26,6 @@ public class InitAPIImpl implements InitAPI {
         SpringContextUtil.init(vertx, context, ApplicationConfig.class);
         SpringContextUtil.autowireDependencies(this, context);
         LiquibaseUtil.initializeSchemaForModule(vertx);
-/*        boolean isEmbeddedKafka = Boolean.parseBoolean(context.config().getString("embedded_kafka", "false"));
-        if(isEmbeddedKafka) {
-
-        }*/
         startupService.initSubscribers();
         blockingFuture.complete();
       },
