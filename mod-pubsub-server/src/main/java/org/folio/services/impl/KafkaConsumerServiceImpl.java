@@ -108,6 +108,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
           messagingModuleList
             .forEach(subscriber -> doRequest(event.getEventPayload(), subscriber.getSubscriberCallback(), HttpMethod.POST, params)
               .setHandler(getEventDeliveredHandler(event, params.getTenantId(), subscriber)));
+          LOGGER.info("Event with id: {} delivered", event.getId());
         }
         return Future.succeededFuture();
       });
