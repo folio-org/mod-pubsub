@@ -90,6 +90,34 @@ public class PublishTest extends AbstractRestTest {
       .statusCode(HttpStatus.SC_NO_CONTENT);
   }
 
+  @Test
+  public void shouldNotFailedWhenRegisterEmptyPublishersList() {
+    PublisherDescriptor publisherDescriptor = new PublisherDescriptor()
+      .withEventDescriptors(Collections.emptyList())
+      .withModuleId("mod-very-important-1.0.0");
+
+    Response postResponse = RestAssured.given()
+      .spec(spec)
+      .body(publisherDescriptor)
+      .when()
+      .post(EVENT_TYPES_PATH + DECLARE_PUBLISHER_PATH);
+    Assert.assertThat(postResponse.statusCode(), is(HttpStatus.SC_CREATED));
+  }
+
+  @Test
+  public void shouldNotFailedWhenRegisterEmptySubscribersList() {
+    SubscriberDescriptor subscriberDescriptor = new SubscriberDescriptor()
+      .withSubscriptionDefinitions(Collections.emptyList())
+      .withModuleId("mod-important-1.0.0");
+
+    Response postResponse = RestAssured.given()
+      .spec(spec)
+      .body(subscriberDescriptor)
+      .when()
+      .post(EVENT_TYPES_PATH + DECLARE_SUBSCRIBER_PATH);
+    Assert.assertThat(postResponse.statusCode(), is(HttpStatus.SC_CREATED));
+  }
+
   private void registerPublisher(EventDescriptor eventDescriptor) {
     PublisherDescriptor publisherDescriptor = new PublisherDescriptor()
       .withEventDescriptors(Collections.singletonList(eventDescriptor))
