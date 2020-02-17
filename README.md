@@ -240,6 +240,20 @@ To publish an event `PubSubClientUtils` class provides `sendEventMessage` method
   }
 ```
 
+Notes: 
+- "eventTTL" - property in event should be non empty (required);
+- "publishedBy" - property in event should be valid regarding module`s id;
+- "pubsub" user should be created (or already exists);
+- specific permissions for 'mod-pubsub' should be added (or already exists);
+- record to the table "user_permissions" should be created for "pubsub" user with list of permission for 'mod-pubsub'(or already exists);
+- the response from modules should be returned to the 'mod-pubsub' before business logic (because 'mod-pubsub' waiting for the response from subscriber module);
+- if events were not published/delivered, check if there are registered publishers and subscribers with specific events declaration using this API: https://s3.amazonaws.com/foliodocs/api/mod-pubsub/pubSub.html. Moreover, if there are some problems with 'mod-pubsub' workflow, check history via this endpoint: https://s3.amazonaws.com/foliodocs/api/mod-pubsub/pubSub.html#pubsub_history_get   
+
+##Performance testing
+First performance testing for this module: https://wiki.folio.org/pages/viewpage.action?spaceKey=FOLIJET&title=mod-pubsub+performance+testing
+
+For further investigation: https://issues.folio.org/browse/MODPUBSUB-68.
+
 ## Issue tracker
 
 See project [MODPUBSUB](https://issues.folio.org/browse/MODPUBSUB)
