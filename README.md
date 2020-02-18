@@ -428,6 +428,60 @@ Check if "pub-sub" user exists in the system. If user exists, then:
 
 #####So, the token for the "pub-sub" user will be used for delivering event to subscriber module.
 
+- Moreover, registered modules should provides this interface with specific "modulePermissions" in "ModuleDescriptor-template.json":
+```json
+  "provides": [
+    {
+      "id": "_tenant",
+      "version": "1.2",
+      "interfaceType": "system",
+      "handlers": [
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/_/tenant",
+          "modulePermissions": [
+            "pubsub.event-types.post",
+            "pubsub.publishers.post",
+            "pubsub.subscribers.post"
+          ]
+        },
+        {
+          "methods": [
+            "DELETE"
+          ],
+          "pathPattern": "/_/tenant"
+        }
+      ]
+    }
+  ]
+```
+
+and requires these:
+```json
+  "requires": [
+    {
+      "id": "pubsub-event-types",
+      "version": "0.1"
+    },
+    {
+      "id": "pubsub-publishers",
+      "version": "0.1"
+    },
+    {
+      "id": "pubsub-subscribers",
+      "version": "0.1"
+    },
+    {
+      "id": "pubsub-publish",
+      "version": "0.1"
+    }
+  ]
+```
+
+- In "mod-pubsub" user permissions are declared in "mod-pubsub-server/src/main/resources/permissions/pubsub-user-permissions.csv"
+
 
 ####Performance testing
 First performance testing for this module: https://wiki.folio.org/pages/viewpage.action?spaceKey=FOLIJET&title=mod-pubsub+performance+testing
