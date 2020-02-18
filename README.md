@@ -429,7 +429,7 @@ Check if "pub-sub" user exists in the system. If user exists, then:
 #####So, the token for the "pub-sub" user will be used for delivering event to subscriber module.
 
 
-##Performance testing
+####Performance testing
 First performance testing for this module: https://wiki.folio.org/pages/viewpage.action?spaceKey=FOLIJET&title=mod-pubsub+performance+testing
 
 For further investigation: https://issues.folio.org/browse/MODPUBSUB-68.
