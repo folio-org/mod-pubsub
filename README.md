@@ -482,12 +482,6 @@ and requires these:
 
 - In "mod-pubsub" user permissions are declared in "mod-pubsub-server/src/main/resources/permissions/pubsub-user-permissions.csv"
 
-
-####Performance testing
-First performance testing for this module: https://wiki.folio.org/pages/viewpage.action?spaceKey=FOLIJET&title=mod-pubsub+performance+testing
-
-For further investigation: https://issues.folio.org/browse/MODPUBSUB-68.
-
 ## Issue tracker
 
 See project [MODPUBSUB](https://issues.folio.org/browse/MODPUBSUB)
