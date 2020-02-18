@@ -240,14 +240,194 @@ To publish an event `PubSubClientUtils` class provides `sendEventMessage` method
   }
 ```
 
-Notes: 
-- "eventTTL" - property in event should be non empty (required);
-- "publishedBy" - property in event should be valid regarding module`s id;
-- "pubsub" user should be created (or already exists);
-- specific permissions for 'mod-pubsub' should be added (or already exists);
-- record to the table "user_permissions" should be created for "pubsub" user with list of permission for 'mod-pubsub'(or already exists);
-- the response from modules should be returned to the 'mod-pubsub' before business logic (because 'mod-pubsub' waiting for the response from subscriber module);
-- if events were not published/delivered, check if there are registered publishers and subscribers with specific events declaration using this API: https://s3.amazonaws.com/foliodocs/api/mod-pubsub/pubSub.html. Moreover, if there are some problems with 'mod-pubsub' workflow, check history via this endpoint: https://s3.amazonaws.com/foliodocs/api/mod-pubsub/pubSub.html#pubsub_history_get   
+####Simple workflow example
+For example, we have 2 modules: publisher and subscriber.
+Publisher will publish event to the "mod-pubsub" and it will deliver to the subscriber module.
+- So, at first we should to register first module as "publisher" to the "mod-pubsub". So, we will create new file "MessagingDescriptor.json" to the root folder:
+```
+{
+  "publications": [
+    {
+      "eventType": "CREATED_TEST_EVENT",
+      "description": "Created test event",
+      "eventTTL": 1,
+      "signed": false
+    }
+  ],
+  "subscriptions": [
+  ]
+}
+```
+This module was declared as publisher for this event type.
+- Then, we should register this module to the "mod-pubsub":
+```java
+public class ModTenantAPI extends TenantAPI {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(ModTenantAPI.class);
+
+  @Override
+  public void postTenant(TenantAttributes tenantAttributes, Map<String, String> headers, Handler<AsyncResult<Response>> handler, Context context) {
+    super.postTenant(tenantAttributes, headers, postTenantAr -> {
+      if (postTenantAr.failed()) {
+        handler.handle(postTenantAr);
+      } else {
+        Vertx vertx = context.owner();
+        vertx.executeBlocking(
+          blockingFuture -> registerModuleToPubsub(headers, context.owner())
+            .setHandler(event -> handler.handle(postTenantAr)),
+          result -> handler.handle(postTenantAr)
+        );
+      }
+    }, context);
+  }
+
+  private Future<Void> registerModuleToPubsub(Map<String, String> headers, Vertx vertx) {
+    Promise<Void> promise = Promise.promise();
+    PubSubClientUtils.registerModule(new org.folio.rest.util.OkapiConnectionParams(headers, vertx))
+      .whenComplete((registrationAr, throwable) -> {
+        if (throwable == null) {
+          LOGGER.info("Module was successfully registered as publisher/subscriber in mod-pubsub");
+          promise.complete();
+        } else {
+          LOGGER.error("Error during module registration in mod-pubsub", throwable);
+          promise.fail(throwable);
+        }
+      });
+    return promise.future();
+  }
+}
+```
+
+- Then, let`s create new endpoint, which will send this event to the other module via "mod-pubsub". Create it in the "publisher-module.raml"-file:
+```raml
+/publisher:
+  /publish:
+    displayName: Publish event
+    description: API used by publisher to send events
+    post:
+      body:
+        application/json:
+          schema: sample
+      responses:
+        204:
+        400:
+          body:
+            application/json:
+              schema: errors
+        500:
+          description: "Internal server error"
+          body:
+            text/plain:
+              example: "Internal server error"
+```
+- Then, implement sending event via created endpoint:
+```java
+public class PublishImpl implements Publisher {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(BatchPublishImpl.class);
+
+  @Override
+  public void postPublisherBatchPublish(Sample entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    Event event = new Event().
+      withEventType("CREATED_TEST_EVENT")
+      .withEventPayload("Test payload")
+      .withEventMetadata(new EventMetadata()
+        .withPublishedBy("mod-publisher")
+        .withTenantId(okapiHeaders.get(OKAPI_TENANT_HEADER))
+        .withEventTTL(1));
+
+        publishEvent(okapiHeaders, asyncResultHandler, vertxContext, event);
+  }
+
+  private void publishEvent(Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext, Event event) {
+    OkapiConnectionParams params = new OkapiConnectionParams(okapiHeaders, vertxContext.owner());
+    PubSubClientUtils.sendEventMessage(event, params)
+      .whenComplete((result, throwable) -> {
+        if (result) {
+          LOGGER.info("Event published successfully: {}", event.getId());
+          asyncResultHandler.handle(Future.succeededFuture());
+        } else {
+          LOGGER.error("Failed to publish event: {}", event.getId());
+          asyncResultHandler.handle(Future.failedFuture("Failed to publish event"));
+        }
+      });
+  }
+}
+```
+
+
+- After that, let's create subscriber module. At first, declare this module as "subscriber". "MessagingDescriptor.json"-file:
+```json
+{
+  "publications": [
+  ],
+  "subscriptions": [
+    {
+      "eventType": "CREATED_TEST_EVENT",
+      "callbackAddress": "/process/records"
+    }
+  ]
+}
+
+```
+Endpoint, which will receive the event from the publisher module has address: "/process/records".
+
+- Register this subscriber module to the "mod-pubsub" the same way as first module via TenantAPI.
+
+- Create new endpoint which was declared as "callbackAddress" via raml:
+```raml
+/process/records:
+    displayName: Publish event
+    description: API used by subscriber to catch events
+    post:
+      body:
+        application/json:
+          type: string
+      responses:
+        204:
+        400:
+          body:
+            application/json:
+              schema: errors
+        500:
+          description: "Internal server error"
+          body:
+            text/plain:
+              example: "Internal server error"
+```
+Then, let's create logic for logging event in subscriber's new endpoint which was declared as "callbackAddress" in the "MessagingDescriptor.json":
+```java
+public class ProcessRecordsImpl implements ProcessRecords {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(ProcessRecordsImpl.class);
+
+  @Override
+  public void postProcessRecords(String entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+    asyncResultHandler.handle(Future.succeededFuture());
+    LOGGER.info("Event: {}", entity);
+  }
+}
+```
+Keep in mind, that subscriber module should return response to the "mod-pubsub" before all business-logic. Main reasons for it:
+- Extra connection to the module should be closed for best performance;
+- There is no need for waiting response from subscriber's logic because this is not "mod-pubsub" responsibility. It should only deliver event to this module.
+
+As result, we can just trigger "/publisher/publish" endpoint, and publisher module will sent event to the "mod-pubsub". After that, "mod-pubsub" will deliver it to the subscriber module. And it will log this event to the console.
+
+####Permissions
+#####"mod-pubsub" permissions workflow:
+Check if "pub-sub" user exists in the system. If user exists, then:
+- read list with permissions from file "pubsub-user-permissions.csv"
+
+ #####Otherwise:
+ If user does not exist in the system, then:
+ - create "pub-sub" user;
+ - check credentials for "pub-sub" user, and create them if not exist;
+ - assign permissions for "pub-sub" user (add new record with "pub-sub" user and specific permissions for it to the "user_permissions" table). 
+
+
+#####So, the token for the "pub-sub" user will be used for delivering event to subscriber module.
+
 
 ##Performance testing
 First performance testing for this module: https://wiki.folio.org/pages/viewpage.action?spaceKey=FOLIJET&title=mod-pubsub+performance+testing
