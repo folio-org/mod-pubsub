@@ -242,8 +242,8 @@ To publish an event `PubSubClientUtils` class provides `sendEventMessage` method
 
 ####Simple workflow example
 For example, we have 2 modules: publisher and subscriber.
-Publisher will publish event to the "mod-pubsub" and it will deliver to the subscriber module.
-- So, at first we should to register first module as "publisher" to the "mod-pubsub". So, we will create new file "MessagingDescriptor.json" to the root folder:
+Publisher publishes an event to the "mod-pubsub", which will be delivered to the subscriber module.
+- First, we should register the first module as "publisher" in "mod-pubsub". To do so, we create a new file "MessagingDescriptor.json"  in the root folder:
 ```
 {
   "publications": [
@@ -258,8 +258,12 @@ Publisher will publish event to the "mod-pubsub" and it will deliver to the subs
   ]
 }
 ```
-This module was declared as publisher for this event type.
-- Then, we should register this module to the "mod-pubsub":
+
+This way the module is being declared as publisher for the "CREATED_TEST_EVENT" type.
+
+
+  
+- Second, we should register the module in "mod-pubsub":
 ```java
 public class ModTenantAPI extends TenantAPI {
 
@@ -298,36 +302,39 @@ public class ModTenantAPI extends TenantAPI {
 }
 ```
 
-- Then, let`s create new endpoint, which will send this event to the other module via "mod-pubsub". Create it in the "publisher-module.raml"-file:
-```raml
-/publisher:
-  /publish:
-    displayName: Publish event
-    description: API used by publisher to send events
-    post:
-      body:
-        application/json:
-          schema: sample
-      responses:
-        204:
-        400:
-          body:
-            application/json:
-              schema: errors
-        500:
-          description: "Internal server error"
-          body:
-            text/plain:
-              example: "Internal server error"
+- In addition, modules registered as "publishers" and/or "subscribers" should add specific "pub-sub" permission as "modulePermissions" in "ModuleDescriptor-template.json":
+  ```json
+    "provides": [
+      {
+        "id": "_tenant",
+        "version": "1.2",
+        "interfaceType": "system",
+        "handlers": [
+          {
+            "methods": [
+              "POST"
+            ],
+            "pathPattern": "/_/tenant",
+            "modulePermissions": [
+              "pubsub.event-types.post",
+              "pubsub.publishers.post",
+              "pubsub.subscribers.post"
+            ]
+          },
+          {
+            "methods": [
+              "DELETE"
+            ],
+            "pathPattern": "/_/tenant"
+          }
+        ]
+      }
+    ]
+  ```
+
+- Then, implement sending event anywhere in your code:
 ```
-- Then, implement sending event via created endpoint:
-```java
-public class PublishImpl implements Publisher {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(BatchPublishImpl.class);
-
-  @Override
-  public void postPublisherBatchPublish(Sample entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
+  private void publishEvent(Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext, Event event) {
     Event event = new Event().
       withEventType("CREATED_TEST_EVENT")
       .withEventPayload("Test payload")
@@ -335,11 +342,6 @@ public class PublishImpl implements Publisher {
         .withPublishedBy("mod-publisher")
         .withTenantId(okapiHeaders.get(OKAPI_TENANT_HEADER))
         .withEventTTL(1));
-
-        publishEvent(okapiHeaders, asyncResultHandler, vertxContext, event);
-  }
-
-  private void publishEvent(Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext, Event event) {
     OkapiConnectionParams params = new OkapiConnectionParams(okapiHeaders, vertxContext.owner());
     PubSubClientUtils.sendEventMessage(event, params)
       .whenComplete((result, throwable) -> {
@@ -351,12 +353,11 @@ public class PublishImpl implements Publisher {
           asyncResultHandler.handle(Future.failedFuture("Failed to publish event"));
         }
       });
-  }
 }
 ```
 
 
-- After that, let's create subscriber module. At first, declare this module as "subscriber". "MessagingDescriptor.json"-file:
+- After that, let's create subscriber module. At first, define "MessagingDescriptor.json"-file for subscriber module:
 ```json
 {
   "publications": [
@@ -372,9 +373,9 @@ public class PublishImpl implements Publisher {
 ```
 Endpoint, which will receive the event from the publisher module has address: "/process/records".
 
-- Register this subscriber module to the "mod-pubsub" the same way as first module via TenantAPI.
+- Register this subscriber module in the "mod-pubsub" the same way as first module via TenantAPI.
 
-- Create new endpoint which was declared as "callbackAddress" via raml:
+- Create new endpoint which was declared as "callbackAddress" using raml:
 ```raml
 /process/records:
     displayName: Publish event
@@ -412,73 +413,23 @@ Keep in mind, that subscriber module should return response to the "mod-pubsub" 
 - Extra connection to the module should be closed for best performance;
 - There is no need for waiting response from subscriber's logic because this is not "mod-pubsub" responsibility. It should only deliver event to this module.
 
-As result, we can just trigger "/publisher/publish" endpoint, and publisher module will sent event to the "mod-pubsub". After that, "mod-pubsub" will deliver it to the subscriber module. And it will log this event to the console.
+As a result, we can send an event from the publisher module to "mod-pubsub" and "mod-pubsub" will deliver it to the subscriber module.
 
 ####Permissions
 #####"mod-pubsub" permissions workflow:
-Check if "pub-sub" user exists in the system. If user exists, then:
-- read list with permissions from file "pubsub-user-permissions.csv"
+At first "mod-pubsub" checks whether "pub-sub" user exists in the system. If user exists, then:
+- adds persmissions from the file "pubsub-user-permissions.csv" for the "pub-sub" user.
 
  #####Otherwise:
  If user does not exist in the system, then:
- - create "pub-sub" user;
- - check credentials for "pub-sub" user, and create them if not exist;
- - assign permissions for "pub-sub" user (add new record with "pub-sub" user and specific permissions for it to the "user_permissions" table). 
+ - "pub-sub" user is created;
+ - "pub-sub" user credentials are created;
+ - permissions are assigned for "pub-sub" user (new record added with "pub-sub" user and specific permissions for it to the "user_permissions" table). 
 
 
-#####So, the token for the "pub-sub" user will be used for delivering event to subscriber module.
+#####After the "pub-sub" user is logged in, it`s token is used for delivering events to subscriber module.
 
-- Moreover, registered modules should provides this interface with specific "modulePermissions" in "ModuleDescriptor-template.json":
-```json
-  "provides": [
-    {
-      "id": "_tenant",
-      "version": "1.2",
-      "interfaceType": "system",
-      "handlers": [
-        {
-          "methods": [
-            "POST"
-          ],
-          "pathPattern": "/_/tenant",
-          "modulePermissions": [
-            "pubsub.event-types.post",
-            "pubsub.publishers.post",
-            "pubsub.subscribers.post"
-          ]
-        },
-        {
-          "methods": [
-            "DELETE"
-          ],
-          "pathPattern": "/_/tenant"
-        }
-      ]
-    }
-  ]
-```
 
-and requires these:
-```json
-  "requires": [
-    {
-      "id": "pubsub-event-types",
-      "version": "0.1"
-    },
-    {
-      "id": "pubsub-publishers",
-      "version": "0.1"
-    },
-    {
-      "id": "pubsub-subscribers",
-      "version": "0.1"
-    },
-    {
-      "id": "pubsub-publish",
-      "version": "0.1"
-    }
-  ]
-```
 
 - In "mod-pubsub" user permissions are declared in "mod-pubsub-server/src/main/resources/permissions/pubsub-user-permissions.csv"
 
