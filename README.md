@@ -240,7 +240,7 @@ To publish an event `PubSubClientUtils` class provides `sendEventMessage` method
   }
 ```
 
-####Simple workflow example
+#### Simple workflow example
 For example, we have 2 modules: publisher and subscriber.
 Publisher publishes an event to the "mod-pubsub", which will be delivered to the subscriber module.
 - First, we should register the first module as "publisher" in "mod-pubsub". To do so, we create a new file "MessagingDescriptor.json"  in the root folder:
@@ -415,19 +415,19 @@ Keep in mind, that subscriber module should return response to the "mod-pubsub" 
 
 As a result, we can send an event from the publisher module to "mod-pubsub" and "mod-pubsub" will deliver it to the subscriber module.
 
-####Permissions
-#####"mod-pubsub" permissions workflow:
+#### Permissions
+##### "mod-pubsub" permissions workflow:
 At first "mod-pubsub" checks whether "pub-sub" user exists in the system. If user exists, then:
 - adds persmissions from the file "pubsub-user-permissions.csv" for the "pub-sub" user.
 
- #####Otherwise:
+ ##### Otherwise:
  If user does not exist in the system, then:
  - "pub-sub" user is created;
  - "pub-sub" user credentials are created;
  - permissions are assigned for "pub-sub" user (new record added with "pub-sub" user and specific permissions for it to the "user_permissions" table). 
 
 
-#####After the "pub-sub" user is logged in, it`s token is used for delivering events to subscriber module.
+##### After the "pub-sub" user is logged in, it`s token is used for delivering events to subscriber module.
 
 
 
