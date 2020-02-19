@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -22,6 +23,7 @@ import org.folio.rest.jaxrs.model.MessagingModule;
 import org.folio.rest.util.MessagingModuleFilter;
 import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.rest.util.RestUtil;
+import org.folio.services.SecurityManager;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -29,6 +31,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
@@ -55,17 +58,22 @@ public class ConsumerServiceUnitTest {
   private static final String TOKEN = "token";
   private static final String CALLBACK_ADDRESS = "/source-storage/records";
   private static final String EVENT_TYPE = "record_created";
+  private static final String TOKEN_KEY_FORMAT = "%s_JWTToken";
 
+  @Spy
+  private Vertx vertx = Vertx.vertx();
   @Mock
   private KafkaConfig kafkaConfig;
   @Mock
   private MessagingModuleDao messagingModuleDao;
+  @Mock
+  private SecurityManager securityManager;
   @Spy
   @InjectMocks
-  private KafkaConsumerServiceImpl consumerService = new KafkaConsumerServiceImpl(Vertx.vertx(), kafkaConfig, messagingModuleDao);
+  private KafkaConsumerServiceImpl consumerService = new KafkaConsumerServiceImpl(vertx, kafkaConfig, messagingModuleDao, securityManager);
 
   private Map<String, String> headers = new HashMap<>();
-  private Vertx vertx = Vertx.vertx();
+//  private Vertx vertx = Vertx.vertx();
 
   @Rule
   public WireMockRule mockServer = new WireMockRule(
@@ -76,6 +84,13 @@ public class ConsumerServiceUnitTest {
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
+    Context vertxContext = vertx.getOrCreateContext();
+    when(vertx.getOrCreateContext()).thenReturn(vertxContext);
+    when(securityManager.loginPubSubUser(any(OkapiConnectionParams.class))).then(invocationOnMock -> {
+      vertxContext.put(String.format(TOKEN_KEY_FORMAT, TENANT), TOKEN);
+      return Future.succeededFuture(true);
+    });
+
     headers.put(OKAPI_URL_HEADER, "http://localhost:" + mockServer.port());
     headers.put(OKAPI_TENANT_HEADER, TENANT);
     headers.put(OKAPI_TOKEN_HEADER, TOKEN);

@@ -26,6 +26,7 @@ import org.folio.rest.jaxrs.model.MessagingModule;
 import org.folio.rest.util.MessagingModuleFilter;
 import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.services.ConsumerService;
+import org.folio.services.SecurityManager;
 import org.folio.services.audit.AuditService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -46,17 +47,22 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(KafkaConsumerServiceImpl.class);
 
+  private static final String TOKEN_KEY_FORMAT = "%s_JWTToken";
+
   private Vertx vertx;
   private KafkaConfig kafkaConfig;
   private MessagingModuleDao messagingModuleDao;
   private AuditService auditService;
+  private SecurityManager securityManager;
 
   public KafkaConsumerServiceImpl(@Autowired Vertx vertx,
                                   @Autowired KafkaConfig kafkaConfig,
-                                  @Autowired MessagingModuleDao messagingModuleDao) {
+                                  @Autowired MessagingModuleDao messagingModuleDao,
+                                  @Autowired SecurityManager securityManager) {
     this.vertx = vertx;
     this.kafkaConfig = kafkaConfig;
     this.messagingModuleDao = messagingModuleDao;
+    this.securityManager = securityManager;
     this.auditService = AuditService.createProxy(vertx);
   }
 
@@ -96,10 +102,12 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
   }
 
   protected Future<Void> deliverEvent(Event event, OkapiConnectionParams params) {
-    return messagingModuleDao.get(new MessagingModuleFilter()
-      .withTenantId(params.getTenantId())
-      .withModuleRole(SUBSCRIBER)
-      .withEventType(event.getEventType()))
+    return getJWTToken(params)
+      .compose(token -> setTokenToParams(token, params))
+      .compose(ar -> messagingModuleDao.get(new MessagingModuleFilter()
+        .withTenantId(params.getTenantId())
+        .withModuleRole(SUBSCRIBER)
+        .withEventType(event.getEventType())))
       .compose(messagingModuleList -> {
         if (CollectionUtils.isEmpty(messagingModuleList)) {
           String errorMessage = format("There is no SUBSCRIBERS registered for event type %s. Event %s will not be delivered", event.getEventType(), event.getId());
@@ -142,6 +150,20 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
       .withPublishedBy(event.getEventMetadata().getPublishedBy())
       .withAuditDate(new Date())
       .withState(state)));
+  }
+
+  private Future<String> getJWTToken(OkapiConnectionParams params) {
+    String token = vertx.getOrCreateContext().get(format(TOKEN_KEY_FORMAT, params.getTenantId()));
+    if (StringUtils.isEmpty(token)) {
+      return securityManager.loginPubSubUser(params)
+        .map(vertx.getOrCreateContext().<String>get(format(TOKEN_KEY_FORMAT, params.getTenantId())));
+    }
+    return Future.succeededFuture(token);
+  }
+
+  private Future<Void> setTokenToParams(String token, OkapiConnectionParams params) {
+    params.setToken(token);
+    return Future.succeededFuture();
   }
 
 }
