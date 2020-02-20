@@ -61,9 +61,8 @@ public class SecurityManagerImpl implements SecurityManager {
       .compose(response -> {
         if (response.statusCode() == HttpStatus.HTTP_CREATED.toInt()) {
           LOGGER.info("Logged in pub-sub user");
-          String token = response.getHeader(OKAPI_TOKEN_HEADER);
-          return pubSubUserDao.savePubSubJWTToken(response.getHeader(OKAPI_TOKEN_HEADER), params.getTenantId())
-            .map(ar -> putTokenToVertxContext(token, params));
+          putTokenToVertxContext(response.getHeader(OKAPI_TOKEN_HEADER), params);
+          return Future.succeededFuture(true);
         }
         LOGGER.error("pub-sub user was not logged in, received status {}", response.statusCode());
         return Future.succeededFuture(false);
@@ -71,8 +70,13 @@ public class SecurityManagerImpl implements SecurityManager {
   }
 
   @Override
-  public Future<String> getJWTToken(String tenantId) {
-    return pubSubUserDao.getPubSubJWTToken(tenantId);
+  public Future<String> getJWTToken(OkapiConnectionParams params) {
+    String token = vertx.getOrCreateContext().get(format(TOKEN_KEY_FORMAT, params.getTenantId()));
+    if (StringUtils.isEmpty(token)) {
+      return loginPubSubUser(params)
+        .map(vertx.getOrCreateContext().<String>get(format(TOKEN_KEY_FORMAT, params.getTenantId())));
+    }
+    return Future.succeededFuture(token);
   }
 
   @Override

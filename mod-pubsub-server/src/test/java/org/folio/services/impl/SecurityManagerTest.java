@@ -97,7 +97,7 @@ public class SecurityManagerTest extends AbstractRestTest {
     params.setToken(TOKEN);
 
     Future<String> future = securityManager.loginPubSubUser(params)
-      .compose(ar -> securityManager.getJWTToken(params.getTenantId()));
+      .compose(ar -> securityManager.getJWTToken(params));
 
     future.setHandler(ar -> {
       assertTrue(ar.succeeded());

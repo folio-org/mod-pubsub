@@ -47,8 +47,6 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(KafkaConsumerServiceImpl.class);
 
-  private static final String TOKEN_KEY_FORMAT = "%s_JWTToken";
-
   private Vertx vertx;
   private KafkaConfig kafkaConfig;
   private MessagingModuleDao messagingModuleDao;
@@ -102,7 +100,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
   }
 
   protected Future<Void> deliverEvent(Event event, OkapiConnectionParams params) {
-    return getJWTToken(params)
+    return securityManager.getJWTToken(params)
       .compose(token -> setTokenToParams(token, params))
       .compose(ar -> messagingModuleDao.get(new MessagingModuleFilter()
         .withTenantId(params.getTenantId())
@@ -150,15 +148,6 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
       .withPublishedBy(event.getEventMetadata().getPublishedBy())
       .withAuditDate(new Date())
       .withState(state)));
-  }
-
-  private Future<String> getJWTToken(OkapiConnectionParams params) {
-    String token = vertx.getOrCreateContext().get(format(TOKEN_KEY_FORMAT, params.getTenantId()));
-    if (StringUtils.isEmpty(token)) {
-      return securityManager.loginPubSubUser(params)
-        .map(vertx.getOrCreateContext().<String>get(format(TOKEN_KEY_FORMAT, params.getTenantId())));
-    }
-    return Future.succeededFuture(token);
   }
 
   private Future<Void> setTokenToParams(String token, OkapiConnectionParams params) {
