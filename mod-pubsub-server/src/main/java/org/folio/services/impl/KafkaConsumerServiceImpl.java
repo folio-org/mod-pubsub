@@ -101,7 +101,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
 
   protected Future<Void> deliverEvent(Event event, OkapiConnectionParams params) {
     return securityManager.getJWTToken(params)
-      .compose(token -> setTokenToParams(token, params))
+      .onSuccess(params::setToken)
       .compose(ar -> messagingModuleDao.get(new MessagingModuleFilter()
         .withTenantId(params.getTenantId())
         .withModuleRole(SUBSCRIBER)
@@ -148,11 +148,6 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
       .withPublishedBy(event.getEventMetadata().getPublishedBy())
       .withAuditDate(new Date())
       .withState(state)));
-  }
-
-  private Future<Void> setTokenToParams(String token, OkapiConnectionParams params) {
-    params.setToken(token);
-    return Future.succeededFuture();
   }
 
 }
