@@ -219,9 +219,8 @@ public class SecurityManagerImpl implements SecurityManager {
     return permissions;
   }
 
-  private Boolean putTokenToVertxContext(String token, OkapiConnectionParams params) {
+  private void putTokenToVertxContext(String token, OkapiConnectionParams params) {
     vertx.getOrCreateContext().put(format(TOKEN_KEY_FORMAT, params.getTenantId()), token);
-    return true;
   }
 
 }
