@@ -13,11 +13,9 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.folio.HttpStatus;
-import org.folio.dao.MessagingModuleDao;
 import org.folio.kafka.KafkaConfig;
 import org.folio.kafka.PubSubConfig;
 import org.folio.rest.jaxrs.model.AuditMessage;
@@ -28,38 +26,42 @@ import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.services.ConsumerService;
 import org.folio.services.SecurityManager;
 import org.folio.services.audit.AuditService;
+import org.folio.services.cache.MessagingModuleStorage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
 import static org.folio.rest.util.RestUtil.doRequest;
+import static org.folio.services.util.AuditUtil.constructJsonAuditMessage;
+import static org.folio.services.util.MessagingModulesUtil.filter;
 
 @Component
 public class KafkaConsumerServiceImpl implements ConsumerService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(KafkaConsumerServiceImpl.class);
 
+  private static final String MESSAGING_MODULES_CACHE_KEY = "messaging_modules";
+
   private Vertx vertx;
   private KafkaConfig kafkaConfig;
-  private MessagingModuleDao messagingModuleDao;
+  private MessagingModuleStorage messagingModuleStorage;
   private AuditService auditService;
   private SecurityManager securityManager;
 
   public KafkaConsumerServiceImpl(@Autowired Vertx vertx,
                                   @Autowired KafkaConfig kafkaConfig,
-                                  @Autowired MessagingModuleDao messagingModuleDao,
-                                  @Autowired SecurityManager securityManager) {
+                                  @Autowired SecurityManager securityManager,
+                                  @Autowired MessagingModuleStorage messagingModuleStorage) {
     this.vertx = vertx;
     this.kafkaConfig = kafkaConfig;
-    this.messagingModuleDao = messagingModuleDao;
+    this.messagingModuleStorage = messagingModuleStorage;
     this.securityManager = securityManager;
     this.auditService = AuditService.createProxy(vertx);
   }
@@ -91,7 +93,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
         String value = record.value();
         LOGGER.info("Received event {}", value);
         Event event = new JsonObject(value).mapTo(Event.class);
-        saveAuditMessage(event, params.getTenantId(), AuditMessage.State.RECEIVED);
+        auditService.saveAuditMessage(constructJsonAuditMessage(event, params.getTenantId(), AuditMessage.State.RECEIVED));
         deliverEvent(event, params);
       } catch (Exception e) {
         LOGGER.error("Error reading event value", e);
@@ -102,12 +104,14 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
   protected Future<Void> deliverEvent(Event event, OkapiConnectionParams params) {
     return securityManager.getJWTToken(params)
       .onSuccess(params::setToken)
-      .compose(ar -> messagingModuleDao.get(new MessagingModuleFilter()
-        .withTenantId(params.getTenantId())
-        .withModuleRole(SUBSCRIBER)
-        .withEventType(event.getEventType())))
+      .compose(ar -> messagingModuleStorage.get(MESSAGING_MODULES_CACHE_KEY)
+        .map(messagingModules -> filter(messagingModules.getMessagingModules(),
+          new MessagingModuleFilter()
+            .withTenantId(params.getTenantId())
+            .withModuleRole(SUBSCRIBER)
+            .withEventType(event.getEventType()))))
       .compose(messagingModuleList -> {
-        if (CollectionUtils.isEmpty(messagingModuleList)) {
+        if (isEmpty(messagingModuleList)) {
           String errorMessage = format("There is no SUBSCRIBERS registered for event type %s. Event %s will not be delivered", event.getEventType(), event.getId());
           LOGGER.error(errorMessage);
         } else {
@@ -123,31 +127,18 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
     return ar -> {
       if (ar.failed()) {
         LOGGER.error("Event {} was not delivered to {}", ar.cause(), event.getId(), subscriber.getSubscriberCallback());
-        saveAuditMessage(event, tenantId, AuditMessage.State.REJECTED);
+        auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.REJECTED));
       } else if (ar.result().statusCode() != HttpStatus.HTTP_OK.toInt()
         && ar.result().statusCode() != HttpStatus.HTTP_CREATED.toInt()
         && ar.result().statusCode() != HttpStatus.HTTP_NO_CONTENT.toInt()) {
         LOGGER.error("Error delivering event {} to {}, response status code is {}, {}",
           event.getId(), subscriber.getSubscriberCallback(), ar.result().statusCode(), ar.result().statusMessage());
-        saveAuditMessage(event, tenantId, AuditMessage.State.REJECTED);
+        auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.REJECTED));
       } else {
         LOGGER.debug("Delivered event {} to {}", event.getId(), subscriber.getSubscriberCallback());
-        saveAuditMessage(event, tenantId, AuditMessage.State.DELIVERED);
+        auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.DELIVERED));
       }
     };
-  }
-
-  private void saveAuditMessage(Event event, String tenantId, AuditMessage.State state) {
-    auditService.saveAuditMessage(JsonObject.mapFrom(new AuditMessage()
-      .withId(UUID.randomUUID().toString())
-      .withEventId(event.getId())
-      .withEventType(event.getEventType())
-      .withTenantId(tenantId)
-      .withCorrelationId(event.getEventMetadata().getCorrelationId())
-      .withCreatedBy(event.getEventMetadata().getCreatedBy())
-      .withPublishedBy(event.getEventMetadata().getPublishedBy())
-      .withAuditDate(new Date())
-      .withState(state)));
   }
 
 }
