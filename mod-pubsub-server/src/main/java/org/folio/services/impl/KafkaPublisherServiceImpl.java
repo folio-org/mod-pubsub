@@ -11,7 +11,7 @@ import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.util.MessagingModuleFilter;
 import org.folio.services.PublisherService;
 import org.folio.services.audit.AuditService;
-import org.folio.services.cache.MessagingModuleStorage;
+import org.folio.services.cache.InternalCache;
 import org.folio.services.publish.PublishingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -32,15 +32,13 @@ public class KafkaPublisherServiceImpl implements PublisherService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(KafkaPublisherServiceImpl.class);
 
-  private static final String MESSAGING_MODULES_CACHE_KEY = "messaging_modules";
-
-  private MessagingModuleStorage messagingModuleStorage;
+  private InternalCache cache;
   private AuditService auditService;
   private PublishingService publishingService;
 
   public KafkaPublisherServiceImpl(@Autowired Vertx vertx,
-                                   @Autowired MessagingModuleStorage messagingModuleStorage) {
-    this.messagingModuleStorage = messagingModuleStorage;
+                                   @Autowired InternalCache cache) {
+    this.cache = cache;
     this.auditService = AuditService.createProxy(vertx);
     this.publishingService = PublishingService.createProxy(vertx);
   }
@@ -71,20 +69,20 @@ public class KafkaPublisherServiceImpl implements PublisherService {
    * @return future with true if succeeded
    */
   private Future<Boolean> verifyPublisher(Event event, String tenantId) {
-    return messagingModuleStorage.get(MESSAGING_MODULES_CACHE_KEY)
-      .map(messagingModules -> filter(messagingModules.getMessagingModules(),
+    return cache.getMessagingModules()
+      .map(messagingModules -> filter(messagingModules,
         new MessagingModuleFilter()
           .withModuleId(event.getEventMetadata().getPublishedBy())
           .withTenantId(tenantId)
           .withModuleRole(PUBLISHER)
           .withEventType(event.getEventType())))
-      .compose(messagingModuleList -> {
-        if (isEmpty(messagingModuleList)) {
+      .compose(publishers -> {
+        if (isEmpty(publishers)) {
           String errorMessage = format("%s is not registered as PUBLISHER for event type %s", event.getEventMetadata().getPublishedBy(), event.getEventType());
           LOGGER.error(errorMessage);
           auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.REJECTED));
           return Future.failedFuture(new BadRequestException(errorMessage));
-        } else if (Boolean.FALSE.equals(messagingModuleList.get(0).getActivated())) {
+        } else if (Boolean.FALSE.equals(publishers.get(0).getActivated())) {
           String error = format("Event type %s is not activated for tenant %s", event.getEventType(), tenantId);
           LOGGER.error(error);
           auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.REJECTED));
@@ -102,14 +100,14 @@ public class KafkaPublisherServiceImpl implements PublisherService {
    * @return future with true if succeeded
    */
   private Future<Boolean> checkForRegisteredSubscribers(Event event, String tenantId) {
-    return messagingModuleStorage.get(MESSAGING_MODULES_CACHE_KEY)
-      .map(messagingModules -> filter(messagingModules.getMessagingModules(),
+    return cache.getMessagingModules()
+      .map(messagingModules -> filter(messagingModules,
         new MessagingModuleFilter()
           .withTenantId(tenantId)
           .withModuleRole(SUBSCRIBER)
           .withEventType(event.getEventType())))
-      .compose(messagingModuleList -> {
-        if (isEmpty(messagingModuleList)) {
+      .compose(subscribers -> {
+        if (isEmpty(subscribers)) {
           String errorMessage = format("There is no SUBSCRIBERS registered for event type %s. Event %s will not be published", event.getEventType(), event.getId());
           LOGGER.error(errorMessage);
           auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.REJECTED));

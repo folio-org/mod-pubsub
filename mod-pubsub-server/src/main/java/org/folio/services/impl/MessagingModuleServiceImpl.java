@@ -21,7 +21,7 @@ import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.services.ConsumerService;
 import org.folio.services.KafkaTopicService;
 import org.folio.services.MessagingModuleService;
-import org.folio.services.cache.MessagingModuleStorage;
+import org.folio.services.cache.InternalCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -50,18 +50,18 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
   private EventDescriptorDao eventDescriptorDao;
   private KafkaTopicService kafkaTopicService;
   private ConsumerService consumerService;
-  private MessagingModuleStorage messagingModuleStorage;
+  private InternalCache cache;
 
   public MessagingModuleServiceImpl(@Autowired MessagingModuleDao messagingModuleDao,
                                     @Autowired EventDescriptorDao eventDescriptorDao,
                                     @Autowired KafkaTopicService kafkaTopicService,
                                     @Autowired ConsumerService consumerService,
-                                    @Autowired MessagingModuleStorage messagingModuleStorage) {
+                                    @Autowired InternalCache cache) {
     this.messagingModuleDao = messagingModuleDao;
     this.eventDescriptorDao = eventDescriptorDao;
     this.kafkaTopicService = kafkaTopicService;
     this.consumerService = consumerService;
-    this.messagingModuleStorage = messagingModuleStorage;
+    this.cache = cache;
   }
 
   @Override
@@ -112,7 +112,7 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
     }
 
     return messagingModuleDao.save(messagingModules)
-      .onSuccess(ar -> messagingModuleStorage.clearStorage())
+      .onSuccess(ar -> cache.invalidate())
       .compose(ar -> kafkaTopicService.createTopics(eventTypes, tenantId, NUMBER_OF_PARTITIONS, REPLICATION_FACTOR));
   }
 
@@ -132,7 +132,7 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
     messagingModules.forEach(module -> module.setSubscriberCallback(subscriberCallbacksMap.get(module.getEventType())));
 
     return messagingModuleDao.save(messagingModules)
-      .onSuccess(ar -> messagingModuleStorage.clearStorage())
+      .onSuccess(ar -> cache.invalidate())
       .compose(ar -> kafkaTopicService.createTopics(eventTypes, params.getTenantId(), NUMBER_OF_PARTITIONS, REPLICATION_FACTOR))
       .compose(ar -> consumerService.subscribe(subscriberDescriptor.getModuleId(), eventTypes, params));
   }
@@ -140,7 +140,7 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
   @Override
   public Future<Boolean> delete(MessagingModuleFilter filter) {
     return messagingModuleDao.delete(filter)
-      .onSuccess(ar -> messagingModuleStorage.clearStorage());
+      .onSuccess(ar -> cache.invalidate());
   }
 
   @Override

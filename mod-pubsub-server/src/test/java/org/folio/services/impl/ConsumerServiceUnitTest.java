@@ -20,8 +20,7 @@ import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.MessagingModule;
 import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.rest.util.RestUtil;
-import org.folio.services.cache.MessagingModuleStorage;
-import org.folio.services.cache.LocalStorage;
+import org.folio.services.cache.InternalCache;
 import org.folio.services.SecurityManager;
 import org.junit.Assert;
 import org.junit.Before;
@@ -61,12 +60,12 @@ public class ConsumerServiceUnitTest {
   @Mock
   private KafkaConfig kafkaConfig;
   @Mock
-  private MessagingModuleStorage messagingModuleStorage;
+  private InternalCache cache;
   @Mock
   private SecurityManager securityManager;
   @Spy
   @InjectMocks
-  private KafkaConsumerServiceImpl consumerService = new KafkaConsumerServiceImpl(vertx, kafkaConfig, securityManager, messagingModuleStorage);
+  private KafkaConsumerServiceImpl consumerService = new KafkaConsumerServiceImpl(vertx, kafkaConfig, securityManager, cache);
 
   private Map<String, String> headers = new HashMap<>();
 
@@ -160,7 +159,7 @@ public class ConsumerServiceUnitTest {
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
-    when(messagingModuleStorage.get(anyString())).thenReturn(Future.succeededFuture(new LocalStorage().withInitializedState(true).withMessagingModules(new ArrayList<>())));
+    when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(new ArrayList<>()));
 
     Future<Void> future = consumerService.deliverEvent(event, params);
 
@@ -211,7 +210,7 @@ public class ConsumerServiceUnitTest {
       .withModuleRole(MessagingModule.ModuleRole.SUBSCRIBER)
       .withActivated(true)
       .withSubscriberCallback(CALLBACK_ADDRESS));
-    when(messagingModuleStorage.get(anyString())).thenReturn(Future.succeededFuture(new LocalStorage().withInitializedState(true).withMessagingModules(messagingModuleList)));
+    when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(messagingModuleList));
 
     Future<Void> future = consumerService.deliverEvent(event, params);
 

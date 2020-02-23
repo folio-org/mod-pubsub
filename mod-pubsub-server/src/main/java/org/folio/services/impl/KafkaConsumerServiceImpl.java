@@ -26,7 +26,7 @@ import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.services.ConsumerService;
 import org.folio.services.SecurityManager;
 import org.folio.services.audit.AuditService;
-import org.folio.services.cache.MessagingModuleStorage;
+import org.folio.services.cache.InternalCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -47,21 +47,19 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(KafkaConsumerServiceImpl.class);
 
-  private static final String MESSAGING_MODULES_CACHE_KEY = "messaging_modules";
-
   private Vertx vertx;
   private KafkaConfig kafkaConfig;
-  private MessagingModuleStorage messagingModuleStorage;
+  private InternalCache cache;
   private AuditService auditService;
   private SecurityManager securityManager;
 
   public KafkaConsumerServiceImpl(@Autowired Vertx vertx,
                                   @Autowired KafkaConfig kafkaConfig,
                                   @Autowired SecurityManager securityManager,
-                                  @Autowired MessagingModuleStorage messagingModuleStorage) {
+                                  @Autowired InternalCache cache) {
     this.vertx = vertx;
     this.kafkaConfig = kafkaConfig;
-    this.messagingModuleStorage = messagingModuleStorage;
+    this.cache = cache;
     this.securityManager = securityManager;
     this.auditService = AuditService.createProxy(vertx);
   }
@@ -104,18 +102,18 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
   protected Future<Void> deliverEvent(Event event, OkapiConnectionParams params) {
     return securityManager.getJWTToken(params)
       .onSuccess(params::setToken)
-      .compose(ar -> messagingModuleStorage.get(MESSAGING_MODULES_CACHE_KEY)
-        .map(messagingModules -> filter(messagingModules.getMessagingModules(),
-          new MessagingModuleFilter()
-            .withTenantId(params.getTenantId())
-            .withModuleRole(SUBSCRIBER)
-            .withEventType(event.getEventType()))))
-      .compose(messagingModuleList -> {
-        if (isEmpty(messagingModuleList)) {
+      .compose(ar -> cache.getMessagingModules())
+      .map(messagingModules -> filter(messagingModules,
+        new MessagingModuleFilter()
+          .withTenantId(params.getTenantId())
+          .withModuleRole(SUBSCRIBER)
+          .withEventType(event.getEventType())))
+      .compose(subscribers -> {
+        if (isEmpty(subscribers)) {
           String errorMessage = format("There is no SUBSCRIBERS registered for event type %s. Event %s will not be delivered", event.getEventType(), event.getId());
           LOGGER.error(errorMessage);
         } else {
-          messagingModuleList
+          subscribers
             .forEach(subscriber -> doRequest(event.getEventPayload(), subscriber.getSubscriberCallback(), HttpMethod.POST, params)
               .setHandler(getEventDeliveredHandler(event, params.getTenantId(), subscriber)));
         }
