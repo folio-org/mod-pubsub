@@ -7,10 +7,12 @@ import org.folio.kafka.KafkaConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.google.common.collect.Iterators.cycle;
 import static org.folio.rest.RestVerticle.MODULE_SPECIFIC_ARGS;
 
 @Component
@@ -19,18 +21,20 @@ public class KafkaProducerManager {
   // number of producers to be created is equal to allocated thread pool
   private static final int NUMBER_OF_PRODUCERS =
     Integer.parseInt(MODULE_SPECIFIC_ARGS.getOrDefault("event.publishing.thread.pool.size", "20"));
-  private UnmodifiableList<KafkaProducer<String, String>> producers;
+  private Iterator<KafkaProducer<String, String>> producerIterator;
 
   public KafkaProducerManager(@Autowired Vertx vertx, @Autowired KafkaConfig config) {
     List<KafkaProducer<String, String>> list =
       Stream.generate(() -> KafkaProducer.<String, String>create(vertx, config.getProducerProps()))
         .limit(NUMBER_OF_PRODUCERS)
         .collect(Collectors.toList());
-    producers = new UnmodifiableList<>(list);
+    producerIterator = cycle(new UnmodifiableList<>(list));
   }
 
   public KafkaProducer<String, String> getKafkaProducer() {
-    return producers.stream().filter(producer -> !producer.writeQueueFull())
-      .findFirst().orElseThrow(() -> new RuntimeException("Kafka Producer write queue is full"));
+    return Stream.generate(producerIterator::next)
+      .filter(producer -> !producer.writeQueueFull())
+      .findAny()
+      .orElseThrow(() -> new RuntimeException("No eligible Kafka Producer available"));
   }
 }

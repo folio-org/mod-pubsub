@@ -53,7 +53,7 @@ public class InternalCache {
   }
 
   public void invalidate() {
-    cache.synchronous().invalidate(MESSAGING_MODULES_CACHE_KEY);
+    cache.synchronous().invalidateAll();
   }
 
 }

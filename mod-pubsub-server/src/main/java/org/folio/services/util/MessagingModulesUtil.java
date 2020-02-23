@@ -3,11 +3,9 @@ package org.folio.services.util;
 import org.folio.rest.jaxrs.model.MessagingModule;
 import org.folio.rest.util.MessagingModuleFilter;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.apache.commons.collections4.CollectionUtils.emptyCollection;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
 public final class MessagingModulesUtil {
