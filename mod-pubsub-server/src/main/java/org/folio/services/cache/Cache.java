@@ -19,22 +19,22 @@ import static org.apache.commons.collections4.IterableUtils.isEmpty;
  * In-memory storage for messaging modules
  */
 @Component
-public class InternalCache {
+public class Cache {
   private static final String MESSAGING_MODULES_CACHE_KEY = "messaging_modules";
 
-  private AsyncLoadingCache<String, List<MessagingModule>> cache;
+  private AsyncLoadingCache<String, List<MessagingModule>> loadingCache;
   private MessagingModuleDao messagingModuleDao;
 
-  public InternalCache(@Autowired Vertx vertx, @Autowired MessagingModuleDao messagingModuleDao) {
+  public Cache(@Autowired Vertx vertx, @Autowired MessagingModuleDao messagingModuleDao) {
     this.messagingModuleDao = messagingModuleDao;
-    this.cache = Caffeine.newBuilder()
+    this.loadingCache = Caffeine.newBuilder()
       .executor(serviceExecutor -> vertx.runOnContext(ar -> serviceExecutor.run()))
       .buildAsync(k -> new ArrayList<>());
   }
 
   public Future<List<MessagingModule>> getMessagingModules() {
     Promise<List<MessagingModule>> promise = Promise.promise();
-    cache
+    loadingCache
       .get(MESSAGING_MODULES_CACHE_KEY)
       .whenComplete((messagingModules, throwable) -> {
         if (throwable == null) {
@@ -53,7 +53,7 @@ public class InternalCache {
   }
 
   public void invalidate() {
-    cache.synchronous().invalidateAll();
+    loadingCache.synchronous().invalidateAll();
   }
 
 }

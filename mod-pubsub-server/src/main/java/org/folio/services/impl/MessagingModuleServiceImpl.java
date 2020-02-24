@@ -21,7 +21,7 @@ import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.services.ConsumerService;
 import org.folio.services.KafkaTopicService;
 import org.folio.services.MessagingModuleService;
-import org.folio.services.cache.InternalCache;
+import org.folio.services.cache.Cache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -50,13 +50,13 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
   private EventDescriptorDao eventDescriptorDao;
   private KafkaTopicService kafkaTopicService;
   private ConsumerService consumerService;
-  private InternalCache cache;
+  private Cache cache;
 
   public MessagingModuleServiceImpl(@Autowired MessagingModuleDao messagingModuleDao,
                                     @Autowired EventDescriptorDao eventDescriptorDao,
                                     @Autowired KafkaTopicService kafkaTopicService,
                                     @Autowired ConsumerService consumerService,
-                                    @Autowired InternalCache cache) {
+                                    @Autowired Cache cache) {
     this.messagingModuleDao = messagingModuleDao;
     this.eventDescriptorDao = eventDescriptorDao;
     this.kafkaTopicService = kafkaTopicService;

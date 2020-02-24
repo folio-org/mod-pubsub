@@ -6,7 +6,7 @@ import io.vertx.core.Vertx;
 import io.vertx.serviceproxy.ServiceBinder;
 import org.folio.services.publish.PublishingService;
 
-public class PublishingVerticle extends AbstractVerticle {
+public class PublisherWorkerVerticle extends AbstractVerticle {
 
   @Override
   public void start(Future<Void> startFuture) throws Exception {

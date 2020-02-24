@@ -11,7 +11,7 @@ import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.util.MessagingModuleFilter;
 import org.folio.services.PublisherService;
 import org.folio.services.audit.AuditService;
-import org.folio.services.cache.InternalCache;
+import org.folio.services.cache.Cache;
 import org.folio.services.publish.PublishingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -32,12 +32,12 @@ public class KafkaPublisherServiceImpl implements PublisherService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(KafkaPublisherServiceImpl.class);
 
-  private InternalCache cache;
+  private Cache cache;
   private AuditService auditService;
   private PublishingService publishingService;
 
   public KafkaPublisherServiceImpl(@Autowired Vertx vertx,
-                                   @Autowired InternalCache cache) {
+                                   @Autowired Cache cache) {
     this.cache = cache;
     this.auditService = AuditService.createProxy(vertx);
     this.publishingService = PublishingService.createProxy(vertx);

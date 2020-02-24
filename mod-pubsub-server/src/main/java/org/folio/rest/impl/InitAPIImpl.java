@@ -34,7 +34,7 @@ public class InitAPIImpl implements InitAPI {
         if (result.succeeded()) {
           initAuditService(vertx);
           DeploymentOptions options = new DeploymentOptions().setWorker(true);
-          vertx.deployVerticle(new PublishingVerticle(), options);
+          vertx.deployVerticle(new PublisherWorkerVerticle(), options);
           handler.handle(Future.succeededFuture(true));
         } else {
           handler.handle(Future.failedFuture(result.cause()));

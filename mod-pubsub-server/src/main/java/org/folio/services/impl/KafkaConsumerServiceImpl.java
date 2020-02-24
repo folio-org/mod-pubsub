@@ -26,7 +26,7 @@ import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.services.ConsumerService;
 import org.folio.services.SecurityManager;
 import org.folio.services.audit.AuditService;
-import org.folio.services.cache.InternalCache;
+import org.folio.services.cache.Cache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -49,14 +49,14 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
 
   private Vertx vertx;
   private KafkaConfig kafkaConfig;
-  private InternalCache cache;
+  private Cache cache;
   private AuditService auditService;
   private SecurityManager securityManager;
 
   public KafkaConsumerServiceImpl(@Autowired Vertx vertx,
                                   @Autowired KafkaConfig kafkaConfig,
                                   @Autowired SecurityManager securityManager,
-                                  @Autowired InternalCache cache) {
+                                  @Autowired Cache cache) {
     this.vertx = vertx;
     this.kafkaConfig = kafkaConfig;
     this.cache = cache;

@@ -20,7 +20,7 @@ import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.MessagingModule;
 import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.rest.util.RestUtil;
-import org.folio.services.cache.InternalCache;
+import org.folio.services.cache.Cache;
 import org.folio.services.SecurityManager;
 import org.junit.Assert;
 import org.junit.Before;
@@ -60,7 +60,7 @@ public class ConsumerServiceUnitTest {
   @Mock
   private KafkaConfig kafkaConfig;
   @Mock
-  private InternalCache cache;
+  private Cache cache;
   @Mock
   private SecurityManager securityManager;
   @Spy
