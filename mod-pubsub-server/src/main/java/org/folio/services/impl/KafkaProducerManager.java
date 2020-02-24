@@ -24,11 +24,11 @@ public class KafkaProducerManager {
   private Iterator<KafkaProducer<String, String>> producerIterator;
 
   public KafkaProducerManager(@Autowired Vertx vertx, @Autowired KafkaConfig config) {
-    List<KafkaProducer<String, String>> list =
+    List<KafkaProducer<String, String>> producers =
       Stream.generate(() -> KafkaProducer.<String, String>create(vertx, config.getProducerProps()))
         .limit(NUMBER_OF_PRODUCERS)
         .collect(Collectors.toList());
-    producerIterator = cycle(new UnmodifiableList<>(list));
+    producerIterator = cycle(new UnmodifiableList<>(producers));
   }
 
   public KafkaProducer<String, String> getKafkaProducer() {

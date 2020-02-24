@@ -14,7 +14,7 @@ public final class MessagingModulesUtil {
   }
 
   public static List<MessagingModule> filter(List<MessagingModule> modules, MessagingModuleFilter filter) {
-    if (isNotEmpty(modules)) {
+    if (isNotEmpty(modules) && filter != null) {
       return modules.stream()
         .filter(messagingModule -> satisfiesCondition(messagingModule, filter))
         .collect(Collectors.toList());
@@ -22,7 +22,7 @@ public final class MessagingModulesUtil {
     return modules;
   }
 
-  public static boolean satisfiesCondition(MessagingModule module, MessagingModuleFilter filter) {
+  private static boolean satisfiesCondition(MessagingModule module, MessagingModuleFilter filter) {
     boolean result = true;
     if (filter.getEventType() != null) {
       result = filter.getEventType().equals(module.getEventType());
