@@ -21,6 +21,7 @@ import javax.ws.rs.BadRequestException;
 import static java.lang.String.format;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.apache.logging.log4j.util.Strings.isNotEmpty;
+import static org.folio.rest.RestVerticle.MODULE_SPECIFIC_ARGS;
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.PUBLISHER;
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
 import static org.folio.services.util.AuditUtil.constructJsonAuditMessage;
@@ -31,6 +32,10 @@ import static org.folio.services.util.MessagingModulesUtil.filter;
 public class KafkaPublisherServiceImpl implements PublisherService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(KafkaPublisherServiceImpl.class);
+
+  private static final boolean ENABLED_EVENT_PAYLOAD_SAVING =
+    Boolean.parseBoolean(MODULE_SPECIFIC_ARGS.getOrDefault("event.publishing.enable.payload.saving", "false"));
+
 
   private Cache cache;
   private AuditService auditService;
@@ -46,7 +51,9 @@ public class KafkaPublisherServiceImpl implements PublisherService {
   @Override
   public Future<Boolean> publishEvent(Event event, String tenantId) {
     Promise<Boolean> promise = Promise.promise();
-    saveAuditMessagePayload(event, tenantId);
+    if (ENABLED_EVENT_PAYLOAD_SAVING) {
+      saveAuditMessagePayload(event, tenantId);
+    }
     auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.CREATED));
     verifyPublisher(event, tenantId)
       .compose(ar -> checkForRegisteredSubscribers(event, tenantId))
