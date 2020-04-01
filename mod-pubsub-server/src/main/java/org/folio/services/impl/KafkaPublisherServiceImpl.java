@@ -33,9 +33,8 @@ public class KafkaPublisherServiceImpl implements PublisherService {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(KafkaPublisherServiceImpl.class);
 
-  private static final boolean ENABLED_EVENT_PAYLOAD_SAVING =
-    Boolean.parseBoolean(MODULE_SPECIFIC_ARGS.getOrDefault("event.publishing.enable.payload.saving", "false"));
-
+  private static final boolean EVENT_PAYLOAD_AUDIT_ENABLED =
+    Boolean.parseBoolean(MODULE_SPECIFIC_ARGS.getOrDefault("event.payload.audit.enabled", "false"));
 
   private Cache cache;
   private AuditService auditService;
@@ -51,7 +50,7 @@ public class KafkaPublisherServiceImpl implements PublisherService {
   @Override
   public Future<Boolean> publishEvent(Event event, String tenantId) {
     Promise<Boolean> promise = Promise.promise();
-    if (ENABLED_EVENT_PAYLOAD_SAVING) {
+    if (EVENT_PAYLOAD_AUDIT_ENABLED) {
       saveAuditMessagePayload(event, tenantId);
     }
     auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.CREATED));
