@@ -162,7 +162,6 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
     }
     if (filter.getModuleId() != null) {
       conditionBuilder.append(" AND module_id LIKE '").append(filter.getModuleId()
-        .replaceAll("\\.", "\\\\.")
         .replaceAll("\\d", "%")).append("'");
     }
     if (filter.getTenantId() != null) {
