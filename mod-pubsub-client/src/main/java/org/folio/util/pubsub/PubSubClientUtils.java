@@ -237,7 +237,7 @@ public class PubSubClientUtils {
   }
 
   public static String constructModuleName() {
-    return PomReader.INSTANCE.getModuleName().replaceAll("_", "-") + "-" + PomReader.INSTANCE.getVersion();
+    return PomReader.INSTANCE.getModuleName().replace("_", "-") + "-" + PomReader.INSTANCE.getVersion();
   }
 
 }
