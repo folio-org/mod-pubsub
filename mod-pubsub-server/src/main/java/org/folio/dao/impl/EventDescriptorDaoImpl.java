@@ -6,8 +6,10 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.sql.ResultSet;
-import io.vertx.ext.sql.UpdateResult;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.Tuple;
+
 import org.folio.dao.EventDescriptorDao;
 import org.folio.dao.PostgresClientFactory;
 import org.folio.rest.jaxrs.model.EventDescriptor;
@@ -21,7 +23,7 @@ import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
-import static org.folio.rest.persist.PostgresClient.pojo2json;
+import static org.folio.rest.tools.ClientHelpers.pojo2json;
 
 /**
  * Implementation for the EventDescriptorDao, works with PostgresClient to access data.
@@ -46,7 +48,7 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
 
   @Override
   public Future<List<EventDescriptor>> getAll() {
-    Promise<ResultSet> promise = Promise.promise();
+    Promise<RowSet<Row>> promise = Promise.promise();
     String preparedQuery = format(GET_ALL_SQL, MODULE_SCHEMA, TABLE_NAME);
     pgClientFactory.getInstance().select(preparedQuery, promise);
     return promise.future().map(this::mapResultSetToEventDescriptorList);
@@ -54,22 +56,21 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
 
   @Override
   public Future<Optional<EventDescriptor>> getByEventType(String eventType) {
-    Promise<ResultSet> promise = Promise.promise();
+    Promise<RowSet<Row>> promise = Promise.promise();
     try {
       String preparedQuery = format(GET_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
-      JsonArray params = new JsonArray().add(eventType);
-      pgClientFactory.getInstance().select(preparedQuery, params, promise);
+      pgClientFactory.getInstance().select(preparedQuery, Tuple.of(eventType), promise);
     } catch (Exception e) {
       LOGGER.error("Error getting EventDescriptor by event type '{}'", e, eventType);
       promise.fail(e);
     }
-    return promise.future().map(resultSet -> resultSet.getResults().isEmpty() ? Optional.empty()
-      : Optional.of(mapRowJsonToEventDescriptor(resultSet.getRows().get(0))));
+    return promise.future().map(resultSet -> resultSet.rowCount() == 0 ? Optional.empty()
+      : Optional.of(mapRowJsonToEventDescriptor(resultSet.iterator().next()))));
   }
 
   @Override
   public Future<List<EventDescriptor>> getByEventTypes(List<String> eventTypes) {
-    Promise<ResultSet> promise = Promise.promise();
+    Promise<RowSet<Row>> promise = Promise.promise();
     String query = getQueryByEventTypes(eventTypes);
     String preparedQuery = format(query, MODULE_SCHEMA, TABLE_NAME);
     pgClientFactory.getInstance().select(preparedQuery, promise);
@@ -90,13 +91,11 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
 
   @Override
   public Future<String> save(EventDescriptor eventDescriptor) {
-    Promise<UpdateResult> promise = Promise.promise();
+    Promise<RowSet<Row>> promise = Promise.promise();
     try {
       String query = format(INSERT_SQL, MODULE_SCHEMA, TABLE_NAME);
-      JsonArray params = new JsonArray()
-        .add(eventDescriptor.getEventType())
-        .add(pojo2json(eventDescriptor));
-      pgClientFactory.getInstance().execute(query, params, promise);
+      pgClientFactory.getInstance().execute(query, Tuple.of(eventDescriptor.getEventType(), pojo2json(eventDescriptor)),
+        promise);
     } catch (Exception e) {
       LOGGER.error("Error saving EventDescriptor with event type '{}'", e, eventDescriptor.getEventType());
       promise.fail(e);
@@ -106,34 +105,31 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
 
   @Override
   public Future<EventDescriptor> update(EventDescriptor eventDescriptor) {
-    Promise<UpdateResult> promise = Promise.promise();
+    Promise<RowSet<Row>> promise = Promise.promise();
     try {
       String query = format(UPDATE_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
-      JsonArray params = new JsonArray()
-        .add(pojo2json(eventDescriptor))
-        .add(eventDescriptor.getEventType());
-      pgClientFactory.getInstance().execute(query, params, promise);
+      pgClientFactory.getInstance().execute(query, Tuple.of(pojo2json(eventDescriptor), eventDescriptor.getEventType()),
+        promise);
     } catch (Exception e) {
       LOGGER.error("Error updating EventDescriptor by event type '{}'", e, eventDescriptor.getEventType());
       promise.fail(e);
     }
-    return promise.future().compose(updateResult -> updateResult.getUpdated() == 1
+    return promise.future().compose(updateResult -> updateResult.rowCount() == 1
       ? Future.succeededFuture(eventDescriptor)
       : Future.failedFuture(new NotFoundException(format("EventDescriptor with event type '%s' was not updated", eventDescriptor.getEventType()))));
   }
 
   @Override
   public Future<Boolean> delete(String eventType) {
-    Promise<UpdateResult> promise = Promise.promise();
+    Promise<RowSet<Row>> promise = Promise.promise();
     try {
       String query = format(DELETE_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
-      JsonArray params = new JsonArray().add(eventType);
-      pgClientFactory.getInstance().execute(query, params, promise);
+      pgClientFactory.getInstance().execute(query, Tuple.of(eventType), promise);
     } catch (Exception e) {
       LOGGER.error("Error deleting EventDescriptor with event type '{}'", e, eventType);
       promise.fail(e);
     }
-    return promise.future().map(updateResult -> updateResult.getUpdated() == 1);
+    return promise.future().map(updateResult -> updateResult.rowCount() == 1);
   }
 
   private EventDescriptor mapRowJsonToEventDescriptor(JsonObject rowAsJson) {
@@ -146,7 +142,7 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
     return eventDescriptor;
   }
 
-  private List<EventDescriptor> mapResultSetToEventDescriptorList(ResultSet resultSet) {
+  private List<EventDescriptor> mapResultSetToEventDescriptorList(RowSet<Row> resultSet) {
     return resultSet.getRows().stream()
       .map(this::mapRowJsonToEventDescriptor)
       .collect(Collectors.toList());

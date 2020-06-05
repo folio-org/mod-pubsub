@@ -7,9 +7,10 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.sql.ResultSet;
-import io.vertx.ext.sql.SQLConnection;
-import io.vertx.ext.sql.UpdateResult;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.Tuple;
+
 import org.apache.commons.lang3.StringUtils;
 import org.folio.dao.MessagingModuleDao;
 import org.folio.dao.PostgresClientFactory;
@@ -17,6 +18,7 @@ import org.folio.dao.util.DbUtil;
 import org.folio.rest.jaxrs.model.MessagingModule;
 import org.folio.rest.jaxrs.model.MessagingModule.ModuleRole;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.SQLConnection;
 import org.folio.rest.util.MessagingModuleFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -51,7 +53,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
 
   @Override
   public Future<List<MessagingModule>> get(MessagingModuleFilter filter) {
-    Promise<ResultSet> promise = Promise.promise();
+    Promise<RowSet<Row>> promise = Promise.promise();
     String preparedQuery = format(GET_BY_SQL, MODULE_SCHEMA, TABLE_NAME, buildWhereClause(filter));
     pgClientFactory.getInstance().select(preparedQuery, promise);
     return promise.future().map(this::mapResultSetToMessagingModuleList);
@@ -78,7 +80,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
    */
   private Future<List<MessagingModule>> saveMessagingModuleList(List<MessagingModule> messagingModules,
                                                                 AsyncResult<SQLConnection> sqlConnection) {
-    Promise<UpdateResult> promise = Promise.promise();
+    Promise<RowSet<Row>> promise = Promise.promise();
     try {
       StringBuilder query = new StringBuilder(format(INSERT_BATCH_SQL, MODULE_SCHEMA, TABLE_NAME));
       JsonArray params = new JsonArray();
@@ -108,34 +110,33 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
 
   @Override
   public Future<Boolean> delete(String id) {
-    Promise<UpdateResult> promise = Promise.promise();
+    Promise<RowSet<Row>> promise = Promise.promise();
     String query = format(DELETE_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
-    JsonArray params = new JsonArray().add(id);
-    pgClientFactory.getInstance().execute(query, params, promise);
-    return promise.future().map(updateResult -> updateResult.getUpdated() == 1);
+    pgClientFactory.getInstance().execute(query, Tuple.of(id), promise);
+    return promise.future().map(updateResult -> updateResult.rowCount() == 1);
   }
 
   @Override
   public Future<Boolean> delete(MessagingModuleFilter filter) {
-    Promise<UpdateResult> promise = Promise.promise();
+    Promise<RowSet<Row>> promise = Promise.promise();
     String query = format(DELETE_BY_SQL, MODULE_SCHEMA, TABLE_NAME, buildWhereClause(filter));
     pgClientFactory.getInstance().execute(query, promise);
-    return promise.future().map(updateResult -> updateResult.getUpdated() == 1);
+    return promise.future().map(updateResult -> updateResult.rowCount() == 1);
   }
 
   @Override
   public Future<List<MessagingModule>> getAll() {
-    Promise<ResultSet> promise = Promise.promise();
+    Promise<RowSet<Row>> promise = Promise.promise();
     String preparedQuery = format(GET_ALL_SQL, MODULE_SCHEMA, TABLE_NAME);
     pgClientFactory.getInstance().select(preparedQuery, promise);
     return promise.future().map(this::mapResultSetToMessagingModuleList);
   }
 
   private Future<Boolean> delete(MessagingModuleFilter filter, AsyncResult<SQLConnection> sqlConnection) {
-    Promise<UpdateResult> promise = Promise.promise();
+    Promise<RowSet<Row>> promise = Promise.promise();
     String query = format(DELETE_BY_SQL, MODULE_SCHEMA, TABLE_NAME, buildWhereClause(filter));
     pgClientFactory.getInstance().execute(sqlConnection, query, promise);
-    return promise.future().map(updateResult -> updateResult.getUpdated() == 1);
+    return promise.future().map(updateResult -> updateResult.rowCount() == 1);
   }
 
   private MessagingModule mapRowJsonToMessagingModule(JsonObject rowAsJson) {
@@ -149,7 +150,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
       .withSubscriberCallback(rowAsJson.getString("subscriber_callback"));
   }
 
-  private List<MessagingModule> mapResultSetToMessagingModuleList(ResultSet resultSet) {
+  private List<MessagingModule> mapResultSetToMessagingModuleList(RowSet<Row> resultSet) {
     return resultSet.getRows().stream()
       .map(this::mapRowJsonToMessagingModule)
       .collect(Collectors.toList());
