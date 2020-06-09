@@ -76,7 +76,7 @@ public class PubSubClientTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldNotRegisterSubscribers() throws Exception {
+  public void shouldNotRegisterSubscribers() {
     WireMock.stubFor(post("/pubsub/event-types/declare/publisher")
       .willReturn(created()));
     WireMock.stubFor(post("/pubsub/event-types")
@@ -92,15 +92,14 @@ public class PubSubClientTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnBadRequestIfNoSubscribersRegistered() {
+  public void shouldPublishEventIfNoSubscribersRegistered() {
     EventDescriptor eventDescriptor = postEventDescriptor();
     registerPublisher(eventDescriptor);
     try {
       Event event = EVENT.mapTo(Event.class);
-      PubSubClientUtils.sendEventMessage(event, params).get();
-      Assert.fail();
+      Assert.assertTrue(PubSubClientUtils.sendEventMessage(event, params).get());
     } catch (Exception e) {
-      Assert.assertTrue(true);
+      Assert.fail();
     }
   }
 
