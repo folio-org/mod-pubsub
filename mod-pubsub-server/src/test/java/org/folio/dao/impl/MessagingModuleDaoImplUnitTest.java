@@ -3,7 +3,6 @@ package org.folio.dao.impl;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.json.JsonArray;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -83,7 +82,6 @@ public class MessagingModuleDaoImplUnitTest {
     // given
     Async async = context.async();
     RowSet<Row> updateResult = new LocalRowSet(0);
-    JsonArray queryParams = new JsonArray().add(messagingModule.getId());
 
     doAnswer(invocation -> {
       Handler<AsyncResult<RowSet<Row>>> handler = invocation.getArgument(2);
