@@ -9,6 +9,7 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
+import io.vertx.sqlclient.impl.ArrayTuple;
 
 import org.folio.dao.PostgresClientFactory;
 import org.folio.rest.jaxrs.model.MessagingModule;
@@ -65,14 +66,14 @@ public class MessagingModuleDaoImplUnitTest {
       handler.handle(Future.succeededFuture(updateResult));
       return updateResult;
     })
-      .when(pgClient).execute(anyString(), eq(Tuple.of(messagingModule.getId())), any(Handler.class));
+      .when(pgClient).execute(anyString(), any(ArrayTuple.class), any(Handler.class));
     // when
     messagingModuleDao.delete(messagingModule.getId())
     // then
       .onComplete(ar -> {
         Assert.assertTrue(ar.succeeded());
         Assert.assertEquals(true, ar.result());
-        verify(pgClient).execute(anyString(), eq(Tuple.of(messagingModule.getId())), any(Handler.class));
+        verify(pgClient).execute(anyString(), any(ArrayTuple.class), any(Handler.class));
         async.complete();
       });
   }
@@ -88,14 +89,14 @@ public class MessagingModuleDaoImplUnitTest {
       handler.handle(Future.succeededFuture(updateResult));
       return updateResult;
     })
-      .when(pgClient).execute(anyString(), eq(Tuple.of(messagingModule.getId())), any(Handler.class));
+      .when(pgClient).execute(anyString(), any(ArrayTuple.class), any(Handler.class));
     // when
     messagingModuleDao.delete(messagingModule.getId())
     // then
       .onComplete(ar -> {
         Assert.assertTrue(ar.succeeded());
         Assert.assertEquals(false, ar.result());
-        verify(pgClient).execute(anyString(), eq(Tuple.of(messagingModule.getId())), any(Handler.class));
+        verify(pgClient).execute(anyString(), any(ArrayTuple.class), any(Handler.class));
         async.complete();
       });
   }
