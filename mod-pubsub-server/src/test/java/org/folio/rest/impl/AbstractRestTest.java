@@ -10,6 +10,8 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.sqlclient.Tuple;
 import net.mguenther.kafka.junit.EmbeddedKafkaCluster;
+import net.minidev.json.JSONArray;
+
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.TenantAttributes;

@@ -23,6 +23,7 @@ import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -64,10 +65,13 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
     Promise<RowSet<Row>> promise = Promise.promise();
     try {
       String query = format(INSERT_AUDIT_MESSAGE_QUERY, convertToPsqlStandard(auditMessage.getTenantId()), AUDIT_MESSAGE_TABLE);
-      Tuple params = Tuple.of(auditMessage.getId(), auditMessage.getEventId(),
-        auditMessage.getEventType(), auditMessage.getTenantId(),
-        Timestamp.from(auditMessage.getAuditDate().toInstant()).toString(),
-        auditMessage.getState(), auditMessage.getPublishedBy(),
+      Tuple params = Tuple.of(UUID.fromString(auditMessage.getId()),
+        UUID.fromString(auditMessage.getEventId()),
+        auditMessage.getEventType(),
+        UUID.fromString(auditMessage.getTenantId()),
+        Timestamp.from(auditMessage.getAuditDate().toInstant()).toLocalDateTime(),
+        auditMessage.getState().toString(),
+        auditMessage.getPublishedBy(),
         auditMessage.getCorrelationId() != null ? auditMessage.getCorrelationId() : "",
         auditMessage.getCreatedBy() != null ? auditMessage.getCreatedBy() : "",
         auditMessage.getErrorMessage() != null ? auditMessage.getErrorMessage() : "");
@@ -115,23 +119,23 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
       .collect(Collectors.toList());
   }
 
-  private AuditMessage mapAuditMessage(Row result) {
+  private AuditMessage mapAuditMessage(Row row) {
     return new AuditMessage()
-      .withId(result.getString("id"))
-      .withEventId(result.getString("event_id"))
-      .withEventType(result.getString("event_type"))
-      .withCorrelationId(result.getString("correlation_id"))
-      .withTenantId(result.getString("tenant_id"))
-      .withCreatedBy(result.getString("created_by"))
-      .withPublishedBy(result.getString("published_by"))
-      .withAuditDate(Date.from(LocalDateTime.parse(result.getString("audit_date")).toInstant(ZoneOffset.UTC)))
-      .withState(AuditMessage.State.fromValue(result.getString("state")))
-      .withErrorMessage(result.getString("error_message"));
+      .withId(row.getValue("id").toString())
+      .withEventId(row.getValue("event_id").toString())
+      .withEventType(row.getValue("event_type").toString())
+      .withCorrelationId(row.getValue("correlation_id").toString())
+      .withTenantId(row.getValue("tenant_id").toString())
+      .withCreatedBy(row.getString("created_by"))
+      .withPublishedBy(row.getString("published_by"))
+      .withAuditDate(Date.from(LocalDateTime.parse(row.getString("audit_date")).toInstant(ZoneOffset.UTC)))
+      .withState(AuditMessage.State.fromValue(row.getString("state")))
+      .withErrorMessage(row.getString("error_message"));
   }
 
   private AuditMessagePayload mapAuditMessagePayload(Row result) {
     return new AuditMessagePayload()
-      .withEventId(result.getString("event_id"))
+      .withEventId(result.getValue("event_id").toString())
       .withContent(result.getString("content"));
   }
 

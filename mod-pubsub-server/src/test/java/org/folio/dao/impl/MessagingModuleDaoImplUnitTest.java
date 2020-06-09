@@ -69,7 +69,7 @@ public class MessagingModuleDaoImplUnitTest {
     // when
     messagingModuleDao.delete(messagingModule.getId())
     // then
-      .setHandler(ar -> {
+      .onComplete(ar -> {
         Assert.assertTrue(ar.succeeded());
         Assert.assertEquals(true, ar.result());
         verify(pgClient).execute(anyString(), eq(Tuple.of(messagingModule.getId())), any(Handler.class));
@@ -92,7 +92,7 @@ public class MessagingModuleDaoImplUnitTest {
     // when
     messagingModuleDao.delete(messagingModule.getId())
     // then
-      .setHandler(ar -> {
+      .onComplete(ar -> {
         Assert.assertTrue(ar.succeeded());
         Assert.assertEquals(false, ar.result());
         verify(pgClient).execute(anyString(), eq(Tuple.of(messagingModule.getId())), any(Handler.class));

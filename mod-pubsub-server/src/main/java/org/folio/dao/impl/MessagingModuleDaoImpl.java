@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -113,7 +114,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
   public Future<Boolean> delete(String id) {
     Promise<RowSet<Row>> promise = Promise.promise();
     String query = format(DELETE_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
-    pgClientFactory.getInstance().execute(query, Tuple.of(id), promise);
+    pgClientFactory.getInstance().execute(query, Tuple.of(UUID.fromString(id)), promise);
     return promise.future().map(updateResult -> updateResult.rowCount() == 1);
   }
 
@@ -140,15 +141,15 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
     return promise.future().map(updateResult -> updateResult.rowCount() == 1);
   }
 
-  private MessagingModule mapRowJsonToMessagingModule(Row rowAsJson) {
+  private MessagingModule mapRowJsonToMessagingModule(Row row) {
     return new MessagingModule()
-      .withId(rowAsJson.getString("id"))
-      .withEventType(rowAsJson.getString("event_type_id"))
-      .withModuleId(rowAsJson.getString("module_id"))
-      .withTenantId(rowAsJson.getString("tenant_id"))
-      .withModuleRole(ModuleRole.valueOf(rowAsJson.getString("role")))
-      .withActivated(rowAsJson.getBoolean("activated"))
-      .withSubscriberCallback(rowAsJson.getString("subscriber_callback"));
+      .withId(row.getValue("id").toString())
+      .withEventType(row.getValue("event_type_id").toString())
+      .withModuleId(row.getValue("module_id").toString())
+      .withTenantId(row.getValue("tenant_id").toString())
+      .withModuleRole(ModuleRole.valueOf(row.getString("role")))
+      .withActivated(row.getBoolean("activated"))
+      .withSubscriberCallback(row.getString("subscriber_callback"));
   }
 
   private List<MessagingModule> mapResultSetToMessagingModuleList(RowSet<Row> resultSet) {
