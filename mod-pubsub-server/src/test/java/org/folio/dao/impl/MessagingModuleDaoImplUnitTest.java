@@ -58,7 +58,7 @@ public class MessagingModuleDaoImplUnitTest {
     // given
     Async async = context.async();
     int updatedRowsNumber = 1;
-    RowSet<Row> updateResult = new LocalRowSet(1);
+    RowSet<Row> updateResult = new LocalRowSet(updatedRowsNumber);
 
     doAnswer(invocation -> {
       Handler<AsyncResult<RowSet<Row>>> handler = invocation.getArgument(2);

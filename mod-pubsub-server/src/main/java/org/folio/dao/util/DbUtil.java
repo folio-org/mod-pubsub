@@ -37,7 +37,7 @@ public final class DbUtil {
         return tx.future();
       })
       .compose(v -> action.apply(tx.future()))
-      .setHandler(result -> {
+      .onComplete(result -> {
         if (result.succeeded()) {
           postgresClient.endTx(tx.future(), endTx -> promise.complete(result.result()));
         } else {
