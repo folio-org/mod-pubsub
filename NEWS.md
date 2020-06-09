@@ -1,6 +1,7 @@
 ## 2020-04-20 v.1.2.0-SNAPSHOT
 * [MODPUBSUB-82](https://issues.folio.org/browse/MODPUBSUB-82) Switch Liquibase integration to use [folio-liquibase-util](https://github.com/folio-org/folio-liquibase-util)
 * [MODPUBSUB-96](https://issues.folio.org/browse/MODPUBSUB-96) Add permission to send events to mod-patron-blocks
+* [MODPUBSUB-97](https://issues.folio.org/browse/MODPUBSUB-97) Allow Kafka topic name to have a customized prefix
 * [MODPUBSUB-85](https://issues.folio.org/browse/MODPUBSUB-85) Client: Remove call for registering Publisher/Subscriber if none declared in MessagingDescriptor
 
 ## 2020-04-27 v1.1.5
