@@ -88,7 +88,7 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
     Promise<RowSet<Row>> promise = Promise.promise();
     try {
       String query = format(INSERT_AUDIT_MESSAGE_PAYLOAD_QUERY, convertToPsqlStandard(tenantId), AUDIT_MESSAGE_PAYLOAD_TABLE);
-      pgClientFactory.getInstance(tenantId).execute(query, Tuple.of(auditMessagePayload.getEventId(), pojo2json(auditMessagePayload)),
+      pgClientFactory.getInstance(tenantId).execute(query, Tuple.of(UUID.fromString(auditMessagePayload.getEventId()), pojo2json(auditMessagePayload)),
         promise);
     } catch (Exception e) {
       LOGGER.error("Error saving audit message payload for event with id {}", e, auditMessagePayload.getEventId());
@@ -103,7 +103,7 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
     Promise<RowSet<Row>> promise = Promise.promise();
     try {
       String query = format(GET_BY_EVENT_ID_QUERY, convertToPsqlStandard(tenantId), AUDIT_MESSAGE_PAYLOAD_TABLE);
-      pgClientFactory.getInstance(tenantId).select(query, Tuple.of(eventId), promise);
+      pgClientFactory.getInstance(tenantId).select(query, Tuple.of(UUID.fromString(eventId)), promise);
     } catch (Exception e) {
       LOGGER.error("Error while searching for audit message payload by event id {}", e, eventId);
       promise.fail(e);
