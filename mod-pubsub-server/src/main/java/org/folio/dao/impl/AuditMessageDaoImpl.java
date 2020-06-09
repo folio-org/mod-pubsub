@@ -37,10 +37,10 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
 
   private static final String AUDIT_MESSAGE_TABLE = "audit_message";
   private static final String AUDIT_MESSAGE_PAYLOAD_TABLE = "audit_message_payload";
-  private static final String INSERT_AUDIT_MESSAGE_QUERY = "INSERT INTO %s.%s (id, event_id, event_type, tenant_id, audit_date, state, published_by, correlation_id, created_by, error_message) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
-  private static final String INSERT_AUDIT_MESSAGE_PAYLOAD_QUERY = "INSERT INTO %s.%s (event_id, content) VALUES (?, ?);";
+  private static final String INSERT_AUDIT_MESSAGE_QUERY = "INSERT INTO %s.%s (id, event_id, event_type, tenant_id, audit_date, state, published_by, correlation_id, created_by, error_message) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);";
+  private static final String INSERT_AUDIT_MESSAGE_PAYLOAD_QUERY = "INSERT INTO %s.%s (event_id, content) VALUES ($1, $2);";
   private static final String SELECT_QUERY = "SELECT * FROM %s.%s";
-  private static final String GET_BY_EVENT_ID_QUERY = "SELECT * FROM %s.%s WHERE event_id = ?;";
+  private static final String GET_BY_EVENT_ID_QUERY = "SELECT * FROM %s.%s WHERE event_id = $1;";
 
   @Autowired
   private PostgresClientFactory pgClientFactory;

@@ -39,10 +39,10 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
   private static final String TABLE_NAME = "event_descriptor";
   private static final String MODULE_SCHEMA = "pubsub_config";
   private static final String GET_ALL_SQL = "SELECT * FROM %s.%s";
-  private static final String GET_BY_ID_SQL = "SELECT * FROM %s.%s WHERE id = ?";
-  private static final String INSERT_SQL = "INSERT INTO %s.%s (id, descriptor) VALUES (?, ?)";
-  private static final String UPDATE_BY_ID_SQL = "UPDATE %s.%s SET descriptor = ? WHERE id = ?";
-  private static final String DELETE_BY_ID_SQL = "DELETE FROM %s.%s WHERE id = ?";
+  private static final String GET_BY_ID_SQL = "SELECT * FROM %s.%s WHERE id = $1";
+  private static final String INSERT_SQL = "INSERT INTO %s.%s (id, descriptor) VALUES ($1, $2)";
+  private static final String UPDATE_BY_ID_SQL = "UPDATE %s.%s SET descriptor = $1 WHERE id = %2";
+  private static final String DELETE_BY_ID_SQL = "DELETE FROM %s.%s WHERE id = %1";
 
   @Autowired
   private PostgresClientFactory pgClientFactory;
