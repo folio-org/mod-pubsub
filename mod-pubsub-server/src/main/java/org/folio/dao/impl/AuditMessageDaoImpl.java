@@ -7,7 +7,6 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
-
 import org.folio.dao.AuditMessageDao;
 import org.folio.dao.PostgresClientFactory;
 import org.folio.rest.jaxrs.model.AuditMessage;
@@ -27,6 +26,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
 import static org.folio.rest.tools.ClientHelpers.pojo2json;
 
@@ -65,15 +65,15 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
     try {
       String query = format(INSERT_AUDIT_MESSAGE_QUERY, convertToPsqlStandard(auditMessage.getTenantId()), AUDIT_MESSAGE_TABLE);
       Tuple params = Tuple.of(UUID.fromString(auditMessage.getId()),
-        auditMessage.getEventId(),
+        UUID.fromString(auditMessage.getEventId()),
         auditMessage.getEventType(),
         auditMessage.getTenantId(),
         Timestamp.from(auditMessage.getAuditDate().toInstant()).toLocalDateTime(),
-        auditMessage.getState().toString(),
+        auditMessage.getState().value(),
         auditMessage.getPublishedBy(),
-        auditMessage.getCorrelationId() != null ? auditMessage.getCorrelationId() : "",
-        auditMessage.getCreatedBy() != null ? auditMessage.getCreatedBy() : "",
-        auditMessage.getErrorMessage() != null ? auditMessage.getErrorMessage() : "");
+        auditMessage.getCorrelationId() != null ? auditMessage.getCorrelationId() : EMPTY,
+        auditMessage.getCreatedBy() != null ? auditMessage.getCreatedBy() : EMPTY,
+        auditMessage.getErrorMessage() != null ? auditMessage.getErrorMessage() : EMPTY);
       pgClientFactory.getInstance(auditMessage.getTenantId()).execute(query, params, promise);
     } catch (Exception e) {
       LOGGER.error("Error saving audit message with id {}", e, auditMessage.getId());
@@ -122,12 +122,12 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
     return new AuditMessage()
       .withId(row.getValue("id").toString())
       .withEventId(row.getValue("event_id").toString())
-      .withEventType(row.getValue("event_type").toString())
-      .withCorrelationId(row.getValue("correlation_id").toString())
-      .withTenantId(row.getValue("tenant_id").toString())
+      .withEventType(row.getString("event_type"))
+      .withCorrelationId(row.getString("correlation_id"))
+      .withTenantId(row.getString("tenant_id"))
       .withCreatedBy(row.getString("created_by"))
       .withPublishedBy(row.getString("published_by"))
-      .withAuditDate(Date.from(LocalDateTime.parse(row.getString("audit_date")).toInstant(ZoneOffset.UTC)))
+      .withAuditDate(Date.from(LocalDateTime.parse(row.getValue("audit_date").toString()).toInstant(ZoneOffset.UTC)))
       .withState(AuditMessage.State.fromValue(row.getString("state")))
       .withErrorMessage(row.getString("error_message"));
   }

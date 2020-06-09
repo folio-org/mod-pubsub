@@ -8,7 +8,6 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
-
 import org.folio.dao.PostgresClientFactory;
 import org.folio.dao.PubSubUserDao;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -15,7 +15,8 @@ import java.util.function.Function;
  */
 public final class DbUtil {
 
-  private DbUtil(){}
+  private DbUtil() {
+  }
 
   private static final Logger LOG = LoggerFactory.getLogger(DbUtil.class);
 
@@ -23,8 +24,8 @@ public final class DbUtil {
    * Executes passed action in transaction
    *
    * @param postgresClient Postgres Client
-   * @param action action that needs to be executed in transaction
-   * @param <T> result type returned from the action
+   * @param action         action that needs to be executed in transaction
+   * @param <T>            result type returned from the action
    * @return future with action result if succeeded or failed future
    */
   public static <T> Future<T> executeInTransaction(PostgresClient postgresClient,

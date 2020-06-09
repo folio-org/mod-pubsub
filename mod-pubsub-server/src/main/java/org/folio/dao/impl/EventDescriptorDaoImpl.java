@@ -2,14 +2,12 @@ package org.folio.dao.impl;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
-
 import org.folio.dao.EventDescriptorDao;
 import org.folio.dao.PostgresClientFactory;
 import org.folio.rest.jaxrs.model.EventDescriptor;
@@ -41,8 +39,8 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
   private static final String GET_ALL_SQL = "SELECT * FROM %s.%s";
   private static final String GET_BY_ID_SQL = "SELECT * FROM %s.%s WHERE id = $1";
   private static final String INSERT_SQL = "INSERT INTO %s.%s (id, descriptor) VALUES ($1, $2)";
-  private static final String UPDATE_BY_ID_SQL = "UPDATE %s.%s SET descriptor = $1 WHERE id = %2";
-  private static final String DELETE_BY_ID_SQL = "DELETE FROM %s.%s WHERE id = %1";
+  private static final String UPDATE_BY_ID_SQL = "UPDATE %s.%s SET descriptor = $1 WHERE id = $2";
+  private static final String DELETE_BY_ID_SQL = "DELETE FROM %s.%s WHERE id = $1";
 
   @Autowired
   private PostgresClientFactory pgClientFactory;
@@ -85,7 +83,7 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
         .map(eventType -> new StringBuilder("'").append(eventType).append("'"))
         .collect(Collectors.joining(", ", "id IN (", ")"));
 
-      query.append( " WHERE ").append(conditionByEventTypes);
+      query.append(" WHERE ").append(conditionByEventTypes);
     }
     return query.toString();
   }

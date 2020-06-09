@@ -8,8 +8,6 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
-
-import org.apache.commons.lang3.StringUtils;
 import org.folio.dao.MessagingModuleDao;
 import org.folio.dao.PostgresClientFactory;
 import org.folio.dao.util.DbUtil;
@@ -21,6 +19,7 @@ import org.folio.rest.util.MessagingModuleFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -42,10 +41,9 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
   private static final String TABLE_NAME = "messaging_module";
   private static final String MODULE_SCHEMA = "pubsub_config";
   private static final String GET_BY_SQL = "SELECT * FROM %s.%s %s";
-  private static final String INSERT_BATCH_SQL = "INSERT INTO %s.%s (id, event_type_id, module_id, tenant_id, role, activated, subscriber_callback) VALUES ";
+  private static final String INSERT_BATCH_SQL = "INSERT INTO %s.%s (id, event_type_id, module_id, tenant_id, role, activated, subscriber_callback) VALUES ($1, $2, $3, $4, $5, $6, $7)";
   private static final String DELETE_BY_ID_SQL = "DELETE FROM %s.%s WHERE id = $1";
   private static final String DELETE_BY_SQL = "DELETE FROM %s.%s %s";
-  private static final String TABLE_COLUMNS_PLACEHOLDER = " ($1, $2, $3, $4, $5, $6, $7),";
   private static final String GET_ALL_SQL = "SELECT * FROM %s.%s";
 
   @Autowired
@@ -80,32 +78,29 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
    */
   private Future<List<MessagingModule>> saveMessagingModuleList(List<MessagingModule> messagingModules,
                                                                 AsyncResult<SQLConnection> sqlConnection) {
-    Promise<RowSet<Row>> promise = Promise.promise();
+    Promise<List<RowSet<Row>>> promise = Promise.promise();
     try {
-      StringBuilder query = new StringBuilder(format(INSERT_BATCH_SQL, MODULE_SCHEMA, TABLE_NAME));
-      Tuple params = Tuple.tuple();
+      String query = format(INSERT_BATCH_SQL, MODULE_SCHEMA, TABLE_NAME);
+      List<Tuple> params = new ArrayList<>();
       for (MessagingModule messagingModule : messagingModules) {
-        query.append(TABLE_COLUMNS_PLACEHOLDER);
-        prepareInsertQueryParameters(messagingModule, params);
+        params.add(prepareInsertQueryParameters(messagingModule));
       }
-      String preparedQuery = StringUtils.strip(query.toString(), ",");
-      pgClientFactory.getInstance().execute(sqlConnection, preparedQuery, params, promise);
+      pgClientFactory.getInstance().execute(sqlConnection, query, params, promise);
     } catch (Exception e) {
       LOGGER.error("Error saving Messaging Modules", e);
-     promise.fail(e);
+      promise.fail(e);
     }
     return promise.future().map(updateResult -> messagingModules);
   }
 
-  private void prepareInsertQueryParameters(MessagingModule messagingModule, Tuple params) {
-    params.addUUID(UUID.fromString(messagingModule.getId()))
-      .addString(messagingModule.getEventType())
-      .addString(messagingModule.getModuleId())
-      .addString(messagingModule.getTenantId())
-      .addString(messagingModule.getModuleRole().value())
-      .addBoolean(messagingModule.getActivated());
-    String subscriberCallback = messagingModule.getSubscriberCallback();
-    params.addString(subscriberCallback != null ? subscriberCallback : EMPTY);
+  private Tuple prepareInsertQueryParameters(MessagingModule messagingModule) {
+    return Tuple.of(UUID.fromString(messagingModule.getId()),
+      messagingModule.getEventType(),
+      messagingModule.getModuleId(),
+      messagingModule.getTenantId(),
+      messagingModule.getModuleRole().value(),
+      messagingModule.getActivated(),
+      messagingModule.getSubscriberCallback() != null ? messagingModule.getSubscriberCallback() : EMPTY);
   }
 
   @Override

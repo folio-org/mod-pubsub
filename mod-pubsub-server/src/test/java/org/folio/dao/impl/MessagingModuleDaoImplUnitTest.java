@@ -8,9 +8,7 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
-import io.vertx.sqlclient.Tuple;
 import io.vertx.sqlclient.impl.ArrayTuple;
-
 import org.folio.dao.PostgresClientFactory;
 import org.folio.rest.jaxrs.model.MessagingModule;
 import org.folio.rest.persist.PostgresClient;
@@ -68,7 +66,7 @@ public class MessagingModuleDaoImplUnitTest {
       .when(pgClient).execute(anyString(), any(ArrayTuple.class), any(Handler.class));
     // when
     messagingModuleDao.delete(messagingModule.getId())
-    // then
+      // then
       .onComplete(ar -> {
         Assert.assertTrue(ar.succeeded());
         Assert.assertEquals(true, ar.result());
@@ -91,7 +89,7 @@ public class MessagingModuleDaoImplUnitTest {
       .when(pgClient).execute(anyString(), any(ArrayTuple.class), any(Handler.class));
     // when
     messagingModuleDao.delete(messagingModule.getId())
-    // then
+      // then
       .onComplete(ar -> {
         Assert.assertTrue(ar.succeeded());
         Assert.assertEquals(false, ar.result());
