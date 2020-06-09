@@ -65,9 +65,9 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
     try {
       String query = format(INSERT_AUDIT_MESSAGE_QUERY, convertToPsqlStandard(auditMessage.getTenantId()), AUDIT_MESSAGE_TABLE);
       Tuple params = Tuple.of(UUID.fromString(auditMessage.getId()),
-        UUID.fromString(auditMessage.getEventId()),
+        auditMessage.getEventId(),
         auditMessage.getEventType(),
-        UUID.fromString(auditMessage.getTenantId()),
+        auditMessage.getTenantId(),
         Timestamp.from(auditMessage.getAuditDate().toInstant()).toLocalDateTime(),
         auditMessage.getState().toString(),
         auditMessage.getPublishedBy(),
