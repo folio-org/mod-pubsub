@@ -20,6 +20,7 @@ import javax.ws.rs.NotFoundException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
@@ -65,7 +66,7 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
       promise.fail(e);
     }
     return promise.future().map(resultSet -> resultSet.rowCount() == 0 ? Optional.empty()
-      : Optional.of(mapRowJsonToEventDescriptor(resultSet.iterator().next()))));
+      : Optional.of(mapRowJsonToEventDescriptor(resultSet.iterator().next())));
   }
 
   @Override
@@ -132,7 +133,7 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
     return promise.future().map(updateResult -> updateResult.rowCount() == 1);
   }
 
-  private EventDescriptor mapRowJsonToEventDescriptor(JsonObject rowAsJson) {
+  private EventDescriptor mapRowJsonToEventDescriptor(Row rowAsJson) {
     EventDescriptor eventDescriptor = new EventDescriptor();
     eventDescriptor.setEventType(rowAsJson.getString("id"));
     JsonObject descriptorAsJson = new JsonObject(rowAsJson.getString("descriptor"));
@@ -143,7 +144,8 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
   }
 
   private List<EventDescriptor> mapResultSetToEventDescriptorList(RowSet<Row> resultSet) {
-    return resultSet.getRows().stream()
+    return Stream.generate(resultSet.iterator()::next)
+      .limit(resultSet.size())
       .map(this::mapRowJsonToEventDescriptor)
       .collect(Collectors.toList());
   }

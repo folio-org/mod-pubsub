@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
@@ -104,14 +105,17 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
       promise.fail(e);
     }
     return promise.future().map(resultSet -> resultSet.rowCount() == 0
-      ? Optional.empty() : Optional.of(mapAuditMessagePayload(resultSet.iterator().next())))K);
+      ? Optional.empty() : Optional.of(mapAuditMessagePayload(resultSet.iterator().next())));
   }
 
   private List<AuditMessage> mapAuditMessagesResult(RowSet<Row> resultSet) {
-    return resultSet.iterator()getRows().stream().map(this::mapAuditMessage).collect(Collectors.toList());
+    return Stream.generate(resultSet.iterator()::next)
+      .limit(resultSet.size())
+      .map(this::mapAuditMessage)
+      .collect(Collectors.toList());
   }
 
-  private AuditMessage mapAuditMessage(JsonObject result) {
+  private AuditMessage mapAuditMessage(Row result) {
     return new AuditMessage()
       .withId(result.getString("id"))
       .withEventId(result.getString("event_id"))
@@ -125,7 +129,7 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
       .withErrorMessage(result.getString("error_message"));
   }
 
-  private AuditMessagePayload mapAuditMessagePayload(JsonObject result) {
+  private AuditMessagePayload mapAuditMessagePayload(Row result) {
     return new AuditMessagePayload()
       .withEventId(result.getString("event_id"))
       .withContent(result.getString("content"));

@@ -25,6 +25,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -83,7 +84,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
     Promise<RowSet<Row>> promise = Promise.promise();
     try {
       StringBuilder query = new StringBuilder(format(INSERT_BATCH_SQL, MODULE_SCHEMA, TABLE_NAME));
-      JsonArray params = new JsonArray();
+      Tuple params = Tuple.tuple();
       for (MessagingModule messagingModule : messagingModules) {
         query.append(TABLE_COLUMNS_PLACEHOLDER);
         prepareInsertQueryParameters(messagingModule, params);
@@ -97,15 +98,15 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
     return promise.future().map(updateResult -> messagingModules);
   }
 
-  private void prepareInsertQueryParameters(MessagingModule messagingModule, JsonArray queryParams) {
-    queryParams.add(messagingModule.getId())
-      .add(messagingModule.getEventType())
-      .add(messagingModule.getModuleId())
-      .add(messagingModule.getTenantId())
-      .add(messagingModule.getModuleRole().value())
-      .add(messagingModule.getActivated());
+  private void prepareInsertQueryParameters(MessagingModule messagingModule, Tuple params) {
+    params.addString(messagingModule.getId())
+      .addString(messagingModule.getEventType())
+      .addString(messagingModule.getModuleId())
+      .addString(messagingModule.getTenantId())
+      .addString(messagingModule.getModuleRole().value())
+      .addBoolean(messagingModule.getActivated());
     String subscriberCallback = messagingModule.getSubscriberCallback();
-    queryParams.add(subscriberCallback != null ? subscriberCallback : EMPTY);
+    params.addString(subscriberCallback != null ? subscriberCallback : EMPTY);
   }
 
   @Override
@@ -139,7 +140,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
     return promise.future().map(updateResult -> updateResult.rowCount() == 1);
   }
 
-  private MessagingModule mapRowJsonToMessagingModule(JsonObject rowAsJson) {
+  private MessagingModule mapRowJsonToMessagingModule(Row rowAsJson) {
     return new MessagingModule()
       .withId(rowAsJson.getString("id"))
       .withEventType(rowAsJson.getString("event_type_id"))
@@ -151,7 +152,8 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
   }
 
   private List<MessagingModule> mapResultSetToMessagingModuleList(RowSet<Row> resultSet) {
-    return resultSet.getRows().stream()
+    return Stream.generate(resultSet.iterator()::next)
+      .limit(resultSet.size())
       .map(this::mapRowJsonToMessagingModule)
       .collect(Collectors.toList());
   }
