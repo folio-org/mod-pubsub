@@ -98,7 +98,7 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
   }
 
   private void prepareInsertQueryParameters(MessagingModule messagingModule, Tuple params) {
-    params.addString(messagingModule.getId())
+    params.addUUID(UUID.fromString(messagingModule.getId()))
       .addString(messagingModule.getEventType())
       .addString(messagingModule.getModuleId())
       .addString(messagingModule.getTenantId())
