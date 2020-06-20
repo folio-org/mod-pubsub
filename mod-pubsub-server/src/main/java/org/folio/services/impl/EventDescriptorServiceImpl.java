@@ -57,6 +57,9 @@ public class EventDescriptorServiceImpl implements EventDescriptorService {
     return eventDescriptorDao.getByEventType(eventDescriptor.getEventType())
       .compose(eventDescriptorOptional -> {
         if (eventDescriptorOptional.isPresent()) {
+          if(eventDescriptorOptional.get().getTmp()){
+            return eventDescriptorDao.update(eventDescriptor).map(EventDescriptor::getEventType);
+          }
           if (EqualsBuilder.reflectionEquals(eventDescriptor, eventDescriptorOptional.get())) {
             return Future.succeededFuture(format("Event descriptor for event type '%s' is registered", eventDescriptor.getEventType()));
           } else {
