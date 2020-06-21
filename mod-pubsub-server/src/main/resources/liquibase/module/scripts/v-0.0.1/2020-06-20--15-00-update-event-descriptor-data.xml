@@ -10,7 +10,7 @@
     </preConditions>
     <sql>
       UPDATE ${database.defaultSchemaName}.event_descriptor
-      SET descriptor = descriptor || '{"tmp": "false"}'
+      SET descriptor = descriptor || jsonb_build_object('tmp', 'false')
       WHERE descriptor->>'tmp' IS NULL;
     </sql>
   </changeSet>
