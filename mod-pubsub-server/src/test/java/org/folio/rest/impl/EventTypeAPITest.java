@@ -23,8 +23,7 @@ public class EventTypeAPITest extends AbstractRestTest {
     .withEventType("CREATED_SRS_MARC_BIB_RECORD_WITH_ORDER_DATA")
     .withDescription("Created SRS Marc Bibliographic Record with order data in 9xx fields")
     .withEventTTL(1)
-    .withSigned(false)
-    .withTmp(false);
+    .withSigned(false);
 
   @Test
   public void shouldReturnEmptyListOnGet() {
