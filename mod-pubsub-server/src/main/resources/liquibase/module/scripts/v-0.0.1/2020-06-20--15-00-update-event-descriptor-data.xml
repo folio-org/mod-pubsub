@@ -9,7 +9,7 @@
       <tableExists tableName="event_descriptor" schemaName="${database.defaultSchemaName}"/>
     </preConditions>
     <sql>
-      UPDATE ${myuniversity}_${mymodule}.event_descriptor
+      UPDATE ${database.defaultSchemaName}.event_descriptor
       SET descriptor = descriptor || '{"tmp": "false"}'
       WHERE descriptor->>'tmp' IS NULL;
     </sql>
