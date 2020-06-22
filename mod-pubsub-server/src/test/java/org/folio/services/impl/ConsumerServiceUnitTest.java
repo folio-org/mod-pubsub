@@ -20,8 +20,8 @@ import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.MessagingModule;
 import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.rest.util.RestUtil;
-import org.folio.services.cache.Cache;
 import org.folio.services.SecurityManager;
+import org.folio.services.cache.Cache;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -217,7 +217,7 @@ public class ConsumerServiceUnitTest {
 
     future.onComplete(ar -> {
       assertTrue(ar.succeeded());
-      verify(consumerService, times(messagingModuleList.size())).getEventDeliveredHandler(any(Event.class), anyString(), any(MessagingModule.class));
+      verify(consumerService, times(messagingModuleList.size())).getEventDeliveredHandler(any(Event.class), anyString(), any(MessagingModule.class), any(OkapiConnectionParams.class), any(Map.class));
       async.complete();
     });
   }
