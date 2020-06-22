@@ -80,6 +80,7 @@ public class ConsumerServiceUnitTest {
   public void setUp() {
     MockitoAnnotations.initMocks(this);
     when(securityManager.getJWTToken(any(OkapiConnectionParams.class))).thenReturn(Future.succeededFuture(TOKEN));
+    when(securityManager.loginPubSubUser(any(OkapiConnectionParams.class))).thenReturn(Future.succeededFuture(true));
 
     headers.put(OKAPI_URL_HEADER, "http://localhost:" + mockServer.port());
     headers.put(OKAPI_TENANT_HEADER, TENANT);
@@ -218,6 +219,55 @@ public class ConsumerServiceUnitTest {
     future.onComplete(ar -> {
       assertTrue(ar.succeeded());
       verify(consumerService, times(messagingModuleList.size())).getEventDeliveredHandler(any(Event.class), anyString(), any(MessagingModule.class), any(OkapiConnectionParams.class), any(Map.class));
+      async.complete();
+    });
+  }
+
+  @Test
+  public void shouldSendRequestAndRetry(TestContext context) {
+    Async async = context.async();
+
+    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS)
+      .willReturn(WireMock.forbidden()));
+
+    Event event = new Event()
+      .withId(UUID.randomUUID().toString())
+      .withEventType(EVENT_TYPE)
+      .withEventMetadata(new EventMetadata()
+        .withTenantId(TENANT)
+        .withEventTTL(30)
+        .withPublishedBy("mod-very-important-1.0.0"));
+
+    OkapiConnectionParams params = new OkapiConnectionParams(vertx);
+    params.setHeaders(headers);
+    params.setOkapiUrl(headers.getOrDefault("x-okapi-url", "localhost"));
+    params.setTenantId(headers.getOrDefault("x-okapi-tenant", TENANT));
+    params.setToken(headers.getOrDefault("x-okapi-token", TOKEN));
+    params.setTimeout(2000);
+
+    Set<MessagingModule> messagingModuleList = new HashSet<>();
+    messagingModuleList.add(new MessagingModule()
+      .withId(UUID.randomUUID().toString())
+      .withEventType(EVENT_TYPE)
+      .withModuleId("mod-source-record-storage-1.0.0")
+      .withTenantId(TENANT)
+      .withModuleRole(MessagingModule.ModuleRole.SUBSCRIBER)
+      .withActivated(true)
+      .withSubscriberCallback(CALLBACK_ADDRESS));
+    messagingModuleList.add(new MessagingModule()
+      .withId(UUID.randomUUID().toString())
+      .withEventType(EVENT_TYPE)
+      .withModuleId("mod-source-record-manager-1.0.0")
+      .withTenantId(TENANT)
+      .withModuleRole(MessagingModule.ModuleRole.SUBSCRIBER)
+      .withActivated(true)
+      .withSubscriberCallback(CALLBACK_ADDRESS));
+    when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(messagingModuleList));
+
+    Future<Void> future = consumerService.deliverEvent(event, params);
+
+    future.onComplete(ar -> {
+      assertTrue(ar.succeeded());
       async.complete();
     });
   }

@@ -120,7 +120,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
   }
 
   protected Future<Void> deliverEvent(Event event, OkapiConnectionParams params) {
-    List<Future> futureList = new ArrayList<>();
+    List<Future> futureList = new ArrayList<>(); //NOSONAR
     Promise<Void> result = Promise.promise();
     Map<MessagingModule, AtomicInteger> retry = new ConcurrentHashMap<>();
     return securityManager.getJWTToken(params)
