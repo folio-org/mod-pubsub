@@ -45,7 +45,7 @@ public class ModTenantAPI extends TenantAPI {
             securityManager.createPubSubUser(params)
               .compose(ar -> securityManager.loginPubSubUser(params))
               .map(this::toObject)
-              .setHandler(blockingFuture);
+              .onComplete(blockingFuture);
           },
           result -> handleResult(result, postTenantAr, handler)
         );
