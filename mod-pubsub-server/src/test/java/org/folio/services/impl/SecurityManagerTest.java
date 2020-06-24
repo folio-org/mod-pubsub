@@ -27,12 +27,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.folio.dao.MessagingModuleDao;
 import org.folio.dao.PostgresClientFactory;
 import org.folio.dao.PubSubUserDao;
+import org.folio.dao.impl.MessagingModuleDaoImpl;
 import org.folio.dao.impl.PubSubUserDaoImpl;
 import org.folio.representation.User;
 import org.folio.rest.impl.AbstractRestTest;
 import org.folio.rest.util.OkapiConnectionParams;
+import org.folio.services.cache.Cache;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Before;
@@ -78,8 +81,11 @@ public class SecurityManagerTest extends AbstractRestTest {
   private final PostgresClientFactory postgresClientFactory = new PostgresClientFactory(vertx);
   @InjectMocks
   private final PubSubUserDao pubSubUserDao = new PubSubUserDaoImpl();
+  @InjectMocks
+  private final MessagingModuleDao messagingModuleDao = new MessagingModuleDaoImpl();
+  private final Cache cache = new Cache(vertx, messagingModuleDao);
   @Spy
-  private final SecurityManagerImpl securityManager = new SecurityManagerImpl(pubSubUserDao, vertx);
+  private final SecurityManagerImpl securityManager = new SecurityManagerImpl(pubSubUserDao, vertx, cache);
 
   private final Context vertxContext = vertx.getOrCreateContext();
 
@@ -117,15 +123,15 @@ public class SecurityManagerTest extends AbstractRestTest {
     Future<String> future = securityManager.loginPubSubUser(params)
       .compose(ar -> securityManager.getJWTToken(params));
 
-    future.setHandler(ar -> {
-      assertTrue(ar.succeeded());
-      assertEquals(pubSubToken, ar.result());
+    future.onComplete(ar -> {
+      context.assertTrue(ar.succeeded());
+      context.assertEquals(pubSubToken, ar.result());
       List<LoggedRequest> requests = findAll(RequestPatternBuilder.allRequests());
-      assertEquals(1, requests.size());
-      assertEquals(LOGIN_URL, requests.get(0).getUrl());
-      assertEquals("POST", requests.get(0).getMethod().getName());
-      String actualToken = vertxContext.get(String.format(TOKEN_KEY_FORMAT, TENANT));
-      assertEquals(pubSubToken, actualToken);
+      context.assertEquals(1, requests.size());
+      context.assertEquals(LOGIN_URL, requests.get(0).getUrl());
+      context.assertEquals("POST", requests.get(0).getMethod().getName());
+      String actualToken = cache.getToken(params.getTenantId());
+      context.assertEquals(pubSubToken, actualToken);
       async.complete();
     });
   }
@@ -160,7 +166,7 @@ public class SecurityManagerTest extends AbstractRestTest {
       verify(0, new RequestPatternBuilder(POST, urlEqualTo(USERS_URL)));
 
       return null;
-    }).setHandler(context.asyncAssertSuccess());
+    }).onComplete(context.asyncAssertSuccess());
   }
 
   @Test
@@ -200,7 +206,7 @@ public class SecurityManagerTest extends AbstractRestTest {
       assertEquals("POST", requests.get(3).getMethod().getName());
 
       return null;
-    }).setHandler(context.asyncAssertSuccess());
+    }).onComplete(context.asyncAssertSuccess());
   }
 
   @Test
@@ -215,9 +221,9 @@ public class SecurityManagerTest extends AbstractRestTest {
 
     Future<String> future = securityManager.getJWTToken(params);
 
-    future.setHandler(ar -> {
-      assertTrue(ar.succeeded());
-      assertEquals(expectedToken, ar.result());
+    future.onComplete(ar -> {
+      context.assertTrue(ar.succeeded());
+      context.assertEquals(expectedToken, ar.result());
       verify(1, postRequestedFor(urlEqualTo(LOGIN_URL)));
       async.complete();
     });
@@ -256,7 +262,7 @@ public class SecurityManagerTest extends AbstractRestTest {
       assertEquals("POST", requests.get(2).getMethod().getName());
 
       return null;
-    }).setHandler(context.asyncAssertSuccess());
+    }).onComplete(context.asyncAssertSuccess());
   }
 
   @Test
@@ -286,7 +292,7 @@ public class SecurityManagerTest extends AbstractRestTest {
       assertEquals("POST", requests.get(1).getMethod().getName());
 
       return null;
-    }).setHandler(context.asyncAssertSuccess());
+    }).onComplete(context.asyncAssertSuccess());
   }
 
   private void verifyUser(LoggedRequest loggedRequest) {

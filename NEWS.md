@@ -1,5 +1,21 @@
-## 2020-04-20 v.1.2.0-SNAPSHOT
+## 2020-06-22 v1.2.3
+* [MODPUBSUB-90](https://issues.folio.org/browse/MODPUBSUB-90) Allow Subscribers to be registered before the Publishers
+* [MODPUBSUB-106](https://issues.folio.org/browse/MODPUBSUB-106) Fix issue with validation of EventDescriptor - save EventDescriptor as json, not an escaped String 
+
+## 2020-06-11 v1.2.2
+* Update dependency on "login" interface to v7.0
+
+## 2020-06-11 v1.2.1
+* [MODPUBSUB-99](https://issues.folio.org/browse/MODPUBSUB-99) Fix reading of pubsub user credentials 
+* [MODPUBSUB-105](https://issues.folio.org/browse/MODPUBSUB-105) Sometimes files don't finish processing, and it's not clear why 
+
+## 2020-06-10 v.1.2.0
 * [MODPUBSUB-82](https://issues.folio.org/browse/MODPUBSUB-82) Switch Liquibase integration to use [folio-liquibase-util](https://github.com/folio-org/folio-liquibase-util)
+* [MODPUBSUB-96](https://issues.folio.org/browse/MODPUBSUB-96) Add permission to send events to mod-patron-blocks
+* [MODPUBSUB-97](https://issues.folio.org/browse/MODPUBSUB-97) Allow Kafka topic name to have a customized prefix
+* [MODPUBSUB-95](https://issues.folio.org/browse/MODPUBSUB-95) Allow publishing event when there are no subscribers
+* [MODPUBSUB-85](https://issues.folio.org/browse/MODPUBSUB-85) Client: Remove call for registering Publisher/Subscriber if none declared in MessagingDescriptor
+* [MODPUBSUB-88](https://issues.folio.org/browse/MODPUBSUB-88) Upgrade to RAML Module Builder 30.0.2
 
 ## 2020-04-27 v1.1.5
 * [MODPUBSUB-83](https://issues.folio.org/browse/MODPUBSUB-83) Add env variable to set replication factor and number of partitions for topics in kafka

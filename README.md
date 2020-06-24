@@ -128,7 +128,17 @@ The partition count controls how many logs the topic will be sharded into.
         "value": "1"
       }
  ```   
- If these values are not set then topics will be created with 1 partition and 1 replica. 
+If these values are not set then topics will be created with 1 partition and 1 replica. 
+
+There is also a possibility to set a customized prefix for kafka topics, specifying the environment in which pusub is deployed
+
+ ```
+      {
+        "name": "ENV",
+        "value": "folio-testing"
+      }
+ ```
+In case this variable is not set, default "folio" prefix will be used in topic names.
 
 ## Verifying the module can connect and work with kafka
 
@@ -397,7 +407,7 @@ public class ModTenantAPI extends TenantAPI {
         Vertx vertx = context.owner();
         vertx.executeBlocking(
           blockingFuture -> registerModuleToPubsub(headers, context.owner())
-            .setHandler(event -> handler.handle(postTenantAr)),
+            .onComplete(event -> handler.handle(postTenantAr)),
           result -> handler.handle(postTenantAr)
         );
       }
@@ -537,7 +547,7 @@ As a result, we can send an event from the publisher module to "mod-pubsub" and 
 #### Permissions
 ##### "mod-pubsub" permissions workflow:
 At first "mod-pubsub" checks whether "pub-sub" user exists in the system. If user exists, then:
-- adds persmissions from the file "pubsub-user-permissions.csv" for the "pub-sub" user.
+- adds permissions from the file "pubsub-user-permissions.csv" for the "pub-sub" user.
 
  ##### Otherwise:
  If user does not exist in the system, then:

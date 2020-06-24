@@ -8,7 +8,7 @@
     },
     {
       "id": "login",
-      "version": "6.0"
+      "version": "7.0"
     },
     {
       "id": "permissions",
@@ -279,6 +279,16 @@
       "permissionName": "inventory.events.post",
       "displayName": "Inventory - post event",
       "description": "Post event to inventory"
+    },
+    {
+      "permissionName": "circulation.events.post",
+      "displayName": "Circulation - post event",
+      "description": "Post event to circulation"
+    },
+    {
+      "permissionName": "patron-blocks.events.post",
+      "displayName": "Patron blocks - post event",
+      "description": "Post events to patron blocks"
     }
   ],
   "launchDescriptor": {

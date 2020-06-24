@@ -7,6 +7,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.kafka.client.producer.impl.KafkaProducerRecordImpl;
 import org.folio.config.ApplicationConfig;
+import org.folio.kafka.KafkaConfig;
 import org.folio.kafka.PubSubConfig;
 import org.folio.rest.jaxrs.model.AuditMessage;
 import org.folio.rest.jaxrs.model.Event;
@@ -27,6 +28,8 @@ public class PublishingServiceImpl implements PublishingService {
 
   @Autowired
   private KafkaProducerManager manager;
+  @Autowired
+  private KafkaConfig kafkaConfig;
   private WorkerExecutor executor;
   private AuditService auditService;
 
@@ -40,12 +43,12 @@ public class PublishingServiceImpl implements PublishingService {
   @Override
   public void sendEvent(JsonObject event, String tenantId) {
     Event eventObject = event.mapTo(Event.class);
-    PubSubConfig config = new PubSubConfig(tenantId, eventObject.getEventType());
+    PubSubConfig config = new PubSubConfig(kafkaConfig.getEnvId(), tenantId, eventObject.getEventType());
     executor.executeBlocking(future -> {
         try {
           manager.getKafkaProducer().write(new KafkaProducerRecordImpl<>(config.getTopicName(), event.encode()), done -> {
             if (done.succeeded()) {
-              LOGGER.info("Sent {} event with id '{}' to topic {}",  event.getString("eventType"), event.getString("id"), config.getTopicName());
+              LOGGER.info("Sent {} event with id '{}' to topic {}", event.getString("eventType"), event.getString("id"), config.getTopicName());
               auditService.saveAuditMessage(constructJsonAuditMessage(eventObject, tenantId, AuditMessage.State.PUBLISHED));
             } else {
               String errorMessage = "Event was not sent";

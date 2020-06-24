@@ -24,6 +24,7 @@ public class Cache {
 
   private AsyncLoadingCache<String, Set<MessagingModule>> loadingCache;
   private com.github.benmanes.caffeine.cache.Cache<String, String> subscriptions;
+  private com.github.benmanes.caffeine.cache.Cache<String, String> tenantToken;
   private MessagingModuleDao messagingModuleDao;
 
   public Cache(@Autowired Vertx vertx, @Autowired MessagingModuleDao messagingModuleDao) {
@@ -32,6 +33,7 @@ public class Cache {
       .executor(serviceExecutor -> vertx.runOnContext(ar -> serviceExecutor.run()))
       .buildAsync(k -> new HashSet<>());
     this.subscriptions = Caffeine.newBuilder().build();
+    this.tenantToken = Caffeine.newBuilder().build();
   }
 
   public Future<Set<MessagingModule>> getMessagingModules() {
@@ -43,7 +45,7 @@ public class Cache {
           if (isEmpty(messagingModules)) {
             messagingModuleDao.getAll()
               .map(messagingModules::addAll)
-              .setHandler(ar -> promise.complete(messagingModules));
+              .onComplete(ar -> promise.complete(messagingModules));
           } else {
             promise.complete(messagingModules);
           }
@@ -60,6 +62,15 @@ public class Cache {
 
   public void addSubscription(String topic) {
     subscriptions.put(topic, topic);
+  }
+
+  public void addToken(String tenant, String token) {
+    tenantToken.invalidate(tenant);
+    tenantToken.put(tenant, token);
+  }
+
+  public String getToken(String tenant) {
+    return tenantToken.getIfPresent(tenant);
   }
 
   public void invalidate() {

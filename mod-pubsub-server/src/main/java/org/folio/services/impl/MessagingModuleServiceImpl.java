@@ -1,5 +1,6 @@
 package org.folio.services.impl;
 
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -25,6 +26,7 @@ import org.folio.services.cache.Cache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -80,22 +82,28 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
   }
 
   @Override
-  public Future<Errors> validateSubscriberDescriptor(SubscriberDescriptor subscriberDescriptor) {
-    Errors errors = new Errors();
+  public Future<Boolean> createMissingEventTypes(SubscriberDescriptor subscriberDescriptor) {
     List<String> eventTypes = subscriberDescriptor.getSubscriptionDefinitions().stream()
       .map(SubscriptionDefinition::getEventType)
       .collect(Collectors.toList());
 
-    return eventDescriptorDao.getByEventTypes(eventTypes).map(existingDescriptorList -> {
-      Map<String, EventDescriptor> descriptorsMap = existingDescriptorList.stream()
-        .collect(Collectors.toMap(EventDescriptor::getEventType, descriptor -> descriptor));
-      for (String eventType : eventTypes) {
-        if (descriptorsMap.get(eventType) == null) {
-          errors.getErrors().add(new Error().withMessage(String.format("Event type '%s' does not exist", eventType)));
+    return eventDescriptorDao.getByEventTypes(eventTypes)
+      .map(existingDescriptorList -> {
+        Map<String, EventDescriptor> descriptorsMap = existingDescriptorList.stream()
+          .collect(Collectors.toMap(EventDescriptor::getEventType, descriptor -> descriptor));
+        List<Future> futures = new ArrayList<>();
+        for (String eventType : eventTypes) {
+          if (descriptorsMap.get(eventType) == null) {
+            LOGGER.info("Event type {} does not exist, creating a temporary definition", eventType);
+            futures.add(eventDescriptorDao.save(
+              new EventDescriptor()
+                .withEventType(eventType)
+                .withEventTTL(1)
+                .withTmp(true)));
+          }
         }
-      }
-      return errors.withTotalRecords(errors.getErrors().size());
-    });
+        return CompositeFuture.join(futures);
+      }).map(true);
   }
 
   @Override
@@ -103,7 +111,7 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
     List<String> eventTypes = publisherDescriptor.getEventDescriptors().stream()
       .map(EventDescriptor::getEventType).collect(Collectors.toList());
     List<MessagingModule> messagingModules = createMessagingModules(publisherDescriptor.getModuleId(), eventTypes, PUBLISHER, tenantId);
-    if(messagingModules.isEmpty()) {
+    if (messagingModules.isEmpty()) {
       LOGGER.info("List of Publishers is empty");
       return Future.succeededFuture(true);
     }
@@ -119,7 +127,7 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
       .map(SubscriptionDefinition::getEventType)
       .collect(Collectors.toList());
     List<MessagingModule> messagingModules = createMessagingModules(subscriberDescriptor.getModuleId(), eventTypes, SUBSCRIBER, params.getTenantId());
-    if(messagingModules.isEmpty()) {
+    if (messagingModules.isEmpty()) {
       LOGGER.info("List of Subscribers is empty");
       return Future.succeededFuture(true);
     }
@@ -150,13 +158,16 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
 
   private void compareEventDescriptors(EventDescriptor eventDescriptor, EventDescriptor existingDescriptor, Errors errors) {
     if (existingDescriptor == null) {
-      errors.getErrors().add(new Error().withMessage(String.format("Event type '%s' does not exist", eventDescriptor.getEventType())));
+      String error = String.format("Event type '%s' does not exist", eventDescriptor.getEventType());
+      LOGGER.error(error);
+      errors.getErrors().add(new Error().withMessage(error));
     } else {
       if (!EqualsBuilder.reflectionEquals(eventDescriptor, existingDescriptor)) {
         String descriptorContent = JsonObject.mapFrom(existingDescriptor).encodePrettily();
         String message = String.format(
           "Publisher descriptor does not match existing descriptor for event type '%s'. To declare a publisher one should use the following descriptor: %s",
           eventDescriptor.getEventType(), descriptorContent);
+        LOGGER.error(message);
         errors.getErrors().add(new Error().withMessage(message));
       }
     }
@@ -166,10 +177,10 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
   /**
    * Creates Messaging Modules by event type and role
    *
-   * @param moduleId module id
+   * @param moduleId   module id
    * @param eventTypes event types list
    * @param moduleRole MessagingModule role
-   * @param tenantId tenant id
+   * @param tenantId   tenant id
    * @return Messaging Modules list
    */
   private List<MessagingModule> createMessagingModules(String moduleId, List<String> eventTypes, ModuleRole moduleRole, String tenantId) {
@@ -181,10 +192,10 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
   /**
    * Creates Messaging Module by event type and role
    *
-   * @param moduleId module id
-   * @param eventType event type name
+   * @param moduleId   module id
+   * @param eventType  event type name
    * @param moduleRole module role
-   * @param tenantId tenant id
+   * @param tenantId   tenant id
    * @return MessagingModule
    */
   private MessagingModule createMessagingModule(String moduleId, String eventType, ModuleRole moduleRole, String tenantId) {
