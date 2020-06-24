@@ -1,4 +1,4 @@
-## 2020-06-24 v1.2.4-SNAPSHOT
+## 2020-06-24 v1.3.0-SNAPSHOT
 * [MODPUBSUB-102](https://issues.folio.org/browse/MODPUBSUB-102) Corrected property with logger configuration file for pub-sub client
 
 ## 2020-06-22 v1.2.3
