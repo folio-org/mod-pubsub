@@ -1,7 +1,11 @@
 package org.folio.services.impl;
 
+import static io.vertx.core.http.HttpMethod.PUT;
+import static io.vertx.core.json.Json.encode;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.folio.HttpStatus.HTTP_NO_CONTENT;
 import static org.folio.rest.util.OkapiConnectionParams.OKAPI_TOKEN_HEADER;
 import static org.folio.rest.util.RestUtil.doRequest;
 
@@ -16,6 +20,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.HttpStatus;
 import org.folio.dao.PubSubUserDao;
+import org.folio.representation.User;
 import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.services.SecurityManager;
 import org.folio.services.cache.Cache;
