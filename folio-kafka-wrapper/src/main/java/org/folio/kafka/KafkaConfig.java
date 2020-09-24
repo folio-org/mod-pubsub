@@ -13,14 +13,20 @@ import java.util.Map;
 @Builder
 @ToString
 public class KafkaConfig {
-  public static final String KAFKA_CONSUMER_AUTO_OFFSET_RESET = "kafka.consumer.auto.offset.reset";
-  public static final String KAFKA_CONSUMER_AUTO_OFFSET_RESET_DEFAULT = "earliest";
+  public static final String KAFKA_CONSUMER_AUTO_OFFSET_RESET_CONFIG = "kafka.consumer.auto.offset.reset";
+  public static final String KAFKA_CONSUMER_AUTO_OFFSET_RESET_CONFIG_DEFAULT = "earliest";
 
-  public static final String KAFKA_CONSUMER_METADATA_MAX_AGE = "kafka.consumer.metadata.max.age.ms";
-  public static final String KAFKA_CONSUMER_METADATA_MAX_AGE_DEFAULT = "30000";
+  public static final String KAFKA_CONSUMER_METADATA_MAX_AGE_CONFIG = "kafka.consumer.metadata.max.age.ms";
+  public static final String KAFKA_CONSUMER_METADATA_MAX_AGE_CONFIG_DEFAULT = "30000";
 
-  public static final String KAFKA_NUMBER_OF_PARTITIONS = "NUMBER_OF_PARTITIONS";
+  public static final String KAFKA_NUMBER_OF_PARTITIONS = "kafka.number_of_partitions";
   public static final String KAFKA_NUMBER_OF_PARTITIONS_DEFAULT = "10";
+
+  public static final String KAFKA_CONSUMER_MAX_POLL_RECORDS_CONFIG = "kafka.consumer.max.poll.records";
+  public static final String KAFKA_CONSUMER_MAX_POLL_RECORDS_CONFIG_DEFAULT = "100";
+
+  public static final String KAFKA_CONSUMER_MAX_POLL_INTERVAL_MS_CONFIG = "kafka.consumer.max.poll.interval.ms";
+  public static final String KAFKA_CONSUMER_MAX_POLL_INTERVAL_MS_CONFIG_DEFAULT = "300000";
 
   private final String kafkaHost;
   private final String kafkaPort;
@@ -41,9 +47,10 @@ public class KafkaConfig {
     Map<String, String> consumerProps = new HashMap<>();
     consumerProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaUrl());
     consumerProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
-    consumerProps.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "100");
-    consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, SimpleConfigurationReader.getValue(KAFKA_CONSUMER_AUTO_OFFSET_RESET, KAFKA_CONSUMER_AUTO_OFFSET_RESET_DEFAULT));
-    consumerProps.put(ConsumerConfig.METADATA_MAX_AGE_CONFIG, SimpleConfigurationReader.getValue(KAFKA_CONSUMER_METADATA_MAX_AGE, KAFKA_CONSUMER_METADATA_MAX_AGE_DEFAULT));
+    consumerProps.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, SimpleConfigurationReader.getValue(KAFKA_CONSUMER_MAX_POLL_RECORDS_CONFIG, KAFKA_CONSUMER_MAX_POLL_RECORDS_CONFIG_DEFAULT));
+    consumerProps.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, SimpleConfigurationReader.getValue(KAFKA_CONSUMER_MAX_POLL_INTERVAL_MS_CONFIG, KAFKA_CONSUMER_MAX_POLL_INTERVAL_MS_CONFIG_DEFAULT));
+    consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, SimpleConfigurationReader.getValue(KAFKA_CONSUMER_AUTO_OFFSET_RESET_CONFIG, KAFKA_CONSUMER_AUTO_OFFSET_RESET_CONFIG_DEFAULT));
+    consumerProps.put(ConsumerConfig.METADATA_MAX_AGE_CONFIG, SimpleConfigurationReader.getValue(KAFKA_CONSUMER_METADATA_MAX_AGE_CONFIG, KAFKA_CONSUMER_METADATA_MAX_AGE_CONFIG_DEFAULT));
     consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
     consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
     return consumerProps;
@@ -56,6 +63,5 @@ public class KafkaConfig {
   public int getNumberOfPartitions() {
     return Integer.parseInt(SimpleConfigurationReader.getValue(KAFKA_NUMBER_OF_PARTITIONS, KAFKA_NUMBER_OF_PARTITIONS_DEFAULT));
   }
-
 
 }

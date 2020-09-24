@@ -7,7 +7,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class KafkaHeaderUtils {
@@ -38,7 +37,7 @@ public class KafkaHeaderUtils {
         Collectors.reducing(StringUtils.EMPTY,
           header -> {
             Buffer value = header.value();
-            return Objects.isNull(value) ? "" : value.toString();
+            return value == null ? "" : value.toString();
           },
           (a, b) -> StringUtils.isNotBlank(a) ? a : b)));
   }

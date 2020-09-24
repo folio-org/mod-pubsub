@@ -18,7 +18,6 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
@@ -76,20 +75,20 @@ public class KafkaConsumerWrapper<K, V> implements Handler<KafkaConsumerRecord<K
     this.subscriptionDefinition = subscriptionDefinition;
     this.globalLoadSensor = globalLoadSensor;
     this.processRecordErrorHandler = processRecordErrorHandler;
-    this.backPressureGauge = Objects.nonNull(backPressureGauge) ?
+    this.backPressureGauge = backPressureGauge != null ?
       backPressureGauge :
       (g, l, t) -> l > 0 && l > t; // Just the simplest gauge - if the local load is greater than the threshold and above zero
     this.loadLimit = loadLimit;
   }
 
   public Future<Void> start(AsyncRecordHandler<K, V> businessHandler, String moduleName) {
-    if (Objects.isNull(businessHandler)) {
+    if (businessHandler == null) {
       String failureMessage = "businessHandler must be provided and can't be null.";
       LOGGER.error(failureMessage);
       return Future.failedFuture(failureMessage);
     }
 
-    if (Objects.isNull(subscriptionDefinition) || StringUtils.isBlank(subscriptionDefinition.getSubscriptionPattern())) {
+    if (subscriptionDefinition == null || StringUtils.isBlank(subscriptionDefinition.getSubscriptionPattern())) {
       String failureMessage = "subscriptionPattern can't be null nor empty. " + subscriptionDefinition;
       LOGGER.error(failureMessage);
       return Future.failedFuture(failureMessage);
@@ -149,7 +148,7 @@ public class KafkaConsumerWrapper<K, V> implements Handler<KafkaConsumerRecord<K
 
   @Override
   public void handle(KafkaConsumerRecord<K, V> record) {
-    int globalLoad = Objects.nonNull(globalLoadSensor) ? globalLoadSensor.increment() : GLOBAL_SENSOR_NA;
+    int globalLoad = globalLoadSensor != null ? globalLoadSensor.increment() : GLOBAL_SENSOR_NA;
 
     int currentLoad = localLoadSensor.incrementAndGet();
 
@@ -168,7 +167,7 @@ public class KafkaConsumerWrapper<K, V> implements Handler<KafkaConsumerRecord<K
         " subscriptionPattern: " + subscriptionDefinition +
         " a Record has been received. key: " + record.key() +
         " currentLoad: " + currentLoad +
-        " globalLoad: " + (Objects.nonNull(globalLoadSensor) ? String.valueOf(globalLoadSensor.current()) : "N/A"));
+        " globalLoad: " + (globalLoadSensor != null ? String.valueOf(globalLoadSensor.current()) : "N/A"));
     }
 
     businessHandler.handle(record).onComplete(businessHandlerCompletionHandler(record));
@@ -194,14 +193,14 @@ public class KafkaConsumerWrapper<K, V> implements Handler<KafkaConsumerRecord<K
 
         if (har.failed()) {
           LOGGER.error("Error while processing a record - id: " + id + " subscriptionPattern: " + subscriptionDefinition + "\n" + har.cause());
-          if (Objects.nonNull(processRecordErrorHandler)) {
+          if (processRecordErrorHandler != null) {
             processRecordErrorHandler.handle(har.cause(), record);
           }
         }
       } finally {
         int actualCurrentLoad = localLoadSensor.decrementAndGet();
 
-        int globalLoad = Objects.nonNull(globalLoadSensor) ? globalLoadSensor.decrement() : GLOBAL_SENSOR_NA;
+        int globalLoad = globalLoadSensor != null ? globalLoadSensor.decrement() : GLOBAL_SENSOR_NA;
 
         if (!backPressureGauge.isThresholdExceeded(globalLoad, actualCurrentLoad, loadBottomGreenLine)) {
           int requestNo = pauseRequests.decrementAndGet();
