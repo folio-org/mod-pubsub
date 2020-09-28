@@ -99,7 +99,7 @@ curl -w '\n' -X POST -D -   \
 ```
 
 ## Environment variables
-Pubsub requires kafka to be running, and to ensure it can connect and interact with kafka the following environment variable should be specified on deployment:
+Pubsub requires kafka to be running, and to ensure it can connect and interact with kafka the following environment variable must be specified on deployment:
  ```
       {
         "name": "KAFKA_HOST",
@@ -114,8 +114,6 @@ Pubsub requires kafka to be running, and to ensure it can connect and interact w
         "value": "http://10.0.2.15:9130"
       }
 ```
-So, these parameters should be added as ENV_VARIABLES to the mod-pubsub build. Otherwise, build will fail.
-
 There are two additional parameters required for pubsub to create topics in kafka - number of partitions and replication factor. 
 The replication factor controls how many servers will replicate each message that is written. If replication factor set to 3 then up to 2 servers can fail before access to the data will be lost.
 The partition count controls how many logs the topic will be sharded into.
