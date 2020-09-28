@@ -1,9 +1,3 @@
-environment {
-  KAFKA_HOST = '10.0.2.15'
-  KAFKA_PORT = '9092'
-  OKAPI_URL = 'http://10.0.2.15:9130'
-}
-
 buildMvn {
   publishModDescriptor = 'yes'
   publishAPI = 'yes'
