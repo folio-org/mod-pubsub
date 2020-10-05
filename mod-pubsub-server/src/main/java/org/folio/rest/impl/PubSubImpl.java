@@ -289,7 +289,7 @@ public class PubSubImpl implements Pubsub {
     };
     try {
       Date start = DateUtils.parseDate(startDate, dateFormats);
-      Date end = processDate(endDate, dateFormats);
+      Date end = extractAndProcessEndDate(endDate, dateFormats);
       return new AuditMessageFilter(start, end)
         .withEventId(eventId)
         .withEventType(eventType)
@@ -300,7 +300,7 @@ public class PubSubImpl implements Pubsub {
     }
   }
 
-  private Date processDate(String endDate, String[] dateFormats) throws ParseException {
+  private Date extractAndProcessEndDate(String endDate, String[] dateFormats) throws ParseException {
     Date end;
     if (checkIfISODateFormat(endDate)) {
       end = DateUtils.parseDate(endDate, new String[]{DateFormatUtils.ISO_DATE_FORMAT.getPattern()});
