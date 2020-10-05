@@ -230,6 +230,22 @@ public class AuditMessageAPITest extends AbstractRestTest {
     });
   }
 
+  @Test
+  public void shouldReturnAuditMessagesOnGetFilteredByManyDaysWithEndTime(TestContext context) {
+    Async async = context.async();
+    addTestData().onComplete(ar -> {
+      RestAssured.given()
+        .spec(spec)
+        .when()
+        .get(HISTORY_PATH + "?startDate=2019-09-27&endDate=2019-09-28T00:00:00")
+        .then()
+        .statusCode(HttpStatus.SC_OK)
+        .body("totalRecords", is(2))
+        .body("auditMessages.size()", is(2));
+      async.complete();
+    });
+  }
+
   private CompositeFuture saveAuditMessages() {
     List<Future> futures = new ArrayList<>();
     String[] dateFormats = {DateFormatUtils.ISO_DATETIME_FORMAT.getPattern()};
