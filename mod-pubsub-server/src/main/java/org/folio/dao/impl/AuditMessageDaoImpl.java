@@ -41,6 +41,8 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
   private static final String INSERT_AUDIT_MESSAGE_PAYLOAD_QUERY = "INSERT INTO %s.%s (event_id, content) VALUES ($1, $2);";
   private static final String SELECT_QUERY = "SELECT * FROM %s.%s";
   private static final String GET_BY_EVENT_ID_QUERY = "SELECT * FROM %s.%s WHERE event_id = $1;";
+  private static final String FIRST_SECOND = "00:00:00";
+  private static final String LAST_SECOND = "23:59:59";
 
   @Autowired
   private PostgresClientFactory pgClientFactory;
@@ -140,9 +142,10 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
 
   private String constructWhereClauseForGetAuditMessagesQuery(AuditMessageFilter filter) {
     StringBuilder whereClause = new StringBuilder(" WHERE ");
+    String endDate = extractEndDate(filter);
     whereClause.append("audit_date BETWEEN ")
       .append("'").append(Timestamp.from(filter.getStartDate().toInstant())).append("' AND ")
-      .append("'").append(Timestamp.from(filter.getEndDate().toInstant())).append("'");
+      .append("'").append(endDate).append("'");
     if (filter.getEventId() != null) {
       whereClause.append(" AND event_id = '").append(filter.getEventId()).append("'");
     }
@@ -153,5 +156,13 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
       whereClause.append(" AND correlation_id = '").append(filter.getCorrelationId()).append("'");
     }
     return whereClause.append(";").toString();
+  }
+
+  private String extractEndDate(AuditMessageFilter filter) {
+    String endDate = Timestamp.from(filter.getEndDate().toInstant()).toString();
+    if(filter.getEndDate().toString().contains(FIRST_SECOND)) {
+      endDate = endDate.replace(FIRST_SECOND, LAST_SECOND);
+    }
+    return endDate;
   }
 }
