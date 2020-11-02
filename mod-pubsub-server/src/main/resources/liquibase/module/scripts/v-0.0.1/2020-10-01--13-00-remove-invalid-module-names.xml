@@ -6,7 +6,7 @@
 
   <changeSet id="2020-10-01--13-00-remove-invalid-module-names" author="VolodymyrRohach">
     <preConditions onFail="MARK_RAN">
-      <tableExists tableName="audit_message" schemaName="${database.defaultSchemaName}"/>
+      <tableExists tableName="messaging_module" schemaName="${database.defaultSchemaName}"/>
     </preConditions>
     <sql>
       DELETE FROM ${database.defaultSchemaName}.messaging_module
