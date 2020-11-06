@@ -34,6 +34,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.PUBLISHER;
+import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
 
 /**
  * Util class for reading module messaging descriptors, sending messages using PubSub and register module in PubSub
@@ -184,51 +186,30 @@ public class PubSubClientUtils {
     String moduleId = constructModuleName();
 
     Future.succeededFuture()
-      .compose(ar -> unregisterPublishers(client, moduleId))
-      .compose(ar -> unregisterSubscribers(client, moduleId))
+      .compose(ar -> unregisterModuleByIdAndRole(client, moduleId, PUBLISHER))
+      .compose(ar -> unregisterModuleByIdAndRole(client, moduleId, SUBSCRIBER))
       .onFailure(future::completeExceptionally)
       .onSuccess(ar -> future.complete(true))
       .onComplete(ar -> client.close());
     return future;
   }
 
-  private static Future<Boolean> unregisterPublishers(PubsubClient client, String moduleId) {
+  private static Future<Boolean> unregisterModuleByIdAndRole(PubsubClient client, String moduleId, MessagingModule.ModuleRole moduleRole) {
     Promise<Boolean> promise = Promise.promise();
     try {
-      LOGGER.info("Trying to unregister module's publishers with module name '{}'", moduleId);
-      client.deletePubsubMessagingModules(moduleId, MessagingModule.ModuleRole.PUBLISHER.value(), response -> {
+      LOGGER.info("Trying to unregister module with name '{}' as {}", moduleId, moduleRole);
+      client.deletePubsubMessagingModules(moduleId, moduleRole.value(), response -> {
         if (response.statusCode() == HttpStatus.HTTP_NO_CONTENT.toInt()) {
-          LOGGER.info("Module's publishers were successfully unregistered");
+          LOGGER.info("Module was successfully unregistered as '{}'", moduleRole);
           promise.complete(true);
         } else {
-          String msg = String.format("Module's publishers were not unregistered in PubSub. HTTP status: %s", response.statusCode());
+          String msg = String.format("Module was not unregistered as '%s' in PubSub. HTTP status: %s", moduleRole, response.statusCode());
           LOGGER.error(msg);
           promise.fail(msg);
         }
       });
     } catch (Exception e) {
-      LOGGER.error("Module's publishers were not deleted in PubSub.", e);
-      promise.fail(e);
-    }
-    return promise.future();
-  }
-
-  private static Future<Boolean> unregisterSubscribers(PubsubClient client, String moduleId) {
-    Promise<Boolean> promise = Promise.promise();
-    try {
-      LOGGER.info("Trying to unregister module's subscribers with module name '{}'", moduleId);
-      client.deletePubsubMessagingModules(moduleId, MessagingModule.ModuleRole.SUBSCRIBER.value(), response -> {
-        if (response.statusCode() == HttpStatus.HTTP_NO_CONTENT.toInt()) {
-          LOGGER.info("Module's subscribers were successfully unregistered");
-          promise.complete(true);
-        } else {
-          String msg = String.format("Module's subscribers were not unregistered in PubSub. HTTP status: %s", response.statusCode());
-          LOGGER.error(msg);
-          promise.fail(msg);
-        }
-      });
-    } catch (Exception e) {
-      LOGGER.error("Module's subscribers were not deleted in PubSub.", e);
+      LOGGER.error("Module was not unregistered as '{}' in PubSub.", e, moduleRole);
       promise.fail(e);
     }
     return promise.future();
