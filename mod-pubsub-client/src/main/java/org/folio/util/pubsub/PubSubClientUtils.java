@@ -3,13 +3,15 @@ package org.folio.util.pubsub;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.folio.HttpStatus;
-import org.folio.rest.client.PubsubClient;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventDescriptor;
 import org.folio.rest.jaxrs.model.MessagingDescriptor;
+import org.folio.rest.jaxrs.model.MessagingModule;
 import org.folio.rest.jaxrs.model.PublisherDescriptor;
 import org.folio.rest.jaxrs.model.SubscriberDescriptor;
 import org.folio.rest.tools.PomReader;
@@ -170,6 +172,68 @@ public class PubSubClientUtils {
   }
 
   /**
+   * Util method to unregister external module in PubSub.
+   *
+   * @param params - okapi connection params
+   * @return future with true if module was unregistered successfully
+   */
+  public static CompletableFuture<Boolean> unregisterModule(OkapiConnectionParams params) {
+    CompletableFuture<Boolean> future = new CompletableFuture<>();
+    PubsubClient client = new PubsubClient(params.getOkapiUrl(), params.getTenantId(), params.getToken());
+    String moduleId = constructModuleName();
+
+    Future.succeededFuture()
+      .compose(ar -> unregisterPublishers(client, moduleId))
+      .compose(ar -> unregisterSubscribers(client, moduleId))
+      .onFailure(future::completeExceptionally)
+      .onSuccess(ar -> future.complete(true))
+      .onComplete(ar -> client.close());
+    return future;
+  }
+
+  private static Future<Boolean> unregisterPublishers(PubsubClient client, String moduleId) {
+    Promise<Boolean> promise = Promise.promise();
+    try {
+      LOGGER.info("Trying to unregister module's publishers with module name '{}'", moduleId);
+      client.deletePubsubMessagingModules(moduleId, MessagingModule.ModuleRole.PUBLISHER.value(), response -> {
+        if (response.statusCode() == HttpStatus.HTTP_NO_CONTENT.toInt()) {
+          LOGGER.info("Module's publishers were successfully unregistered");
+          promise.complete(true);
+        } else {
+          String msg = String.format("Module's publishers were not unregistered in PubSub. HTTP status: %s", response.statusCode());
+          LOGGER.error(msg);
+          promise.fail(msg);
+        }
+      });
+    } catch (Exception e) {
+      LOGGER.error("Module's publishers were not deleted in PubSub.", e);
+      promise.fail(e);
+    }
+    return promise.future();
+  }
+
+  private static Future<Boolean> unregisterSubscribers(PubsubClient client, String moduleId) {
+    Promise<Boolean> promise = Promise.promise();
+    try {
+      LOGGER.info("Trying to unregister module's subscribers with module name '{}'", moduleId);
+      client.deletePubsubMessagingModules(moduleId, MessagingModule.ModuleRole.SUBSCRIBER.value(), response -> {
+        if (response.statusCode() == HttpStatus.HTTP_NO_CONTENT.toInt()) {
+          LOGGER.info("Module's subscribers were successfully unregistered");
+          promise.complete(true);
+        } else {
+          String msg = String.format("Module's subscribers were not unregistered in PubSub. HTTP status: %s", response.statusCode());
+          LOGGER.error(msg);
+          promise.fail(msg);
+        }
+      });
+    } catch (Exception e) {
+      LOGGER.error("Module's subscribers were not deleted in PubSub.", e);
+      promise.fail(e);
+    }
+    return promise.future();
+  }
+
+  /**
    * Reads messaging descriptor file 'MessagingDescriptor.json' and returns {@link DescriptorHolder} that contains
    * descriptors for module registration as publisher and subscriber.
    * At first, messaging descriptor is searched in directory by path specified in 'messaging_config_path' system property,
@@ -180,7 +244,7 @@ public class PubSubClientUtils {
    *
    * @return {@link DescriptorHolder}
    * @throws MessagingDescriptorNotFoundException if messaging descriptor file was not found
-   * @throws IOException                          if a low-level I/O problem (unexpected end-of-input) occurs while readind file
+   * @throws IOException                          if a low-level I/O problem (unexpected end-of-input) occurs while reading file
    * @throws IllegalArgumentException             if parsing file problems occurs (file contains invalid json structure)
    */
   static DescriptorHolder readMessagingDescriptor() throws IOException {
