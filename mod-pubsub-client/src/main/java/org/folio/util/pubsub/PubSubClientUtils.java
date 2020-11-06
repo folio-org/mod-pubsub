@@ -8,6 +8,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.folio.HttpStatus;
+import org.folio.rest.client.PubsubClient;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventDescriptor;
 import org.folio.rest.jaxrs.model.MessagingDescriptor;
