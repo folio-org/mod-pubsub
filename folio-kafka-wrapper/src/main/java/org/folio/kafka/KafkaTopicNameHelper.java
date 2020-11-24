@@ -47,8 +47,4 @@ public class KafkaTopicNameHelper {
       .subscriptionPattern(formatSubscriptionPattern(env, nameSpace, eventType))
       .build();
   }
-
-//  private static String getModuleName() {
-//    return PomReader.INSTANCE.getModuleName().replace("_", "-");
-//  }
 }
