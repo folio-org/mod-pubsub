@@ -1,6 +1,28 @@
-## 2020-06-24 v1.3.0-SNAPSHOT
+## 2020-10-29 v1.4.0-SNAPSHOT
+* [MODPUBSUB-87](https://issues.folio.org/browse/MODPUBSUB-87) Create utility method for module unregistering
+
+## 2020-11-05 v1.3.3
+* Fix logging after RMB upgrade
+
+## 2020-11-03 v1.3.2
+* [MODPUBSUB-129](https://issues.folio.org/browse/MODPUBSUB-129) Create script that would delete module subscriptions with "_" in their names
+* [MODPUBSUB-134](https://issues.folio.org/browse/MODPUBSUB-134) Upgrade to RMB v31.1.5
+
+## 2020-10-23 v1.3.1
+* [MODPUBSUB-127](https://issues.folio.org/browse/MODPUBSUB-127) Explicitly close HttpClient created by PubsubClient
+
+## 2020-10-06 v1.3.0
 * [MODPUBSUB-102](https://issues.folio.org/browse/MODPUBSUB-102) Corrected property with logger configuration file for pub-sub client
-* [MODDATAIMP-324](https://issues.folio.org/browse/MODDATAIMP-324) Update all Data-Import modules to the new RMB version
+* [MODDATAIMP-324](https://issues.folio.org/browse/MODDATAIMP-324) Update to RMB v31.0.2
+* [MODPUBSUB-110](https://issues.folio.org/browse/MODPUBSUB-110) Make env variables required for module deployment.
+* [MODPUBSUB-126](https://issues.folio.org/browse/MODPUBSUB-126) Make GET pubsub/history return audit messages filtered by date inclusively 
+
+## 2020-11-03 v1.2.6
+* [MODPUBSUB-133](https://issues.folio.org/browse/MODPUBSUB-133) Explicitly close HttpClient created by PubsubClient
+* [MODPUBSUB-129](https://issues.folio.org/browse/MODPUBSUB-129) Create script that would delete module subscriptions with "_" in their names
+
+## 2020-07-17 v1.2.5
+* [MODDATAIMP-309](https://issues.folio.org/browse/MODDATAIMP-309) Remove unnecessary requests to login
 
 ## 2020-07-10 v1.2.4
 * [MODDATAIMP-309](https://issues.folio.org/browse/MODDATAIMP-309) Deleted KafkaPublisherServiceImpl vertx proxy service

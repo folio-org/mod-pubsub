@@ -3,13 +3,17 @@ package org.folio.util.pubsub;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.web.handler.impl.HttpStatusException;
 import org.folio.HttpStatus;
 import org.folio.rest.client.PubsubClient;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventDescriptor;
 import org.folio.rest.jaxrs.model.MessagingDescriptor;
+import org.folio.rest.jaxrs.model.MessagingModule;
 import org.folio.rest.jaxrs.model.PublisherDescriptor;
 import org.folio.rest.jaxrs.model.SubscriberDescriptor;
 import org.folio.rest.tools.PomReader;
@@ -17,6 +21,7 @@ import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.util.pubsub.exceptions.EventSendingException;
 import org.folio.util.pubsub.exceptions.MessagingDescriptorNotFoundException;
 import org.folio.util.pubsub.exceptions.ModuleRegistrationException;
+import org.folio.util.pubsub.exceptions.ModuleUnregistrationException;
 import org.folio.util.pubsub.support.DescriptorHolder;
 
 import java.io.File;
@@ -30,7 +35,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import static java.lang.String.format;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
+import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.PUBLISHER;
+import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
 
 /**
  * Util class for reading module messaging descriptors, sending messages using PubSub and register module in PubSub
@@ -53,14 +61,14 @@ public class PubSubClientUtils {
    * @return - async result with boolean value. True if message was sanded successfully
    */
   public static CompletableFuture<Boolean> sendEventMessage(Event eventMessage, OkapiConnectionParams params) {
-    PubsubClient client = new PubsubClient(params.getOkapiUrl(), params.getTenantId(), params.getToken());
     CompletableFuture<Boolean> result = new CompletableFuture<>();
+    PubsubClient client = new PubsubClient(params.getOkapiUrl(), params.getTenantId(), params.getToken());
     try {
       client.postPubsubPublish(eventMessage, ar -> {
         if (ar.statusCode() == HttpStatus.HTTP_NO_CONTENT.toInt()) {
           result.complete(true);
         } else {
-          EventSendingException exception = new EventSendingException(String.format("Error during publishing Event Message in PubSub. Status code: %s . Status message: %s ", ar.statusCode(), ar.statusMessage()));
+          EventSendingException exception = new EventSendingException(format("Error during publishing Event Message in PubSub. Status code: %s . Status message: %s ", ar.statusCode(), ar.statusMessage()));
           LOGGER.error(exception);
           result.completeExceptionally(exception);
         }
@@ -68,9 +76,8 @@ public class PubSubClientUtils {
     } catch (Exception e) {
       LOGGER.error("Error during sending event message to PubSub", e);
       result.completeExceptionally(e);
-      return result;
     }
-    return result;
+    return result.whenComplete((res, throwable) -> client.close());
   }
 
   /**
@@ -81,8 +88,8 @@ public class PubSubClientUtils {
    */
   public static CompletableFuture<Boolean> registerModule(OkapiConnectionParams params) {
     CompletableFuture<Boolean> result = new CompletableFuture<>();
+    PubsubClient client = new PubsubClient(params.getOkapiUrl(), params.getTenantId(), params.getToken());
     try {
-      PubsubClient client = new PubsubClient(params.getOkapiUrl(), params.getTenantId(), params.getToken());
       LOGGER.info("Reading MessagingDescriptor.json");
       DescriptorHolder descriptorHolder = readMessagingDescriptor();
       if (descriptorHolder.getPublisherDescriptor() != null &&
@@ -96,12 +103,11 @@ public class PubSubClientUtils {
         isNotEmpty(descriptorHolder.getSubscriberDescriptor().getSubscriptionDefinitions())) {
         result = result.thenCompose(ar -> registerSubscribers(client, descriptorHolder.getSubscriberDescriptor()));
       }
-      return result;
     } catch (Exception e) {
       LOGGER.error("Error during registration module in PubSub", e);
       result.completeExceptionally(e);
-      return result;
     }
+    return result.whenComplete((res, throwable) -> client.close());
   }
 
   private static CompletableFuture<Void> registerEventTypes(PubsubClient client, List<EventDescriptor> events) {
@@ -113,7 +119,7 @@ public class PubSubClientUtils {
           if (ar.statusCode() == HttpStatus.HTTP_CREATED.toInt()) {
             future.complete(true);
           } else {
-            ModuleRegistrationException exception = new ModuleRegistrationException(String.format("EventDescriptor was not registered for eventType: %s . Status code: %s", eventDescriptor.getEventType(), ar.statusCode()));
+            ModuleRegistrationException exception = new ModuleRegistrationException(format("EventDescriptor was not registered for eventType: %s . Status code: %s", eventDescriptor.getEventType(), ar.statusCode()));
             LOGGER.error(exception);
             future.completeExceptionally(exception);
           }
@@ -172,6 +178,44 @@ public class PubSubClientUtils {
   }
 
   /**
+   * Util method to unregister external module in PubSub.
+   *
+   * @param params - okapi connection params
+   * @return future with true if module was unregistered successfully
+   */
+  public static CompletableFuture<Boolean> unregisterModule(OkapiConnectionParams params) {
+    PubsubClient client = new PubsubClient(params.getOkapiUrl(), params.getTenantId(), params.getToken());
+    String moduleId = constructModuleName();
+
+    return unregisterModuleByIdAndRole(client, moduleId, PUBLISHER)
+      .thenCompose(ar -> unregisterModuleByIdAndRole(client, moduleId, SUBSCRIBER))
+      .whenComplete((ar, e) -> client.close());
+  }
+
+  private static CompletableFuture<Boolean> unregisterModuleByIdAndRole(PubsubClient client, String moduleId, MessagingModule.ModuleRole moduleRole) {
+    Promise<Boolean> promise = Promise.promise();
+    CompletableFuture<Boolean> future = new CompletableFuture<>();
+    try {
+      LOGGER.info("Trying to unregister module with name '{}' as {}", moduleId, moduleRole);
+      client.deletePubsubMessagingModules(moduleId, moduleRole.value(), response -> {
+        if (response.statusCode() == HttpStatus.HTTP_NO_CONTENT.toInt()) {
+          LOGGER.info("Module {} was successfully unregistered as '{}'", moduleId, moduleRole);
+          future.complete(true);
+        } else {
+          String msg = format("Module %s was not unregistered as '%s' in PubSub. HTTP status: %s", moduleId, moduleRole, response.statusCode());
+          LOGGER.error(msg);
+          future.completeExceptionally(new ModuleUnregistrationException(msg));
+        }
+      });
+    } catch (Exception e) {
+      LOGGER.error("Module was not unregistered as '{}' in PubSub.", e, moduleRole);
+      promise.fail(e);
+      future.completeExceptionally(e);
+    }
+    return future;
+  }
+
+  /**
    * Reads messaging descriptor file 'MessagingDescriptor.json' and returns {@link DescriptorHolder} that contains
    * descriptors for module registration as publisher and subscriber.
    * At first, messaging descriptor is searched in directory by path specified in 'messaging_config_path' system property,
@@ -182,7 +226,7 @@ public class PubSubClientUtils {
    *
    * @return {@link DescriptorHolder}
    * @throws MessagingDescriptorNotFoundException if messaging descriptor file was not found
-   * @throws IOException                          if a low-level I/O problem (unexpected end-of-input) occurs while readind file
+   * @throws IOException                          if a low-level I/O problem (unexpected end-of-input) occurs while reading file
    * @throws IllegalArgumentException             if parsing file problems occurs (file contains invalid json structure)
    */
   static DescriptorHolder readMessagingDescriptor() throws IOException {
