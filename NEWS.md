@@ -3,7 +3,7 @@
 * [MODPUBSUB-118](https://issues.folio.org/browse/MODPUBSUB-118) Create sub-project in mod-pubsub for utility transport layer classes
 * [MODPUBSUB-139](https://issues.folio.org/browse/MODPUBSUB-139) Multiple versions of mod-pubsub in the same environment consume events for all tenants[BUGFIX]
 * [MODPUBSUB-140](https://issues.folio.org/browse/MODPUBSUB-140) Upgrade to RAML Module Builder 32.x
-
+* [MODPUBSUB-137](https://issues.folio.org/browse/MODPUBSUB-137) Add personal data disclosure form
 
 ## 2020-11-05 v1.3.3
 * Fix logging after RMB upgrade
