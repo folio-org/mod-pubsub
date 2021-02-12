@@ -1,9 +1,8 @@
 package org.folio.rest.util;
 
 import io.vertx.core.Promise;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import org.apache.http.HttpStatus;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.tools.utils.ValidationHelper;
 
 import javax.ws.rs.BadRequestException;
@@ -13,7 +12,7 @@ import javax.ws.rs.core.Response;
 
 public final class ExceptionHelper {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionHelper.class);
+  private static final Logger LOGGER = LogManager.getLogger();
 
   private ExceptionHelper() {
   }
@@ -21,13 +20,13 @@ public final class ExceptionHelper {
   public static Response mapExceptionToResponse(Throwable throwable) {
     LOGGER.error(throwable.getMessage());
     if (throwable instanceof BadRequestException) {
-      return Response.status(HttpStatus.SC_BAD_REQUEST)
+      return Response.status(400)
         .type(MediaType.TEXT_PLAIN)
         .entity(throwable.getMessage())
         .build();
     }
     if (throwable instanceof NotFoundException) {
-      return Response.status(HttpStatus.SC_NOT_FOUND)
+      return Response.status(404)
         .type(MediaType.TEXT_PLAIN)
         .entity(throwable.getMessage())
         .build();
@@ -36,13 +35,13 @@ public final class ExceptionHelper {
     ValidationHelper.handleError(throwable, validationPromise);
     if (validationPromise.future().isComplete()) {
       Response response = validationPromise.future().result();
-      if (response.getStatus() == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
+      if (response.getStatus() == 500) {
         LOGGER.error(throwable.getMessage(), throwable);
       }
       return response;
     }
     LOGGER.error(throwable.getMessage(), throwable);
-    return Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR)
+    return Response.status(500)
       .type(MediaType.TEXT_PLAIN)
       .entity(Response.Status.INTERNAL_SERVER_ERROR.getReasonPhrase())
       .build();
