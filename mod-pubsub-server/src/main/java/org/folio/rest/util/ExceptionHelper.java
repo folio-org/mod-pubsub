@@ -1,6 +1,7 @@
 package org.folio.rest.util;
 
 import io.vertx.core.Promise;
+import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.tools.utils.ValidationHelper;
@@ -20,13 +21,13 @@ public final class ExceptionHelper {
   public static Response mapExceptionToResponse(Throwable throwable) {
     LOGGER.error(throwable.getMessage());
     if (throwable instanceof BadRequestException) {
-      return Response.status(400)
+      return Response.status(HttpStatus.SC_BAD_REQUEST)
         .type(MediaType.TEXT_PLAIN)
         .entity(throwable.getMessage())
         .build();
     }
     if (throwable instanceof NotFoundException) {
-      return Response.status(404)
+      return Response.status(HttpStatus.SC_NOT_FOUND)
         .type(MediaType.TEXT_PLAIN)
         .entity(throwable.getMessage())
         .build();
@@ -35,13 +36,13 @@ public final class ExceptionHelper {
     ValidationHelper.handleError(throwable, validationPromise);
     if (validationPromise.future().isComplete()) {
       Response response = validationPromise.future().result();
-      if (response.getStatus() == 500) {
+      if (response.getStatus() == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
         LOGGER.error(throwable.getMessage(), throwable);
       }
       return response;
     }
     LOGGER.error(throwable.getMessage(), throwable);
-    return Response.status(500)
+    return Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR)
       .type(MediaType.TEXT_PLAIN)
       .entity(Response.Status.INTERNAL_SERVER_ERROR.getReasonPhrase())
       .build();
