@@ -142,6 +142,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
           subscribers
             .forEach(subscriber -> {
               retry.put(subscriber, new AtomicInteger(0));
+              LOGGER.info("Start delivering messages to subscriber {}", subscriber.getSubscriberCallback());
               futureList.add(RestUtil.doRequest(params, subscriber.getSubscriberCallback(), HttpMethod.POST, event.getEventPayload())
                 .onComplete(v -> getEventDeliveredHandler(event, params.getTenantId(), subscriber, params, retry)));
             });
@@ -155,6 +156,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
   protected Handler<AsyncResult<HttpResponse<Buffer>>> getEventDeliveredHandler(Event event, String tenantId, MessagingModule subscriber, OkapiConnectionParams params, Map<MessagingModule, AtomicInteger> retry) {
     retry.get(subscriber).incrementAndGet();
     return ar -> {
+      LOGGER.info("Delivering was complete. Checking for response...");
       if (ar.failed()) {
         String errorMessage = format("%s event with id '%s' was not delivered to %s", event.getEventType(), event.getId(), subscriber.getSubscriberCallback());
         LOGGER.error(errorMessage, ar.cause());
