@@ -1,8 +1,8 @@
 package org.folio.rest.util;
 
 import io.vertx.core.Vertx;
-import org.apache.commons.collections4.map.HashedMap;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public final class OkapiConnectionParams {
@@ -13,7 +13,7 @@ public final class OkapiConnectionParams {
   private String okapiUrl;
   private String tenantId;
   private String token;
-  private Map<String, String> headers = new HashedMap<>();
+  private Map<String, String> headers = new HashMap<>();
   private Vertx vertx;
   private int timeout = 2000;
 
