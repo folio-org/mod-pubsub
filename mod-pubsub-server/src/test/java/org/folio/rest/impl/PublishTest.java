@@ -3,6 +3,7 @@ package org.folio.rest.impl;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.apache.http.HttpStatus;
 import org.folio.rest.jaxrs.model.EventDescriptor;
@@ -77,7 +78,7 @@ public class PublishTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldPublishEventWithPayload() {
+  public void shouldPublishEventWithPayload(TestContext context) {
     EventDescriptor eventDescriptor = postEventDescriptor(EVENT_DESCRIPTOR);
     registerPublisher(eventDescriptor);
     registerSubscriber(eventDescriptor);
