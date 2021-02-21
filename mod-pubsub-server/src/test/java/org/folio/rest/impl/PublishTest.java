@@ -78,7 +78,7 @@ public class PublishTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldPublishEventWithPayload(TestContext context) {
+  public void shouldPublishEventWithPayload() {
     EventDescriptor eventDescriptor = postEventDescriptor(EVENT_DESCRIPTOR);
     registerPublisher(eventDescriptor);
     registerSubscriber(eventDescriptor);
