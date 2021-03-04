@@ -1,3 +1,6 @@
+## 2021-02-23 v2.1.0-SNAPSHOT
+* [MODPUBSUB-152](https://issues.folio.org/browse/MODPUBSUB-152) Module registration in mod-pubsub fails when MessagingDescriptor contains no publications
+
 ## 2021-02-22 v2.0.0
 * [MODPUBSUB-87](https://issues.folio.org/browse/MODPUBSUB-87) Create utility method for module unregistering
 * [MODPUBSUB-118](https://issues.folio.org/browse/MODPUBSUB-118) Create sub-project in mod-pubsub for utility transport layer classes

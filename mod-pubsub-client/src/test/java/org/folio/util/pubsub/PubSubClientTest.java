@@ -6,13 +6,10 @@ import com.github.tomakehurst.wiremock.matching.UrlPathPattern;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.apache.http.HttpStatus;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventDescriptor;
-import org.folio.rest.jaxrs.model.MessagingModule;
 import org.folio.rest.jaxrs.model.PublisherDescriptor;
 import org.folio.rest.jaxrs.model.SubscriberDescriptor;
 import org.folio.rest.jaxrs.model.SubscriptionDefinition;
@@ -24,13 +21,11 @@ import org.junit.runner.RunWith;
 
 import java.util.Collections;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.badRequest;
 import static com.github.tomakehurst.wiremock.client.WireMock.created;
 import static com.github.tomakehurst.wiremock.client.WireMock.delete;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
 import static org.hamcrest.Matchers.is;
@@ -75,6 +70,8 @@ public class PubSubClientTest extends AbstractRestTest {
   @Test
   public void shouldNotRegisterPublishers() {
     WireMock.stubFor(post("/pubsub/event-types/declare/publisher")
+      .willReturn(badRequest()));
+    WireMock.stubFor(post("/pubsub/event-types/declare/subscriber")
       .willReturn(badRequest()));
     WireMock.stubFor(post("/pubsub/event-types")
       .willReturn(created()));

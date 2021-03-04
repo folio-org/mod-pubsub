@@ -85,7 +85,7 @@ public class PubSubClientUtils {
    * @return - async result with boolean value. True if module was registered successfully
    */
   public static CompletableFuture<Boolean> registerModule(OkapiConnectionParams params) {
-    CompletableFuture<Boolean> result = new CompletableFuture<>();
+    CompletableFuture<Boolean> result = null;
     PubsubClient client = new PubsubClient(params.getOkapiUrl(), params.getTenantId(), params.getToken());
     try {
       LOGGER.info("Reading MessagingDescriptor.json");
@@ -99,11 +99,11 @@ public class PubSubClientUtils {
       }
       if (descriptorHolder.getSubscriberDescriptor() != null &&
         isNotEmpty(descriptorHolder.getSubscriberDescriptor().getSubscriptionDefinitions())) {
-        result = result.thenCompose(ar -> registerSubscribers(client, descriptorHolder.getSubscriberDescriptor()));
+        result = registerSubscribers(client, descriptorHolder.getSubscriberDescriptor());
       }
     } catch (Exception e) {
       LOGGER.error("Error during registration module in PubSub", e);
-      result.completeExceptionally(e);
+      result = CompletableFuture.failedFuture(e);
     }
     return result;
   }
