@@ -14,7 +14,6 @@ import org.folio.rest.jaxrs.model.PublisherDescriptor;
 import org.folio.rest.jaxrs.model.SubscriberDescriptor;
 import org.folio.rest.jaxrs.model.SubscriptionDefinition;
 import org.folio.rest.util.OkapiConnectionParams;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,6 +28,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.delete;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 @RunWith(VertxUnitRunner.class)
 public class PubSubClientTest extends AbstractRestTest {
@@ -64,7 +66,7 @@ public class PubSubClientTest extends AbstractRestTest {
 
   @Test
   public void registerModuleSuccessfully() throws Exception {
-    Assert.assertTrue(PubSubClientUtils.registerModule(params).get());
+    assertTrue(PubSubClientUtils.registerModule(params).get());
   }
 
   @Test
@@ -77,9 +79,9 @@ public class PubSubClientTest extends AbstractRestTest {
       .willReturn(created()));
     try {
       PubSubClientUtils.registerModule(fakeParams).get();
-      Assert.fail();
+      fail();
     } catch (Exception e) {
-      Assert.assertTrue(true);
+      assertTrue(true);
     }
   }
 
@@ -93,9 +95,9 @@ public class PubSubClientTest extends AbstractRestTest {
       .willReturn(badRequest()));
     try {
       PubSubClientUtils.registerModule(fakeParams).get();
-      Assert.fail();
+      fail();
     } catch (Exception e) {
-      Assert.assertTrue(true);
+      assertTrue(true);
     }
   }
 
@@ -105,9 +107,9 @@ public class PubSubClientTest extends AbstractRestTest {
     registerPublisher(eventDescriptor);
     try {
       Event event = EVENT.mapTo(Event.class);
-      Assert.assertTrue(PubSubClientUtils.sendEventMessage(event, params).get());
+      assertTrue(PubSubClientUtils.sendEventMessage(event, params).get());
     } catch (Exception e) {
-      Assert.fail();
+      fail();
     }
   }
 
@@ -119,15 +121,15 @@ public class PubSubClientTest extends AbstractRestTest {
 
     try {
       Event event = EVENT.mapTo(Event.class);
-      Assert.assertTrue(PubSubClientUtils.sendEventMessage(event, params).get());
+      assertTrue(PubSubClientUtils.sendEventMessage(event, params).get());
     } catch (Exception e) {
-      Assert.fail();
+      fail();
     }
   }
 
   @Test
   public void shouldUnregisterModuleSuccessfully() throws Exception {
-    Assert.assertTrue(PubSubClientUtils.unregisterModule(params).get());
+    assertTrue(PubSubClientUtils.unregisterModule(params).get());
   }
 
   @Test(expected = ExecutionException.class)
@@ -147,7 +149,7 @@ public class PubSubClientTest extends AbstractRestTest {
       .body(JsonObject.mapFrom(publisherDescriptor).encode())
       .when()
       .post(EVENT_TYPES_PATH + DECLARE_PUBLISHER_PATH);
-    Assert.assertThat(postResponse.statusCode(), is(HttpStatus.SC_CREATED));
+    assertThat(postResponse.statusCode(), is(HttpStatus.SC_CREATED));
   }
 
   private EventDescriptor postEventDescriptor() {
@@ -156,7 +158,7 @@ public class PubSubClientTest extends AbstractRestTest {
       .body(JsonObject.mapFrom(PubSubClientTest.EVENT_DESCRIPTOR).encode())
       .when()
       .post(EVENT_TYPES_PATH);
-    Assert.assertThat(postResponse.statusCode(), is(HttpStatus.SC_CREATED));
+    assertThat(postResponse.statusCode(), is(HttpStatus.SC_CREATED));
     return new JsonObject(postResponse.body().asString()).mapTo(EventDescriptor.class);
   }
 
@@ -173,7 +175,7 @@ public class PubSubClientTest extends AbstractRestTest {
       .body(JsonObject.mapFrom(subscriberDescriptor).encode())
       .when()
       .post(EVENT_TYPES_PATH + DECLARE_SUBSCRIBER_PATH);
-    Assert.assertThat(postResponse.statusCode(), is(HttpStatus.SC_CREATED));
+    assertThat(postResponse.statusCode(), is(HttpStatus.SC_CREATED));
   }
 
 }
