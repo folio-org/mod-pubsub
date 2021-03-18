@@ -86,6 +86,5 @@ public class KafkaInternalCache {
     }
 
     outdatedEvents.forEach(outdatedEvent -> kafkaCache.remove(outdatedEvent));
-    outdatedEvents.clear();
   }
 }
