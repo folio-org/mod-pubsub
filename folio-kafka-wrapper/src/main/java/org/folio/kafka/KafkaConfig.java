@@ -68,8 +68,10 @@ public class KafkaConfig {
 
   public KafkaCacheConfig getCacheConfig() {
     Properties props = new Properties();
-    props.put(KafkaCacheConfig.KAFKACACHE_BOOTSTRAP_SERVERS_CONFIG, /*"PLAINTEXT://" +*/ getKafkaUrl());
+    props.put("kafkastore.bootstrap.servers", "PLAINTEXT://" + getKafkaUrl());
+    props.put(KafkaCacheConfig.KAFKACACHE_BOOTSTRAP_SERVERS_CONFIG, "PLAINTEXT://" + getKafkaUrl());
     props.put(KAFKA_CACHE_TOPIC_PROPERTY, "events_cache");
+    LOGGER.info("URL: " + getKafkaUrl());
     return new KafkaCacheConfig(props);
   }
 
