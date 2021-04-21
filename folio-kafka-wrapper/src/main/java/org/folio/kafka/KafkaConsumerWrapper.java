@@ -13,12 +13,12 @@ import io.vertx.kafka.client.consumer.OffsetAndMetadata;
 import lombok.Builder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import java.util.regex.Pattern;
 
 public class KafkaConsumerWrapper<K, V> implements Handler<KafkaConsumerRecord<K, V>> {
@@ -185,13 +185,13 @@ public class KafkaConsumerWrapper<K, V> implements Handler<KafkaConsumerRecord<K
         if (LOGGER.isDebugEnabled()) {
           LOGGER.debug("Consumer - id: " + id + " subscriptionPattern: " + subscriptionDefinition + " Committing offset: " + offset);
         }
-        kafkaConsumer.commit(offsets, completionHandler -> {
-          if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Consumer - id: " + id + " subscriptionPattern: " + subscriptionDefinition + " Committed offset: " + offset);
-          }
-        });
-
-        if (har.failed()) {
+        if (har.succeeded()) {
+          kafkaConsumer.commit(offsets, completionHandler -> {
+            if (LOGGER.isDebugEnabled()) {
+              LOGGER.debug("Consumer - id: " + id + " subscriptionPattern: " + subscriptionDefinition + " Committed offset: " + offset);
+            }
+          });
+        } else {
           LOGGER.error("Error while processing a record - id: " + id + " subscriptionPattern: " + subscriptionDefinition + "\n" + har.cause());
           if (processRecordErrorHandler != null) {
             processRecordErrorHandler.handle(har.cause(), record);
