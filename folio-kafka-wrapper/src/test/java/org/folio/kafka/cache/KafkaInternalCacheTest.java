@@ -21,6 +21,8 @@ import static net.mguenther.kafka.junit.EmbeddedKafkaCluster.provisionWith;
 import static net.mguenther.kafka.junit.EmbeddedKafkaClusterConfig.useDefaults;
 import static org.apache.kafka.common.config.TopicConfig.CLEANUP_POLICY_CONFIG;
 import static org.apache.kafka.common.config.TopicConfig.CLEANUP_POLICY_DELETE;
+import static org.apache.kafka.common.config.TopicConfig.RETENTION_MS_CONFIG;
+import static org.folio.kafka.cache.KafkaInternalCache.KAFKA_CACHE_RETENTION_MS_DEFAULT;
 import static org.junit.Assert.assertEquals;
 
 public class KafkaInternalCacheTest {
@@ -58,6 +60,7 @@ public class KafkaInternalCacheTest {
     kafkaCluster.exists(CACHE_TOPIC);
     Properties topicConfig = kafkaCluster.fetchTopicConfig(CACHE_TOPIC);
     assertEquals(topicConfig.getProperty(CLEANUP_POLICY_CONFIG), CLEANUP_POLICY_DELETE);
+    assertEquals(topicConfig.getProperty(RETENTION_MS_CONFIG), KAFKA_CACHE_RETENTION_MS_DEFAULT);
 
     Map<String, TopicDescription> topicDescriptionMap = adminClient.describeTopics(Collections.singleton(CACHE_TOPIC)).all().get(60, TimeUnit.SECONDS);
     TopicDescription topicDescription = topicDescriptionMap.get(CACHE_TOPIC);

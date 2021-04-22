@@ -29,6 +29,9 @@ import java.util.concurrent.TimeoutException;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.apache.kafka.common.config.TopicConfig.CLEANUP_POLICY_CONFIG;
+import static org.apache.kafka.common.config.TopicConfig.CLEANUP_POLICY_DELETE;
+import static org.apache.kafka.common.config.TopicConfig.RETENTION_MS_CONFIG;
 
 /**
  * Cache in Kafka for processing events.
@@ -39,6 +42,8 @@ public class KafkaInternalCache {
   public static final String KAFKA_CACHE_NUMBER_OF_PARTITIONS_DEFAULT = "1";
   public static final String KAFKA_CACHE_REPLICATION_FACTOR = "kafkacache.topic.replication.factor";
   public static final String KAFKA_CACHE_REPLICATION_FACTOR_DEFAULT = "1";
+  public static final String KAFKA_CACHE_RETENTION_MS = "kafkacache.log.retention.ms";
+  public static final String KAFKA_CACHE_RETENTION_MS_DEFAULT = "18000000";
 
   private static final Logger LOGGER = LogManager.getLogger(KafkaInternalCache.class);
 
@@ -77,7 +82,10 @@ public class KafkaInternalCache {
       } else {
         LOGGER.debug("Creating kafka cache topic '{}'", cacheTopic);
         NewTopic topicRequest = new NewTopic(cacheTopic, getNumberOfPartitions(), getReplicationFactor());
-        topicRequest.configs(Map.of(TopicConfig.CLEANUP_POLICY_CONFIG, TopicConfig.CLEANUP_POLICY_DELETE));
+        topicRequest.configs(Map.of(
+          CLEANUP_POLICY_CONFIG, CLEANUP_POLICY_DELETE,
+          RETENTION_MS_CONFIG, getLogRetentionTime()));
+
         adminClient.createTopics(Collections.singleton(topicRequest)).all().get(300000, MILLISECONDS);
         LOGGER.info("Kafka cache topic has been successfully created: {}", topicRequest);
       }
@@ -148,5 +156,9 @@ public class KafkaInternalCache {
 
   private short getReplicationFactor() {
     return Short.parseShort(System.getenv().getOrDefault(KAFKA_CACHE_REPLICATION_FACTOR, KAFKA_CACHE_REPLICATION_FACTOR_DEFAULT));
+  }
+
+  private String getLogRetentionTime() {
+    return System.getenv().getOrDefault(KAFKA_CACHE_RETENTION_MS, KAFKA_CACHE_RETENTION_MS_DEFAULT);
   }
 }
