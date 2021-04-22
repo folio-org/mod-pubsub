@@ -130,24 +130,28 @@ public class KafkaInternalCache {
    * @param eventTimeoutHours - timeout for event in hours.
    */
   public void cleanupEvents(int eventTimeoutHours) {
-    List<String> outdatedEvents = new ArrayList<>();
+    try {
+      List<String> outdatedEvents = new ArrayList<>();
 
-    LocalDateTime currentTime = LocalDateTime.now();
-    KeyValueIterator<String, String> events = kafkaCache.all();
-    events.forEachRemaining(currentEvent -> {
-      if (currentEvent.value != null) {
-        LocalDateTime eventTime = LocalDateTime.parse(currentEvent.value);
-        long hoursBetween = ChronoUnit.HOURS.between(eventTime, currentTime);
-        if (hoursBetween >= eventTimeoutHours) {
-          outdatedEvents.add(currentEvent.key);
+      LocalDateTime currentTime = LocalDateTime.now();
+      KeyValueIterator<String, String> events = kafkaCache.all();
+      events.forEachRemaining(currentEvent -> {
+        if (currentEvent.value != null) {
+          LocalDateTime eventTime = LocalDateTime.parse(currentEvent.value);
+          long hoursBetween = ChronoUnit.HOURS.between(eventTime, currentTime);
+          if (hoursBetween >= eventTimeoutHours) {
+            outdatedEvents.add(currentEvent.key);
+          }
         }
+      });
+      if (!outdatedEvents.isEmpty()) {
+        LOGGER.info("Clearing cache from outdated events...");
       }
-    });
-    if (!outdatedEvents.isEmpty()) {
-      LOGGER.info("Clearing cache from outdated events...");
-    }
 
-    outdatedEvents.forEach(outdatedEvent -> kafkaCache.remove(outdatedEvent));
+      outdatedEvents.forEach(outdatedEvent -> kafkaCache.remove(outdatedEvent));
+    } catch (Exception e) {
+      LOGGER.error("Failed to clear outdated elements in kafka cache", e);
+    }
   }
 
   private int getNumberOfPartitions() {
