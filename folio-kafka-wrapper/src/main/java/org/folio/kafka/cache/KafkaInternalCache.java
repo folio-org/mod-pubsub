@@ -82,9 +82,13 @@ public class KafkaInternalCache {
         LOGGER.info("Kafka cache topic has been successfully created: {}", topicRequest);
       }
     } catch (TimeoutException e) {
-      LOGGER.error("Timed out trying to create Kafka cache topic '{}'", cacheTopic, e);
+      throw new KafkaInternalCacheInitializationException(format("Timed out trying to create Kafka cache topic '%s'", cacheTopic), e);
     } catch (InterruptedException | ExecutionException e) {
-      LOGGER.error("Failed to create Kafka cache topic '{}'", cacheTopic, e);
+      if (e.getCause() instanceof TopicExistsException) {
+        LOGGER.info("Kafka cache topic '{}' has not been created, it's already exists", cacheTopic);
+      } else {
+        throw new KafkaInternalCacheInitializationException(format("Failed to create Kafka cache topic '%s'", cacheTopic), e);
+      }
     }
   }
 
