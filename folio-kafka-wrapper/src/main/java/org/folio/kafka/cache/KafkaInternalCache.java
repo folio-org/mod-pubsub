@@ -38,7 +38,7 @@ public class KafkaInternalCache {
   public static final String KAFKA_CACHE_NUMBER_OF_PARTITIONS = "kafkacache.topic.number.partitions";
   public static final String KAFKA_CACHE_NUMBER_OF_PARTITIONS_DEFAULT = "1";
   public static final String KAFKA_CACHE_REPLICATION_FACTOR = "kafkacache.topic.replication.factor";
-  public static final String KAFKA_CACHE_REPLICATION_FACTOR_DEFAULT = "3";
+  public static final String KAFKA_CACHE_REPLICATION_FACTOR_DEFAULT = "1";
 
   private static final Logger LOGGER = LogManager.getLogger(KafkaInternalCache.class);
 
