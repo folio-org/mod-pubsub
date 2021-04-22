@@ -5,6 +5,7 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.TopicDescription;
 import org.folio.kafka.KafkaConfig;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -64,7 +65,8 @@ public class KafkaInternalCacheTest {
     assertEquals(1, topicDescription.partitions().get(0).replicas().size());
   }
 
-  public void teardown() {
+  @AfterClass
+  public static void teardown() {
     adminClient.close();
   }
 }
