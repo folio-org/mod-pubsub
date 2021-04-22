@@ -127,10 +127,12 @@ public class KafkaInternalCache {
     LocalDateTime currentTime = LocalDateTime.now();
     KeyValueIterator<String, String> events = kafkaCache.all();
     events.forEachRemaining(currentEvent -> {
-      LocalDateTime eventTime = LocalDateTime.parse(currentEvent.value);
-      long hoursBetween = ChronoUnit.HOURS.between(eventTime, currentTime);
-      if (hoursBetween >= eventTimeoutHours) {
-        outdatedEvents.add(currentEvent.key);
+      if (currentEvent.value != null) {
+        LocalDateTime eventTime = LocalDateTime.parse(currentEvent.value);
+        long hoursBetween = ChronoUnit.HOURS.between(eventTime, currentTime);
+        if (hoursBetween >= eventTimeoutHours) {
+          outdatedEvents.add(currentEvent.key);
+        }
       }
     });
     if (!outdatedEvents.isEmpty()) {
