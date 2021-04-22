@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import static io.kcache.KafkaCacheConfig.KAFKACACHE_TOPIC_REQUIRE_COMPACT_CONFIG;
+
 @Getter
 @Builder
 @ToString
@@ -64,6 +66,7 @@ public class KafkaConfig {
     Properties props = new Properties();
     props.put(KafkaCacheConfig.KAFKACACHE_BOOTSTRAP_SERVERS_CONFIG, "PLAINTEXT://" + getKafkaUrl()); //It should be as PLAINTEXT, as known issue in Kafka.
     props.put(KAFKA_CACHE_TOPIC_PROPERTY, "events_cache");
+    props.put(KAFKACACHE_TOPIC_REQUIRE_COMPACT_CONFIG, false);
     return new KafkaCacheConfig(props);
   }
 
