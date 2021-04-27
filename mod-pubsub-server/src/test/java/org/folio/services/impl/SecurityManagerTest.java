@@ -65,7 +65,7 @@ public class SecurityManagerTest extends AbstractRestTest {
 
   private static final String LOGIN_URL = "/authn/login";
   private static final String USERS_URL = "/users";
-  private static final String USERS_URL_WITH_QUERY = "/users?query=username=pub-sub";
+  private static final String USERS_URL_WITH_QUERY = "/users?query=username=" + SYSTEM_USER_NAME;
   private static final String CREDENTIALS_URL = "/authn/credentials";
   private static final String PERMISSIONS_URL = "/perms/users";
   private static final String TENANT = "diku";
@@ -78,7 +78,8 @@ public class SecurityManagerTest extends AbstractRestTest {
   @InjectMocks
   private final MessagingModuleDao messagingModuleDao = new MessagingModuleDaoImpl();
   private final Cache cache = new Cache(vertx, messagingModuleDao);
-  private final PubSubUserConfig pubSubUserConfig = new PubSubUserConfig();
+  private final PubSubUserConfig pubSubUserConfig = new PubSubUserConfig(SYSTEM_USER_NAME,
+    SYSTEM_USER_PASSWORD);
   @Spy
   private final SecurityManagerImpl securityManager = new SecurityManagerImpl(vertx, cache,
     pubSubUserConfig);
@@ -312,7 +313,7 @@ public class SecurityManagerTest extends AbstractRestTest {
 
     assertNotNull(user.getId());
     assertTrue(user.isActive());
-    assertEquals("pub-sub", user.getUsername());
+    assertEquals(SYSTEM_USER_NAME, user.getUsername());
 
     assertNotNull(user.getPersonal());
     assertEquals("System", user.getPersonal().getLastName());
@@ -325,7 +326,7 @@ public class SecurityManagerTest extends AbstractRestTest {
 
     return new JsonObject()
       .put("id", id)
-      .put("username", "pub-sub")
+      .put("username", SYSTEM_USER_NAME)
       .put("active", "true")
       .put("proxyFor", new JsonArray())
       .put("createdDate", DateTime.now(DateTimeZone.UTC).toString())

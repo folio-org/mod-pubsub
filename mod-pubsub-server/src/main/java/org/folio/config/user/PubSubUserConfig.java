@@ -7,11 +7,15 @@ import io.vertx.core.json.JsonObject;
 
 @Component
 public class PubSubUserConfig {
-  @Value("${SYSTEM_USER_NAME:pub-sub}")
   private String name;
-
-  @Value("${SYSTEM_USER_PASSWORD:pubsub}")
   private String password;
+
+  public PubSubUserConfig(@Value("${SYSTEM_USER_NAME:pub-sub}") String name,
+    @Value("${SYSTEM_USER_PASSWORD:pubsub}") String password) {
+
+    this.name = name;
+    this.password = password;
+  }
 
   public String getName() {
     return name;

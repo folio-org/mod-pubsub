@@ -126,13 +126,15 @@ public abstract class AbstractRestTest {
               String error = res3.bodyAsJson(TenantJob.class).getError();
               // it would be better if this would actually succeed.. But we'll accept this error for now
               if (error != null) {
-                context.assertEquals("Failed to create pub-sub user. Received status code 400", error);
+                context.assertEquals(format("Failed to create %s user. Received status code 400",
+                  SYSTEM_USER_NAME), error);
               }
             }));
           } else {
             // if we get here and error is immediately returned from tenant init
             // it would be better if this would actually succeed.. But we'll accept this error for now
-            context.assertEquals("Failed to create pub-sub user. Received status code 400", res2.bodyAsString());
+            context.assertEquals(format("Failed to create %s user. Received status code 400",
+              SYSTEM_USER_NAME), res2.bodyAsString());
           }
         }));
       } catch (Exception e) {

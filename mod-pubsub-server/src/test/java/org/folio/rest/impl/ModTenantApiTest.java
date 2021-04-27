@@ -10,6 +10,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static java.lang.String.format;
 import static org.folio.rest.util.OkapiConnectionParams.OKAPI_URL_HEADER;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -85,7 +86,7 @@ public class ModTenantApiTest extends AbstractRestTest {
     String body = getTenant().extract().body().asString();
 
     assertTrue(body, new JsonObject(body).getBoolean("complete"));
-    assertEquals("Unable to update the pub-sub user: " + expectedErrorMessage,
+    assertEquals(format("Unable to update the %s user: %s", SYSTEM_USER_NAME, expectedErrorMessage),
       new JsonObject(body).getString("error"));
   }
 
