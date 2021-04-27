@@ -29,10 +29,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.folio.dao.MessagingModuleDao;
-import org.folio.dao.PostgresClientFactory;
-import org.folio.dao.PubSubUserDao;
 import org.folio.dao.impl.MessagingModuleDaoImpl;
-import org.folio.dao.impl.PubSubUserDaoImpl;
+import org.folio.config.user.PubSubUserConfig;
 import org.folio.representation.User;
 import org.folio.rest.impl.AbstractRestTest;
 import org.folio.rest.util.OkapiConnectionParams;
@@ -72,21 +70,18 @@ public class SecurityManagerTest extends AbstractRestTest {
   private static final String PERMISSIONS_URL = "/perms/users";
   private static final String TENANT = "diku";
   private static final String TOKEN = "token";
-  private static final String TOKEN_KEY_FORMAT = "%s_JWTToken";
 
   private final Map<String, String> headers = new HashMap<>();
 
   @Spy
   private final Vertx vertx = Vertx.vertx();
-  @Spy
-  private final PostgresClientFactory postgresClientFactory = new PostgresClientFactory(vertx);
-  @InjectMocks
-  private final PubSubUserDao pubSubUserDao = new PubSubUserDaoImpl();
   @InjectMocks
   private final MessagingModuleDao messagingModuleDao = new MessagingModuleDaoImpl();
   private final Cache cache = new Cache(vertx, messagingModuleDao);
+  private final PubSubUserConfig pubSubUserConfig = new PubSubUserConfig();
   @Spy
-  private final SecurityManagerImpl securityManager = new SecurityManagerImpl(pubSubUserDao, vertx, cache);
+  private final SecurityManagerImpl securityManager = new SecurityManagerImpl(vertx, cache,
+    pubSubUserConfig);
 
   private final Context vertxContext = vertx.getOrCreateContext();
 

@@ -53,6 +53,11 @@ public abstract class AbstractRestTest {
   private static final int PORT = NetworkUtils.nextFreePort();
   protected static final String OKAPI_URL = "http://localhost:" + PORT;
 
+  protected static final String SYSTEM_USER_NAME_ENV = "SYSTEM_USER_NAME";
+  protected static final String SYSTEM_USER_PASSWORD_ENV = "SYSTEM_USER_PASSWORD";
+  protected static final String SYSTEM_USER_NAME = "test-pubsub-username";
+  protected static final String SYSTEM_USER_PASSWORD = "test-pubsub-password";
+
   static RequestSpecification spec;
   private static String useExternalDatabase;
   protected static Vertx vertx;
@@ -68,6 +73,8 @@ public abstract class AbstractRestTest {
     System.setProperty(KAFKA_HOST, hostAndPort[0]);
     System.setProperty(KAFKA_PORT, hostAndPort[1]);
     System.setProperty(OKAPI_URL_ENV, OKAPI_URL);
+    System.setProperty(SYSTEM_USER_NAME_ENV, SYSTEM_USER_NAME);
+    System.setProperty(SYSTEM_USER_PASSWORD_ENV, SYSTEM_USER_PASSWORD);
     deployVerticle(context);
   }
 

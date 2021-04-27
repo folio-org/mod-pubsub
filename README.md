@@ -140,6 +140,20 @@ This variable is used as a prefix to avoid any confusion with Kafka topics and c
  ```
 If this variable is not set, default "folio" prefix will be used in topic names, which is acceptable only if a separate Kafka installation is used on the environment.
 
+****System user credentials****
+`mod-pubsub` requires this user to be able to deliver events.
+ ```
+      {
+        "name": "SYSTEM_USER_NAME",
+        "value": "pub-sub"
+      },
+      {
+        "name": "SYSTEM_USER_PASSWORD",
+        "value": "pubsub"
+      }
+ ```
+Default value for username is `pub-sub`, password `pubsub`.
+
 ## Verifying the module can connect and work with kafka
 
 To verify that pubsub can successfully connect and work with kafka send the following requests:

@@ -1,7 +1,7 @@
 package org.folio.services.impl;
 
 import com.google.common.io.Resources;
-import io.vertx.core.CompositeFuture;
+
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -14,11 +14,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
-import org.folio.dao.PubSubUserDao;
+import org.folio.config.user.PubSubUserConfig;
 import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.representation.User;
 import org.folio.rest.util.OkapiConnectionParams;
-import org.folio.rest.util.RestUtil;
 import org.folio.services.SecurityManager;
 import org.folio.services.cache.Cache;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,17 +49,18 @@ public class SecurityManagerImpl implements SecurityManager {
   private static final String CREDENTIALS_URL = "/authn/credentials";
   private static final String PERMISSIONS_URL = "/perms/users";
   private static final String PERMISSIONS_FILE_PATH = "permissions/pubsub-user-permissions.csv";
-  private static final String PUB_SUB_USERNAME = "pub-sub";
   private static final String USER_LAST_NAME = "System";
 
-  private PubSubUserDao pubSubUserDao;
   private Vertx vertx;
   private Cache cache;
+  private PubSubUserConfig pubSubUserConfig;
 
-  public SecurityManagerImpl(@Autowired PubSubUserDao pubSubUserDao, @Autowired Vertx vertx, @Autowired Cache cache) {
-    this.pubSubUserDao = pubSubUserDao;
+  public SecurityManagerImpl(@Autowired Vertx vertx, @Autowired Cache cache,
+    @Autowired PubSubUserConfig pubSubUserConfig) {
+
     this.vertx = vertx;
     this.cache = cache;
+    this.pubSubUserConfig = pubSubUserConfig;
   }
 
   @Override
@@ -72,7 +72,7 @@ public class SecurityManagerImpl implements SecurityManager {
       return Future.succeededFuture(true);
     }
 
-    return pubSubUserDao.getPubSubUserCredentials(params.getTenantId())
+    return Future.succeededFuture(pubSubUserConfig.getUserCredentialsJson())
       .compose(userCredentials -> doRequest(params, LOGIN_URL, HttpMethod.POST, userCredentials.encode()))
       .compose(response -> {
         if (response.getCode() == HttpStatus.HTTP_CREATED.toInt()) {
@@ -115,7 +115,7 @@ public class SecurityManagerImpl implements SecurityManager {
   }
 
   private Future<User> existsPubSubUser(OkapiConnectionParams params) {
-    String query = "?query=username=" + PUB_SUB_USERNAME;
+    String query = "?query=username=" + pubSubUserConfig.getName();
     return doRequest(params, USERS_URL + query, HttpMethod.GET, null)
       .compose(response -> {
         Promise<User> promise = Promise.promise();
@@ -179,7 +179,7 @@ public class SecurityManagerImpl implements SecurityManager {
   }
 
   private Future<String> saveCredentials(String userId, OkapiConnectionParams params) {
-    return pubSubUserDao.getPubSubUserCredentials(params.getTenantId())
+    return Future.succeededFuture(pubSubUserConfig.getUserCredentialsJson())
       .compose(credentials -> {
         credentials.put("userId", userId);
         return doRequest(params, CREDENTIALS_URL, HttpMethod.POST, credentials.encode())
@@ -267,7 +267,7 @@ public class SecurityManagerImpl implements SecurityManager {
 
     user.setId(UUID.randomUUID().toString());
     user.setActive(true);
-    user.setUsername(PUB_SUB_USERNAME);
+    user.setUsername(pubSubUserConfig.getName());
 
     user.setPersonal(new User.Personal());
     user.getPersonal().setLastName(USER_LAST_NAME);
