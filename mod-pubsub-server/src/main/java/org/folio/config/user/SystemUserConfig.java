@@ -6,11 +6,11 @@ import org.springframework.stereotype.Component;
 import io.vertx.core.json.JsonObject;
 
 @Component
-public class PubSubUserConfig {
-  private String name;
-  private String password;
+public class SystemUserConfig {
+  private final String name;
+  private final String password;
 
-  public PubSubUserConfig(@Value("${SYSTEM_USER_NAME:pub-sub}") String name,
+  public SystemUserConfig(@Value("${SYSTEM_USER_NAME:pub-sub}") String name,
     @Value("${SYSTEM_USER_PASSWORD:pubsub}") String password) {
 
     this.name = name;

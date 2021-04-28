@@ -30,9 +30,8 @@ import java.util.UUID;
 
 import org.folio.dao.MessagingModuleDao;
 import org.folio.dao.impl.MessagingModuleDaoImpl;
-import org.folio.config.user.PubSubUserConfig;
+import org.folio.config.user.SystemUserConfig;
 import org.folio.representation.User;
-import org.folio.rest.impl.AbstractRestTest;
 import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.services.cache.Cache;
 import org.joda.time.DateTime;
@@ -61,7 +60,9 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
-public class SecurityManagerTest extends AbstractRestTest {
+public class SecurityManagerTest {
+  protected static final String SYSTEM_USER_NAME = "test-pubsub-username";
+  protected static final String SYSTEM_USER_PASSWORD = "test-pubsub-password";
 
   private static final String LOGIN_URL = "/authn/login";
   private static final String USERS_URL = "/users";
@@ -78,11 +79,11 @@ public class SecurityManagerTest extends AbstractRestTest {
   @InjectMocks
   private final MessagingModuleDao messagingModuleDao = new MessagingModuleDaoImpl();
   private final Cache cache = new Cache(vertx, messagingModuleDao);
-  private final PubSubUserConfig pubSubUserConfig = new PubSubUserConfig(SYSTEM_USER_NAME,
+  private final SystemUserConfig systemUserConfig = new SystemUserConfig(SYSTEM_USER_NAME,
     SYSTEM_USER_PASSWORD);
   @Spy
   private final SecurityManagerImpl securityManager = new SecurityManagerImpl(vertx, cache,
-    pubSubUserConfig);
+    systemUserConfig);
 
   private final Context vertxContext = vertx.getOrCreateContext();
 
