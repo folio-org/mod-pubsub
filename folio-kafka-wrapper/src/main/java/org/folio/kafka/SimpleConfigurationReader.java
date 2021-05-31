@@ -9,7 +9,7 @@ public class SimpleConfigurationReader {
   }
 
   public static String getValue(String key, String defValue) {
-    String value = System.getenv(key);
+    String value = System.getProperty(key, System.getenv(key));
     return value != null ? value : defValue;
   }
 
