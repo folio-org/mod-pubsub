@@ -10,6 +10,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.config.SslConfigs;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -34,26 +35,26 @@ public class KafkaConfig {
   public static final String KAFKA_CONSUMER_MAX_POLL_INTERVAL_MS_CONFIG = "kafka.consumer.max.poll.interval.ms";
   public static final String KAFKA_CONSUMER_MAX_POLL_INTERVAL_MS_CONFIG_DEFAULT = "300000";
 
-  public static final String KAFKA_SECURITY_PROTOCOL = "security.protocol";
+  public static final String KAFKA_SECURITY_PROTOCOL_CONFIG = "security.protocol";
   public static final String KAFKA_SECURITY_PROTOCOL_DEFAULT = "PLAINTEXT";
 
-  public static final String KAFKA_SSL_PROTOCOL = "ssl.protocol";
+  public static final String KAFKA_SSL_PROTOCOL_CONFIG = "ssl.protocol";
   public static final String KAFKA_SSL_PROTOCOL_DEFAULT = "TLSv1.2";
 
-  public static final String KAFKA_SSL_KEY_PASSWORD = "ssl.key.password";
+  public static final String KAFKA_SSL_KEY_PASSWORD_CONFIG = "ssl.key.password";
 
-  public static final String KAFKA_SSL_TRUSTSTORE_LOCATION = "ssl.truststore.location";
+  public static final String KAFKA_SSL_TRUSTSTORE_LOCATION_CONFIG = "ssl.truststore.location";
 
-  public static final String KAFKA_SSL_TRUSTSTORE_PASSWORD = "ssl.truststore.password";
+  public static final String KAFKA_SSL_TRUSTSTORE_PASSWORD_CONFIG = "ssl.truststore.password";
 
-  public static final String KAFKA_SSL_TRUSTSTORE_TYPE = "ssl.truststore.type";
+  public static final String KAFKA_SSL_TRUSTSTORE_TYPE_CONFIG = "ssl.truststore.type";
   public static final String KAFKA_SSL_TRUSTSTORE_TYPE_DEFAULT = "JKS";
 
-  public static final String KAFKA_SSL_KEYSTORE_LOCATION = "ssl.keystore.location";
+  public static final String KAFKA_SSL_KEYSTORE_LOCATION_CONFIG = "ssl.keystore.location";
 
-  public static final String KAFKA_SSL_KEYSTORE_PASSWORD = "ssl.keystore.password";
+  public static final String KAFKA_SSL_KEYSTORE_PASSWORD_CONFIG = "ssl.keystore.password";
 
-  public static final String KAFKA_SSL_KEYSTORE_TYPE = "ssl.keystore.type";
+  public static final String KAFKA_SSL_KEYSTORE_TYPE_CONFIG = "ssl.keystore.type";
   public static final String KAFKA_SSL_KEYSTORE_TYPE_DEFAULT = "JKS";
 
   private static final String KAFKA_CACHE_TOPIC_PROPERTY = "kafkacache.topic";
@@ -72,15 +73,24 @@ public class KafkaConfig {
     producerProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
     producerProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
 
-    producerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SimpleConfigurationReader.getValue(KAFKA_SECURITY_PROTOCOL, KAFKA_SECURITY_PROTOCOL_DEFAULT));
-    producerProps.put(SslConfigs.SSL_PROTOCOL_CONFIG, SimpleConfigurationReader.getValue(KAFKA_SSL_PROTOCOL, KAFKA_SSL_PROTOCOL_DEFAULT));
-    producerProps.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, SimpleConfigurationReader.getValue(KAFKA_SSL_KEY_PASSWORD, null));
-    producerProps.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, SimpleConfigurationReader.getValue(KAFKA_SSL_TRUSTSTORE_LOCATION, null));
-    producerProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, SimpleConfigurationReader.getValue(KAFKA_SSL_TRUSTSTORE_PASSWORD, null));
-    producerProps.put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, SimpleConfigurationReader.getValue(KAFKA_SSL_TRUSTSTORE_TYPE, KAFKA_SSL_TRUSTSTORE_TYPE_DEFAULT));
-    producerProps.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, SimpleConfigurationReader.getValue(KAFKA_SSL_KEYSTORE_LOCATION, null));
-    producerProps.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, SimpleConfigurationReader.getValue(KAFKA_SSL_KEYSTORE_PASSWORD, null));
-    producerProps.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, SimpleConfigurationReader.getValue(KAFKA_SSL_KEYSTORE_TYPE, KAFKA_SSL_KEYSTORE_TYPE_DEFAULT));
+    producerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SimpleConfigurationReader.getValue(
+      List.of(KAFKA_SECURITY_PROTOCOL_CONFIG, SpringKafkaProperties.KAFKA_SECURITY_PROTOCOL), KAFKA_SECURITY_PROTOCOL_DEFAULT));
+    producerProps.put(SslConfigs.SSL_PROTOCOL_CONFIG, SimpleConfigurationReader.getValue(
+      List.of(KAFKA_SSL_PROTOCOL_CONFIG, SpringKafkaProperties.KAFKA_SSL_PROTOCOL), KAFKA_SSL_PROTOCOL_DEFAULT));
+    producerProps.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, SimpleConfigurationReader.getValue(
+      List.of(KAFKA_SSL_KEY_PASSWORD_CONFIG, SpringKafkaProperties.KAFKA_SSL_KEY_PASSWORD), null));
+    producerProps.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, SimpleConfigurationReader.getValue(
+      List.of(KAFKA_SSL_TRUSTSTORE_LOCATION_CONFIG, SpringKafkaProperties.KAFKA_SSL_TRUSTSTORE_LOCATION), null));
+    producerProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, SimpleConfigurationReader.getValue(
+      List.of(KAFKA_SSL_TRUSTSTORE_PASSWORD_CONFIG, SpringKafkaProperties.KAFKA_SSL_TRUSTSTORE_PASSWORD), null));
+    producerProps.put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, SimpleConfigurationReader.getValue(
+      List.of(KAFKA_SSL_TRUSTSTORE_TYPE_CONFIG, SpringKafkaProperties.KAFKA_SSL_TRUSTSTORE_TYPE), KAFKA_SSL_TRUSTSTORE_TYPE_DEFAULT));
+    producerProps.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, SimpleConfigurationReader.getValue(
+      List.of(KAFKA_SSL_KEYSTORE_LOCATION_CONFIG, SpringKafkaProperties.KAFKA_SSL_KEYSTORE_LOCATION), null));
+    producerProps.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, SimpleConfigurationReader.getValue(
+      List.of(KAFKA_SSL_KEYSTORE_PASSWORD_CONFIG, SpringKafkaProperties.KAFKA_SSL_KEYSTORE_PASSWORD), null));
+    producerProps.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, SimpleConfigurationReader.getValue(
+      List.of(KAFKA_SSL_KEYSTORE_TYPE_CONFIG, SpringKafkaProperties.KAFKA_SSL_KEYSTORE_TYPE), KAFKA_SSL_KEYSTORE_TYPE_DEFAULT));
     return producerProps;
   }
 
@@ -88,22 +98,35 @@ public class KafkaConfig {
     Map<String, String> consumerProps = new HashMap<>();
     consumerProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaUrl());
     consumerProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
-    consumerProps.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, SimpleConfigurationReader.getValue(KAFKA_CONSUMER_MAX_POLL_RECORDS_CONFIG, KAFKA_CONSUMER_MAX_POLL_RECORDS_CONFIG_DEFAULT));
-    consumerProps.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, SimpleConfigurationReader.getValue(KAFKA_CONSUMER_MAX_POLL_INTERVAL_MS_CONFIG, KAFKA_CONSUMER_MAX_POLL_INTERVAL_MS_CONFIG_DEFAULT));
-    consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, SimpleConfigurationReader.getValue(KAFKA_CONSUMER_AUTO_OFFSET_RESET_CONFIG, KAFKA_CONSUMER_AUTO_OFFSET_RESET_CONFIG_DEFAULT));
-    consumerProps.put(ConsumerConfig.METADATA_MAX_AGE_CONFIG, SimpleConfigurationReader.getValue(KAFKA_CONSUMER_METADATA_MAX_AGE_CONFIG, KAFKA_CONSUMER_METADATA_MAX_AGE_CONFIG_DEFAULT));
     consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
     consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
+    consumerProps.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, SimpleConfigurationReader.getValue(
+      List.of(KAFKA_CONSUMER_MAX_POLL_RECORDS_CONFIG, SpringKafkaProperties.KAFKA_CONSUMER_MAX_POLL_RECORDS), KAFKA_CONSUMER_MAX_POLL_RECORDS_CONFIG_DEFAULT));
+    consumerProps.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, SimpleConfigurationReader.getValue(
+      List.of(KAFKA_CONSUMER_MAX_POLL_INTERVAL_MS_CONFIG, SpringKafkaProperties.KAFKA_CONSUMER_MAX_POLL_INTERVAL_MS), KAFKA_CONSUMER_MAX_POLL_INTERVAL_MS_CONFIG_DEFAULT));
+    consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, SimpleConfigurationReader.getValue(
+      List.of(KAFKA_CONSUMER_AUTO_OFFSET_RESET_CONFIG, SpringKafkaProperties.KAFKA_CONSUMER_AUTO_OFFSET_RESET), KAFKA_CONSUMER_AUTO_OFFSET_RESET_CONFIG_DEFAULT));
+    consumerProps.put(ConsumerConfig.METADATA_MAX_AGE_CONFIG, SimpleConfigurationReader.getValue(
+      List.of(KAFKA_CONSUMER_METADATA_MAX_AGE_CONFIG, SpringKafkaProperties.KAFKA_CONSUMER_METADATA_MAX_AGE), KAFKA_CONSUMER_METADATA_MAX_AGE_CONFIG_DEFAULT));
 
-    consumerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SimpleConfigurationReader.getValue(KAFKA_SECURITY_PROTOCOL, KAFKA_SECURITY_PROTOCOL_DEFAULT));
-    consumerProps.put(SslConfigs.SSL_PROTOCOL_CONFIG, SimpleConfigurationReader.getValue(KAFKA_SSL_PROTOCOL, KAFKA_SSL_PROTOCOL_DEFAULT));
-    consumerProps.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, SimpleConfigurationReader.getValue(KAFKA_SSL_KEY_PASSWORD, null));
-    consumerProps.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, SimpleConfigurationReader.getValue(KAFKA_SSL_TRUSTSTORE_LOCATION, null));
-    consumerProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, SimpleConfigurationReader.getValue(KAFKA_SSL_TRUSTSTORE_PASSWORD, null));
-    consumerProps.put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, SimpleConfigurationReader.getValue(KAFKA_SSL_TRUSTSTORE_TYPE, KAFKA_SSL_TRUSTSTORE_TYPE_DEFAULT));
-    consumerProps.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, SimpleConfigurationReader.getValue(KAFKA_SSL_KEYSTORE_LOCATION, null));
-    consumerProps.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, SimpleConfigurationReader.getValue(KAFKA_SSL_KEYSTORE_PASSWORD, null));
-    consumerProps.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, SimpleConfigurationReader.getValue(KAFKA_SSL_KEYSTORE_TYPE, KAFKA_SSL_KEYSTORE_TYPE_DEFAULT));
+    consumerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SimpleConfigurationReader.getValue(
+      List.of(KAFKA_SECURITY_PROTOCOL_CONFIG, SpringKafkaProperties.KAFKA_SECURITY_PROTOCOL), KAFKA_SECURITY_PROTOCOL_DEFAULT));
+    consumerProps.put(SslConfigs.SSL_PROTOCOL_CONFIG, SimpleConfigurationReader.getValue(
+      List.of(KAFKA_SSL_PROTOCOL_CONFIG, SpringKafkaProperties.KAFKA_SSL_PROTOCOL), KAFKA_SSL_PROTOCOL_DEFAULT));
+    consumerProps.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, SimpleConfigurationReader.getValue(
+      List.of(KAFKA_SSL_KEY_PASSWORD_CONFIG, SpringKafkaProperties.KAFKA_SSL_KEY_PASSWORD), null));
+    consumerProps.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, SimpleConfigurationReader.getValue(
+      List.of(KAFKA_SSL_TRUSTSTORE_LOCATION_CONFIG, SpringKafkaProperties.KAFKA_SSL_TRUSTSTORE_LOCATION), null));
+    consumerProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, SimpleConfigurationReader.getValue(
+      List.of(KAFKA_SSL_TRUSTSTORE_PASSWORD_CONFIG, SpringKafkaProperties.KAFKA_SSL_TRUSTSTORE_PASSWORD), null));
+    consumerProps.put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, SimpleConfigurationReader.getValue(
+      List.of(KAFKA_SSL_TRUSTSTORE_TYPE_CONFIG, SpringKafkaProperties.KAFKA_SSL_TRUSTSTORE_TYPE), KAFKA_SSL_TRUSTSTORE_TYPE_DEFAULT));
+    consumerProps.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, SimpleConfigurationReader.getValue(
+      List.of(KAFKA_SSL_KEYSTORE_LOCATION_CONFIG, SpringKafkaProperties.KAFKA_SSL_KEYSTORE_LOCATION), null));
+    consumerProps.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, SimpleConfigurationReader.getValue(
+      List.of(KAFKA_SSL_KEYSTORE_PASSWORD_CONFIG, SpringKafkaProperties.KAFKA_SSL_KEYSTORE_PASSWORD), null));
+    consumerProps.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, SimpleConfigurationReader.getValue(
+      List.of(KAFKA_SSL_KEYSTORE_TYPE_CONFIG, SpringKafkaProperties.KAFKA_SSL_KEYSTORE_TYPE), KAFKA_SSL_KEYSTORE_TYPE_DEFAULT));
     return consumerProps;
   }
 
