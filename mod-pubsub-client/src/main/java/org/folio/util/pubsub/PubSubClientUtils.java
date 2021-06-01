@@ -31,6 +31,7 @@ import org.folio.rest.jaxrs.model.MessagingDescriptor;
 import org.folio.rest.jaxrs.model.MessagingModule;
 import org.folio.rest.jaxrs.model.PublisherDescriptor;
 import org.folio.rest.jaxrs.model.SubscriberDescriptor;
+import org.folio.rest.tools.utils.ModuleName;
 import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.util.pubsub.exceptions.EventSendingException;
 import org.folio.util.pubsub.exceptions.MessagingDescriptorNotFoundException;
@@ -189,17 +190,12 @@ public class PubSubClientUtils {
    */
   public static CompletableFuture<Boolean> unregisterModule(OkapiConnectionParams params) {
     PubsubClient client = new PubsubClient(params.getOkapiUrl(), params.getTenantId(), params.getToken());
-    try {
-      String moduleId = constructModuleName();
 
-      return unregisterModuleByIdAndRole(client, moduleId, PUBLISHER)
-        .thenCompose(ar -> unregisterModuleByIdAndRole(client, moduleId, SUBSCRIBER))
-        .whenComplete((ar, e) -> client.close());
-    }
-    catch (IOException | XmlPullParserException e) {
-      LOGGER.error("Module was not unregistered as '{}' in PubSub.", SUBSCRIBER, e);
-      return failedFuture(e);
-    }
+    String moduleId = constructModuleName();
+
+    return unregisterModuleByIdAndRole(client, moduleId, PUBLISHER)
+      .thenCompose(ar -> unregisterModuleByIdAndRole(client, moduleId, SUBSCRIBER))
+      .whenComplete((ar, e) -> client.close());
   }
 
   private static CompletableFuture<Boolean> unregisterModuleByIdAndRole(PubsubClient client, String moduleId, MessagingModule.ModuleRole moduleRole) {
@@ -251,7 +247,7 @@ public class PubSubClientUtils {
         .withSubscriberDescriptor(new SubscriberDescriptor()
           .withModuleId(constructModuleName())
           .withSubscriptionDefinitions(messagingDescriptor.getSubscriptions()));
-    } catch (JsonParseException | JsonMappingException | XmlPullParserException e) {
+    } catch (JsonParseException | JsonMappingException e) {
       String errorMessage = "Can not read messaging descriptor, cause: " + e.getMessage();
       LOGGER.error(errorMessage);
       throw new IllegalArgumentException(e);
@@ -294,9 +290,14 @@ public class PubSubClientUtils {
     return Optional.of(fileStream);
   }
 
-  private static String constructModuleName() throws IOException, XmlPullParserException {
-    Model model = new MavenXpp3Reader().read(new FileReader("pom.xml"));
-    return model.getArtifactId().replace("_", "-") + "-" + model.getVersion();
+  private static String constructModuleName() {
+    try {
+      Model model = new MavenXpp3Reader().read(new FileReader("../pom.xml"));
+      return ModuleName.getModuleName() + "-" + model.getVersion();
+    }
+    catch (IOException | XmlPullParserException e) {
+      return ModuleName.getModuleName();
+    }
   }
 
 }
