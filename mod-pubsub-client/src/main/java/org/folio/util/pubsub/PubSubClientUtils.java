@@ -294,11 +294,13 @@ public class PubSubClientUtils {
       MavenXpp3Reader mavenXpp3Reader = new MavenXpp3Reader();
       Model model = mavenXpp3Reader.read(pomFileReader);
 
+      String moduleName = ModuleName.getModuleName();
       String moduleVersion = model.getVersion();
 
-      return format("%s-%s", ModuleName.getModuleName(), moduleVersion);
+      return format("%s-%s", moduleName, moduleVersion);
     }
     catch (IOException | XmlPullParserException e) {
+      // Using module name without a version when unable to parse pom.xml
       return ModuleName.getModuleName();
     }
   }
