@@ -49,6 +49,7 @@ import io.vertx.core.Promise;
  */
 public class PubSubClientUtils {
 
+  public static final String PARENT_POM_PATH = "../pom.xml";
   public static final String MESSAGING_CONFIG_PATH_PROPERTY = "messaging_config_path";
   private static final String MESSAGING_CONFIG_FILE_NAME = "MessagingDescriptor.json";
 
@@ -290,7 +291,7 @@ public class PubSubClientUtils {
 
   private static String getModuleId() {
     try {
-      FileReader pomFileReader = new FileReader("../pom.xml");
+      FileReader pomFileReader = new FileReader(PARENT_POM_PATH);
       MavenXpp3Reader mavenXpp3Reader = new MavenXpp3Reader();
       Model model = mavenXpp3Reader.read(pomFileReader);
 
