@@ -189,7 +189,6 @@ public class PubSubClientUtils {
    */
   public static CompletableFuture<Boolean> unregisterModule(OkapiConnectionParams params) {
     PubsubClient client = new PubsubClient(params.getOkapiUrl(), params.getTenantId(), params.getToken());
-
     String moduleId = constructModuleName();
 
     return unregisterModuleByIdAndRole(client, moduleId, PUBLISHER)
@@ -292,7 +291,9 @@ public class PubSubClientUtils {
   private static String constructModuleName() {
     try {
       FileReader pomFileReader = new FileReader("../pom.xml");
-      Model model = new MavenXpp3Reader().read(pomFileReader);
+      MavenXpp3Reader mavenXpp3Reader = new MavenXpp3Reader();
+      Model model = mavenXpp3Reader.read(pomFileReader);
+
       String moduleVersion = model.getVersion();
 
       return format("%s-%s", ModuleName.getModuleName(), moduleVersion);
