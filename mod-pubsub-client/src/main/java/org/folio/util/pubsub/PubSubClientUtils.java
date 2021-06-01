@@ -1,7 +1,6 @@
 package org.folio.util.pubsub;
 
 import static java.lang.String.format;
-import static java.util.concurrent.CompletableFuture.failedFuture;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.PUBLISHER;
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
@@ -110,7 +109,7 @@ public class PubSubClientUtils {
       }
     } catch (Exception e) {
       LOGGER.error("Error during registration module in PubSub", e);
-      result = failedFuture(e);
+      result = CompletableFuture.failedFuture(e);
     }
     return result.whenComplete((res, throwable) -> client.close());
   }
@@ -292,8 +291,11 @@ public class PubSubClientUtils {
 
   private static String constructModuleName() {
     try {
-      Model model = new MavenXpp3Reader().read(new FileReader("../pom.xml"));
-      return ModuleName.getModuleName() + "-" + model.getVersion();
+      FileReader pomFileReader = new FileReader("../pom.xml");
+      Model model = new MavenXpp3Reader().read(pomFileReader);
+      String moduleVersion = model.getVersion();
+
+      return format("%s-%s", ModuleName.getModuleName(), moduleVersion);
     }
     catch (IOException | XmlPullParserException e) {
       return ModuleName.getModuleName();
