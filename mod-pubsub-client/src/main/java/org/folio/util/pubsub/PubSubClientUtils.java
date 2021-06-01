@@ -189,7 +189,7 @@ public class PubSubClientUtils {
    */
   public static CompletableFuture<Boolean> unregisterModule(OkapiConnectionParams params) {
     PubsubClient client = new PubsubClient(params.getOkapiUrl(), params.getTenantId(), params.getToken());
-    String moduleId = constructModuleName();
+    String moduleId = getModuleId();
 
     return unregisterModuleByIdAndRole(client, moduleId, PUBLISHER)
       .thenCompose(ar -> unregisterModuleByIdAndRole(client, moduleId, SUBSCRIBER))
@@ -240,10 +240,10 @@ public class PubSubClientUtils {
 
       return new DescriptorHolder()
         .withPublisherDescriptor(new PublisherDescriptor()
-          .withModuleId(constructModuleName())
+          .withModuleId(getModuleId())
           .withEventDescriptors(messagingDescriptor.getPublications()))
         .withSubscriberDescriptor(new SubscriberDescriptor()
-          .withModuleId(constructModuleName())
+          .withModuleId(getModuleId())
           .withSubscriptionDefinitions(messagingDescriptor.getSubscriptions()));
     } catch (JsonParseException | JsonMappingException e) {
       String errorMessage = "Can not read messaging descriptor, cause: " + e.getMessage();
@@ -288,7 +288,7 @@ public class PubSubClientUtils {
     return Optional.of(fileStream);
   }
 
-  private static String constructModuleName() {
+  private static String getModuleId() {
     try {
       FileReader pomFileReader = new FileReader("../pom.xml");
       MavenXpp3Reader mavenXpp3Reader = new MavenXpp3Reader();
