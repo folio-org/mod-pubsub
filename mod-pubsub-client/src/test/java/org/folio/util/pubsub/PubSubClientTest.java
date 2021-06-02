@@ -6,7 +6,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.delete;
 import static com.github.tomakehurst.wiremock.client.WireMock.noContent;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
-import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -21,6 +20,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
@@ -28,9 +28,6 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.github.tomakehurst.wiremock.matching.RegexPattern;
 import com.github.tomakehurst.wiremock.matching.UrlPathPattern;
 
-import io.restassured.builder.RequestSpecBuilder;
-import io.restassured.http.ContentType;
-import io.restassured.specification.RequestSpecification;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
@@ -39,8 +36,6 @@ public class PubSubClientTest {
   private static final String TENANT_ID = "diku";
   private static final String TOKEN = "token";
   private static final int PORT = NetworkUtils.nextFreePort();
-
-  private static RequestSpecification spec;
 
   private static OkapiConnectionParams params = new OkapiConnectionParams();
   private static final JsonObject EVENT = new JsonObject()
@@ -67,29 +62,18 @@ public class PubSubClientTest {
     params.setOkapiUrl("http://localhost:" + PORT);
     params.setTenantId(TENANT_ID);
     params.setToken(TOKEN);
-
-    spec = new RequestSpecBuilder()
-      .setContentType(ContentType.JSON)
-      .addHeader(OKAPI_HEADER_TENANT, TENANT_ID)
-      .setBaseUri("http://localhost:" + PORT)
-      .addHeader("Accept", "text/plain, application/json")
-      .build();
   }
 
   @Test
   public void registerModuleSuccessfully() throws Exception {
-    WireMock.stubFor(post(DECLARE_PUBLISHER_PATH).willReturn(created()));
-    WireMock.stubFor(post(DECLARE_SUBSCRIBER_PATH).willReturn(created()));
-    WireMock.stubFor(post(EVENT_TYPES_PATH).willReturn(created()));
+    stubPubSubServer(created(), created(), created());
 
     assertTrue(PubSubClientUtils.registerModule(params).get());
   }
 
   @Test
   public void shouldNotRegisterPublishers() {
-    WireMock.stubFor(post(DECLARE_PUBLISHER_PATH).willReturn(badRequest()));
-    WireMock.stubFor(post(DECLARE_SUBSCRIBER_PATH).willReturn(created()));
-    WireMock.stubFor(post(EVENT_TYPES_PATH).willReturn(created()));
+    stubPubSubServer(badRequest(), created(), created());
 
     try {
       PubSubClientUtils.registerModule(params).get();
@@ -101,9 +85,7 @@ public class PubSubClientTest {
 
   @Test
   public void shouldNotRegisterSubscribers() {
-    WireMock.stubFor(post(DECLARE_PUBLISHER_PATH).willReturn(created()));
-    WireMock.stubFor(post(DECLARE_SUBSCRIBER_PATH).willReturn(badRequest()));
-    WireMock.stubFor(post(EVENT_TYPES_PATH).willReturn(created()));
+    stubPubSubServer(created(), badRequest(), created());
 
     try {
       PubSubClientUtils.registerModule(params).get();
@@ -136,5 +118,14 @@ public class PubSubClientTest {
     WireMock.stubFor(delete(new UrlPathPattern(new RegexPattern(MESSAGING_MODULES_PATH + "?.*"), true))
       .willReturn(serverError()));
     PubSubClientUtils.unregisterModule(params).get();
+  }
+
+  private void stubPubSubServer(ResponseDefinitionBuilder declarePublisherResponse,
+    ResponseDefinitionBuilder declareSubscriberResponse,
+    ResponseDefinitionBuilder eventTypesResponse) {
+
+    WireMock.stubFor(post(DECLARE_PUBLISHER_PATH).willReturn(declarePublisherResponse));
+    WireMock.stubFor(post(DECLARE_SUBSCRIBER_PATH).willReturn(declareSubscriberResponse));
+    WireMock.stubFor(post(EVENT_TYPES_PATH).willReturn(eventTypesResponse));
   }
 }
