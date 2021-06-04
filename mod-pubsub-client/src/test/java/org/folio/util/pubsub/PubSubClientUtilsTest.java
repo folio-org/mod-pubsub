@@ -15,6 +15,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertNotNull;
 
 public class PubSubClientUtilsTest {
@@ -79,6 +80,18 @@ public class PubSubClientUtilsTest {
     System.setProperty(MESSAGING_CONFIG_PATH_PROPERTY, MESSAGE_DESCRIPTOR_PATH_WITH_INVALID_FIELD);
 
     PubSubClientUtils.readMessagingDescriptor();
+  }
+
+  @Test
+  public void shouldBuildCorrectModuleId() {
+    // Passing parent pom.xml path to get the correct version because mod-pubsub-client is a submodule.
+    // Typically, modules will call PubSubClientUtils.getModuleId() to use their own pom.xml
+    assertThat(PubSubClientUtils.getModuleId("../pom.xml"), startsWith("mod-pubsub"));
+
+    // No version here because mod-pubsub-client's own pom.xml doesn't specify a version.
+    assertThat(PubSubClientUtils.getModuleId(), is("mod-pubsub"));
+
+    assertThat(PubSubClientUtils.getModuleId("not-a-pom.xml"), is("mod-pubsub"));
   }
 
 }

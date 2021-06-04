@@ -49,7 +49,6 @@ import io.vertx.core.Promise;
  */
 public class PubSubClientUtils {
 
-  public static final String PARENT_POM_PATH = "../pom.xml";
   public static final String MESSAGING_CONFIG_PATH_PROPERTY = "messaging_config_path";
   private static final String MESSAGING_CONFIG_FILE_NAME = "MessagingDescriptor.json";
 
@@ -289,20 +288,41 @@ public class PubSubClientUtils {
     return Optional.of(fileStream);
   }
 
-  private static String getModuleId() {
+  /**
+   * Builds module ID using the default POM file path.
+   * @return Module ID
+   */
+  public static String getModuleId() {
+    return getModuleId("pom.xml");
+  }
+
+  /**
+   * Parses pom.xml file and builds module ID. Format: {module-name}-{module-version}.
+   * If it can't find module's version (because specified pom.xml doesn't exist or it can't be parsed
+   * or it doesn't have a version tag) this method will return just a module name part - {module-name}.
+   * In both cases underscores (_) in the module name will be replaced with dashes (-).
+   * @param pomFilePath pom.xml file path
+   * @return Module ID
+   */
+  public static String getModuleId(String pomFilePath) {
+    String moduleName = ModuleName.getModuleName().replace("_", "-");
+
     try {
-      FileReader pomFileReader = new FileReader(PARENT_POM_PATH);
+      FileReader pomFileReader = new FileReader(pomFilePath);
       MavenXpp3Reader mavenXpp3Reader = new MavenXpp3Reader();
       Model model = mavenXpp3Reader.read(pomFileReader);
 
-      String moduleName = ModuleName.getModuleName();
       String moduleVersion = model.getVersion();
+
+      if (moduleVersion == null) {
+        return moduleName;
+      }
 
       return format("%s-%s", moduleName, moduleVersion);
     }
     catch (IOException | XmlPullParserException e) {
       // Using module name without a version when unable to parse pom.xml
-      return ModuleName.getModuleName();
+      return moduleName;
     }
   }
 
