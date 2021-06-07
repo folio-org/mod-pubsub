@@ -32,7 +32,6 @@ import org.folio.util.pubsub.exceptions.MessagingDescriptorNotFoundException;
 import org.folio.util.pubsub.exceptions.ModuleRegistrationException;
 import org.folio.util.pubsub.exceptions.ModuleUnregistrationException;
 import org.folio.util.pubsub.support.DescriptorHolder;
-import org.folio.util.pubsub.support.PomReader;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -86,12 +85,12 @@ public class PubSubClientUtils {
    * @param params - okapi connection params
    * @return - async result with boolean value. True if module was registered successfully
    */
-  public static CompletableFuture<Boolean> registerModule(OkapiConnectionParams params) {
+  public static CompletableFuture<Boolean> registerModule(OkapiConnectionParams params, String moduleId) {
     CompletableFuture<Boolean> result = CompletableFuture.completedFuture(false);
     PubsubClient client = new PubsubClient(params.getOkapiUrl(), params.getTenantId(), params.getToken());
     try {
       LOGGER.info("Reading MessagingDescriptor.json");
-      DescriptorHolder descriptorHolder = readMessagingDescriptor();
+      DescriptorHolder descriptorHolder = readMessagingDescriptor(moduleId);
       if (descriptorHolder.getPublisherDescriptor() != null &&
         isNotEmpty(descriptorHolder.getPublisherDescriptor().getEventDescriptors())) {
         LOGGER.info("Registering events for publishers");
@@ -183,9 +182,8 @@ public class PubSubClientUtils {
    * @param params - okapi connection params
    * @return future with true if module was unregistered successfully
    */
-  public static CompletableFuture<Boolean> unregisterModule(OkapiConnectionParams params) {
+  public static CompletableFuture<Boolean> unregisterModule(OkapiConnectionParams params, String moduleId) {
     PubsubClient client = new PubsubClient(params.getOkapiUrl(), params.getTenantId(), params.getToken());
-    String moduleId = getModuleId();
 
     return unregisterModuleByIdAndRole(client, moduleId, PUBLISHER)
       .thenCompose(ar -> unregisterModuleByIdAndRole(client, moduleId, SUBSCRIBER))
@@ -229,17 +227,17 @@ public class PubSubClientUtils {
    * @throws IOException                          if a low-level I/O problem (unexpected end-of-input) occurs while reading file
    * @throws IllegalArgumentException             if parsing file problems occurs (file contains invalid json structure)
    */
-  static DescriptorHolder readMessagingDescriptor() throws IOException {
+  static DescriptorHolder readMessagingDescriptor(String moduleId) throws IOException {
     ObjectMapper objectMapper = new ObjectMapper();
     try {
       MessagingDescriptor messagingDescriptor = objectMapper.readValue(getMessagingDescriptorInputStream(), MessagingDescriptor.class);
 
       return new DescriptorHolder()
         .withPublisherDescriptor(new PublisherDescriptor()
-          .withModuleId(getModuleId())
+          .withModuleId(moduleId)
           .withEventDescriptors(messagingDescriptor.getPublications()))
         .withSubscriberDescriptor(new SubscriberDescriptor()
-          .withModuleId(getModuleId())
+          .withModuleId(moduleId)
           .withSubscriptionDefinitions(messagingDescriptor.getSubscriptions()));
     } catch (JsonParseException | JsonMappingException e) {
       String errorMessage = "Can not read messaging descriptor, cause: " + e.getMessage();
@@ -284,8 +282,8 @@ public class PubSubClientUtils {
     return Optional.of(fileStream);
   }
 
-  public static String getModuleId() {
-    return PomReader.INSTANCE.getModuleName().replace("_", "-") + "-" + PomReader.INSTANCE.getVersion();
-  }
+//  public static String getModuleId() {
+//    return PomReader.INSTANCE.getModuleName().replace("_", "-") + "-" + PomReader.INSTANCE.getVersion();
+//  }
 
 }
