@@ -84,14 +84,7 @@ public class PubSubClientUtilsTest {
 
   @Test
   public void shouldBuildCorrectModuleId() {
-    // Passing parent pom.xml path to get the correct version because mod-pubsub-client is a submodule.
-    // Typically, modules will call PubSubClientUtils.getModuleId() to use their own pom.xml
-    assertThat(PubSubClientUtils.getModuleId("../pom.xml"), startsWith("mod-pubsub"));
-
-    // No version here because mod-pubsub-client's own pom.xml doesn't specify a version.
-    assertThat(PubSubClientUtils.getModuleId(), is("mod-pubsub"));
-
-    assertThat(PubSubClientUtils.getModuleId("not-a-pom.xml"), is("mod-pubsub"));
+    assertThat(PubSubClientUtils.getModuleId(), startsWith("mod-pubsub-"));
   }
 
 }

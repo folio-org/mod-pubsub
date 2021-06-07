@@ -8,7 +8,6 @@ import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Paths;
@@ -19,9 +18,6 @@ import java.util.concurrent.CompletableFuture;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.maven.model.Model;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.folio.HttpStatus;
 import org.folio.rest.client.PubsubClient;
 import org.folio.rest.jaxrs.model.Event;
@@ -30,13 +26,13 @@ import org.folio.rest.jaxrs.model.MessagingDescriptor;
 import org.folio.rest.jaxrs.model.MessagingModule;
 import org.folio.rest.jaxrs.model.PublisherDescriptor;
 import org.folio.rest.jaxrs.model.SubscriberDescriptor;
-import org.folio.rest.tools.utils.ModuleName;
 import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.util.pubsub.exceptions.EventSendingException;
 import org.folio.util.pubsub.exceptions.MessagingDescriptorNotFoundException;
 import org.folio.util.pubsub.exceptions.ModuleRegistrationException;
 import org.folio.util.pubsub.exceptions.ModuleUnregistrationException;
 import org.folio.util.pubsub.support.DescriptorHolder;
+import org.folio.util.pubsub.support.PomReader;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -288,42 +284,8 @@ public class PubSubClientUtils {
     return Optional.of(fileStream);
   }
 
-  /**
-   * Builds module ID using the default POM file path.
-   * @return Module ID
-   */
   public static String getModuleId() {
-    return getModuleId("pom.xml");
-  }
-
-  /**
-   * Parses pom.xml file and builds module ID. Format: {module-name}-{module-version}.
-   * If it can't find module's version (because specified pom.xml doesn't exist or it can't be parsed
-   * or it doesn't have a version tag) this method will return just a module name part - {module-name}.
-   * In both cases underscores (_) in the module name will be replaced with dashes (-).
-   * @param pomFilePath pom.xml file path
-   * @return Module ID
-   */
-  public static String getModuleId(String pomFilePath) {
-    String moduleName = ModuleName.getModuleName().replace("_", "-");
-
-    try {
-      FileReader pomFileReader = new FileReader(pomFilePath);
-      MavenXpp3Reader mavenXpp3Reader = new MavenXpp3Reader();
-      Model model = mavenXpp3Reader.read(pomFileReader);
-
-      String moduleVersion = model.getVersion();
-
-      if (moduleVersion == null) {
-        return moduleName;
-      }
-
-      return format("%s-%s", moduleName, moduleVersion);
-    }
-    catch (IOException | XmlPullParserException e) {
-      // Using module name without a version when unable to parse pom.xml
-      return moduleName;
-    }
+    return PomReader.INSTANCE.getModuleName().replace("_", "-") + "-" + PomReader.INSTANCE.getVersion();
   }
 
 }
