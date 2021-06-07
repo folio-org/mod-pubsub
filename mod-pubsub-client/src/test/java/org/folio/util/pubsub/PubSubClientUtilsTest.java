@@ -1,6 +1,7 @@
 package org.folio.util.pubsub;
 
 import static org.folio.util.pubsub.PubSubClientUtils.MESSAGING_CONFIG_PATH_PROPERTY;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
@@ -11,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.folio.util.pubsub.support.DescriptorHolder;
+import org.folio.util.pubsub.support.PomUtils;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -19,7 +21,6 @@ import org.junit.rules.TemporaryFolder;
 
 public class PubSubClientUtilsTest {
 
-  private static final String MODULE_ID = "mod-module-1.2.3";
   private static final String MESSAGE_DESCRIPTOR_PATH_WITH_INVALID_FIELD = "config/with_invalid_field";
   private static final String VALID_MESSAGE_DESCRIPTOR_PATH = "config\\valid_config\\";
 
@@ -35,7 +36,7 @@ public class PubSubClientUtilsTest {
 
   @Test
   public void shouldReadMessagingDescriptorByDefaultPathAndReturnFilledDescriptorHolder() throws IOException {
-    DescriptorHolder descriptorHolder = PubSubClientUtils.readMessagingDescriptor(MODULE_ID);
+    DescriptorHolder descriptorHolder = PubSubClientUtils.readMessagingDescriptor();
 
     assertNotNull(descriptorHolder.getPublisherDescriptor());
     assertNotNull(descriptorHolder.getSubscriberDescriptor());
@@ -49,7 +50,7 @@ public class PubSubClientUtilsTest {
   public void shouldReadMessagingDescriptorByPathFromSystemProperty() throws IOException {
     System.setProperty(MESSAGING_CONFIG_PATH_PROPERTY, VALID_MESSAGE_DESCRIPTOR_PATH);
 
-    DescriptorHolder descriptorHolder = PubSubClientUtils.readMessagingDescriptor(MODULE_ID);
+    DescriptorHolder descriptorHolder = PubSubClientUtils.readMessagingDescriptor();
 
     assertNotNull(descriptorHolder.getPublisherDescriptor());
     assertNotNull(descriptorHolder.getSubscriberDescriptor());
@@ -64,7 +65,7 @@ public class PubSubClientUtilsTest {
     File descriptorParentFolder = temporaryFolder.newFolder();
     System.setProperty(MESSAGING_CONFIG_PATH_PROPERTY, descriptorParentFolder.getAbsolutePath());
 
-    DescriptorHolder descriptorHolder = PubSubClientUtils.readMessagingDescriptor(MODULE_ID);
+    DescriptorHolder descriptorHolder = PubSubClientUtils.readMessagingDescriptor();
 
     assertNotNull(descriptorHolder.getPublisherDescriptor());
     assertNotNull(descriptorHolder.getSubscriberDescriptor());
@@ -79,12 +80,11 @@ public class PubSubClientUtilsTest {
     exceptionRule.expect(IllegalArgumentException.class);
     System.setProperty(MESSAGING_CONFIG_PATH_PROPERTY, MESSAGE_DESCRIPTOR_PATH_WITH_INVALID_FIELD);
 
-    PubSubClientUtils.readMessagingDescriptor(MODULE_ID);
+    PubSubClientUtils.readMessagingDescriptor();
   }
 
-//  @Test
-//  public void shouldBuildCorrectModuleId() {
-//    assertThat(PubSubClientUtils.getModuleId(), startsWith("mod-pubsub-"));
-//  }
-
+  @Test
+  public void shouldBuildCorrectModuleId() {
+    assertThat(PubSubClientUtils.getModuleId(), startsWith("mod-pubsub-"));
+  }
 }

@@ -36,7 +36,6 @@ public class PubSubClientTest {
   private static final String TENANT_ID = "diku";
   private static final String TOKEN = "token";
   private static final int PORT = NetworkUtils.nextFreePort();
-  private static final String MODULE_ID = "mod-module-1.2.3";
 
   private static OkapiConnectionParams params = new OkapiConnectionParams();
   private static final JsonObject EVENT = new JsonObject()
@@ -69,7 +68,7 @@ public class PubSubClientTest {
   public void registerModuleSuccessfully() throws Exception {
     stubPubSubServer(created(), created(), created());
 
-    assertTrue(PubSubClientUtils.registerModule(params, MODULE_ID).get());
+    assertTrue(PubSubClientUtils.registerModule(params).get());
   }
 
   @Test
@@ -77,7 +76,7 @@ public class PubSubClientTest {
     stubPubSubServer(badRequest(), created(), created());
 
     try {
-      PubSubClientUtils.registerModule(params, MODULE_ID).get();
+      PubSubClientUtils.registerModule(params).get();
       fail();
     } catch (Exception e) {
       assertTrue(true);
@@ -89,7 +88,7 @@ public class PubSubClientTest {
     stubPubSubServer(created(), badRequest(), created());
 
     try {
-      PubSubClientUtils.registerModule(params, MODULE_ID).get();
+      PubSubClientUtils.registerModule(params).get();
       fail();
     } catch (Exception e) {
       assertTrue(true);
@@ -111,14 +110,14 @@ public class PubSubClientTest {
   public void shouldUnregisterModuleSuccessfully() throws Exception {
     WireMock.stubFor(delete(new UrlPathPattern(new RegexPattern(MESSAGING_MODULES_PATH + "?.*"), true))
       .willReturn(noContent()));
-    assertTrue(PubSubClientUtils.unregisterModule(params, MODULE_ID).get());
+    assertTrue(PubSubClientUtils.unregisterModule(params).get());
   }
 
   @Test(expected = ExecutionException.class)
   public void shouldReturnFailedFutureWhenPubsubReturnsServerError() throws Exception {
     WireMock.stubFor(delete(new UrlPathPattern(new RegexPattern(MESSAGING_MODULES_PATH + "?.*"), true))
       .willReturn(serverError()));
-    PubSubClientUtils.unregisterModule(params, MODULE_ID).get();
+    PubSubClientUtils.unregisterModule(params).get();
   }
 
   private void stubPubSubServer(ResponseDefinitionBuilder declarePublisherResponse,
