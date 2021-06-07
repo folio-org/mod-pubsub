@@ -1,7 +1,5 @@
 package org.folio.util.pubsub.support;
 
-import static java.lang.String.format;
-
 import java.io.FileReader;
 import java.io.IOException;
 
@@ -9,7 +7,6 @@ import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-import org.folio.rest.tools.utils.ModuleName;
 
 public class PomUtils {
   public static String getModuleVersion() {
@@ -22,6 +19,10 @@ public class PomUtils {
       String version = model.getVersion();
       if (version == null || version.isEmpty()) {
         Parent parent = model.getParent();
+        if (parent == null) {
+          return "";
+        }
+
         return getVersionRecursively(parent.getRelativePath());
       }
       else {
@@ -29,7 +30,7 @@ public class PomUtils {
       }
     }
     catch (IOException | XmlPullParserException e) {
-      throw new RuntimeException("Failed to parse pom.xml");
+      throw new RuntimeException("Failed to parse " + pomPath);
     }
   }
 }
