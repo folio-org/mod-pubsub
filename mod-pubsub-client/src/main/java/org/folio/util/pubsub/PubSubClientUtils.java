@@ -186,8 +186,8 @@ public class PubSubClientUtils {
    */
   public static CompletableFuture<Boolean> unregisterModule(OkapiConnectionParams params) {
     PubsubClient client = new PubsubClient(params.getOkapiUrl(), params.getTenantId(), params.getToken());
-
     String moduleId = getModuleId();
+
     return unregisterModuleByIdAndRole(client, moduleId, PUBLISHER)
       .thenCompose(ar -> unregisterModuleByIdAndRole(client, moduleId, SUBSCRIBER))
       .whenComplete((ar, e) -> client.close());

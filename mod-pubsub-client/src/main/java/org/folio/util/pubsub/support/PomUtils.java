@@ -20,7 +20,7 @@ public class PomUtils {
       if (version == null || version.isEmpty()) {
         Parent parent = model.getParent();
         if (parent == null) {
-          return "";
+          throw new RuntimeException("Failed to find version in POM file");
         }
 
         return getVersionRecursively(parent.getRelativePath());

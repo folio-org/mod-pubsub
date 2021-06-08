@@ -1,10 +1,10 @@
 package org.folio.util.pubsub;
 
 import static org.folio.util.pubsub.PubSubClientUtils.MESSAGING_CONFIG_PATH_PROPERTY;
-import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
+import static org.hamcrest.text.MatchesPattern.matchesPattern;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertNotNull;
 
@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.IOException;
 
 import org.folio.util.pubsub.support.DescriptorHolder;
-import org.folio.util.pubsub.support.PomUtils;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -85,6 +84,6 @@ public class PubSubClientUtilsTest {
 
   @Test
   public void shouldBuildCorrectModuleId() {
-    assertThat(PubSubClientUtils.getModuleId(), startsWith("mod-pubsub-"));
+    assertThat(PubSubClientUtils.getModuleId(), matchesPattern("mod-pubsub-[0-9]{1}.+"));
   }
 }
