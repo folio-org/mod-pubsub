@@ -19,8 +19,8 @@ public class PomUtils {
       String version = model.getVersion();
       if (version == null || version.isEmpty()) {
         Parent parent = model.getParent();
-        if (parent == null) {
-          throw new RuntimeException("Failed to find version in POM file");//NOSONAR
+        if (parent == null) { //NOSONAR
+          throw new RuntimeException("Failed to find version in POM file"); //NOSONAR
         }
 
         return getVersionRecursively(parent.getRelativePath());
@@ -29,8 +29,8 @@ public class PomUtils {
         return version;
       }
     }
-    catch (IOException | XmlPullParserException e) {
-      throw new RuntimeException("Failed to parse " + pomPath);//NOSONAR
+    catch (IOException | XmlPullParserException e) { //NOSONAR
+      throw new RuntimeException("Failed to parse " + pomPath); //NOSONAR
     }
   }
 }
