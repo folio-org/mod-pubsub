@@ -107,6 +107,8 @@ public class KafkaConsumerWrapper<K, V> implements Handler<KafkaConsumerRecord<K
     consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, KafkaTopicNameHelper.formatGroupName(subscriptionDefinition.getEventType(), moduleName));
 
     kafkaConsumer = KafkaConsumer.create(vertx, consumerProps);
+
+    kafkaConsumer.handler(this);
     kafkaConsumer.exceptionHandler(throwable -> LOGGER.error("Error while KafkaConsumerWrapper is working: ", throwable));
 
     Pattern pattern = Pattern.compile(subscriptionDefinition.getSubscriptionPattern());
