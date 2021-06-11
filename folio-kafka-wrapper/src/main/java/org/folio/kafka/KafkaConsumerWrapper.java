@@ -107,8 +107,7 @@ public class KafkaConsumerWrapper<K, V> implements Handler<KafkaConsumerRecord<K
     consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, KafkaTopicNameHelper.formatGroupName(subscriptionDefinition.getEventType(), moduleName));
 
     kafkaConsumer = KafkaConsumer.create(vertx, consumerProps);
-
-    kafkaConsumer.handler(this);
+    kafkaConsumer.exceptionHandler(throwable -> LOGGER.error("Error while KafkaConsumerWrapper is working: ", throwable));
 
     Pattern pattern = Pattern.compile(subscriptionDefinition.getSubscriptionPattern());
     kafkaConsumer.subscribe(pattern, ar -> {
@@ -156,9 +155,7 @@ public class KafkaConsumerWrapper<K, V> implements Handler<KafkaConsumerRecord<K
       int requestNo = pauseRequests.getAndIncrement();
       if (requestNo == 0) {
         kafkaConsumer.pause();
-        if (LOGGER.isDebugEnabled()) {
-          LOGGER.debug("Consumer - id: " + id + " subscriptionPattern: " + subscriptionDefinition + " kafkaConsumer.pause() requested");
-        }
+        LOGGER.info("Consumer - id: " + id + " subscriptionPattern: " + subscriptionDefinition + " kafkaConsumer.pause() requested" + " currentLoad: " + currentLoad + " loadLimit: " + loadLimit);
       }
     }
 
@@ -183,11 +180,15 @@ public class KafkaConsumerWrapper<K, V> implements Handler<KafkaConsumerRecord<K
         OffsetAndMetadata offsetAndMetadata = new OffsetAndMetadata(offset, null);
         offsets.put(topicPartition, offsetAndMetadata);
         if (LOGGER.isDebugEnabled()) {
-          LOGGER.debug("Consumer - id: " + id + " subscriptionPattern: " + subscriptionDefinition + " Committing offset: " + offset);
+          LOGGER.info("Consumer - id: " + id + " subscriptionPattern: " + subscriptionDefinition + " Committing offset: " + offset);
         }
-        kafkaConsumer.commit(offsets, completionHandler -> {
-          if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Consumer - id: " + id + " subscriptionPattern: " + subscriptionDefinition + " Committed offset: " + offset);
+        kafkaConsumer.commit(offsets, ar -> {
+          if (ar.succeeded()) {
+            if (LOGGER.isDebugEnabled()) {
+              LOGGER.debug("Consumer - id: " + id + " subscriptionPattern: " + subscriptionDefinition + " Committed offset: " + offset);
+            }
+          } else {
+            LOGGER.error("Consumer - id: " + id + " subscriptionPattern: " + subscriptionDefinition + " Error while commit offset: " + offset, ar.cause());
           }
         });
 
@@ -207,7 +208,7 @@ public class KafkaConsumerWrapper<K, V> implements Handler<KafkaConsumerRecord<K
           if (requestNo == 0) {
 //           synchronized (this) { all this is handled within the same verticle
             kafkaConsumer.resume();
-            LOGGER.debug("Consumer - id: " + id + " subscriptionPattern: " + subscriptionDefinition + " kafkaConsumer.resume() requested");
+            LOGGER.info("Consumer - id: " + id + " subscriptionPattern: " + subscriptionDefinition + " kafkaConsumer.resume() requested" + " currentLoad: " + actualCurrentLoad + " loadBottomGreenLine: " + loadBottomGreenLine);
 //            }
           }
         }
