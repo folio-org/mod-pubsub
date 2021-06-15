@@ -29,7 +29,7 @@ public class KafkaTopicNameHelperTest {
     SubscriptionDefinition subscriptionDefinition = KafkaTopicNameHelper.createSubscriptionDefinition("folio", "Default", "DI_COMPLETED");
     assertNotNull(subscriptionDefinition);
     assertNotNull(subscriptionDefinition.getEventType());
-    assertEquals(subscriptionDefinition.getEventType(), "DI_COMPLETED");
+    assertEquals( "DI_COMPLETED", subscriptionDefinition.getEventType());
     assertNotNull(subscriptionDefinition.getSubscriptionPattern());
     assertEquals("folio\\.Default\\.\\w{1,}\\.DI_COMPLETED", subscriptionDefinition.getSubscriptionPattern());
   }
