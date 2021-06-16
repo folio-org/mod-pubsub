@@ -26,23 +26,23 @@ public class KafkaConfig {
   private int numberOfPartitions;
   @Value("${ENV:folio}")
   private String envId;
-  @Value("${security.protocol}")
+  @Value("${security.protocol:}")
   private String kafkaSecurityProtocolConfig;
-  @Value("${ssl.protocol}")
+  @Value("${ssl.protocol:}")
   private String kafkaSslProtocolConfig;
-  @Value("${ssl.key.password}")
+  @Value("${ssl.key.password:}")
   private String kafkaSslKeyPasswordConfig;
-  @Value("${ssl.truststore.location}")
+  @Value("${ssl.truststore.location:}")
   private String kafkaSslTruststoreLocationConfig;
-  @Value("${ssl.truststore.password}")
+  @Value("${ssl.truststore.password:}")
   private String kafkaSslTruststorePasswordConfig;
-  @Value("${ssl.truststore.type}")
+  @Value("${ssl.truststore.type:}")
   private String kafkaSslTruststoreTypeConfig;
-  @Value("${ssl.keystore.location}")
+  @Value("${ssl.keystore.location:}")
   private String kafkaSslKeystoreLocationConfig;
-  @Value("${ssl.keystore.password}")
+  @Value("${ssl.keystore.password:}")
   private String kafkaSslKeystorePasswordConfig;
-  @Value("${ssl.keystore.type}")
+  @Value("${ssl.keystore.type:}")
   private String kafkaSslKeystoreTypeConfig;
 
   public static final String KAFKA_SECURITY_PROTOCOL_DEFAULT = "PLAINTEXT";
