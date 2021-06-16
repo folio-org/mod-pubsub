@@ -99,7 +99,7 @@ public class KafkaConfig {
     return envId;
   }
 
-  private void ensureSecurityProps(Map<String, String> clientProps) {
+  private void ensureSecurityProps(Map<String, String> clientProps) {//NOSONAR
     clientProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, SimpleConfigurationReader.getValue(
       kafkaSecurityProtocolConfig, SpringKafkaProperties.KAFKA_SECURITY_PROTOCOL, KAFKA_SECURITY_PROTOCOL_DEFAULT));
     clientProps.put(SslConfigs.SSL_PROTOCOL_CONFIG, SimpleConfigurationReader.getValue(
