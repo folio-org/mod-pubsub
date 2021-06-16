@@ -1,6 +1,6 @@
 package org.folio.kafka;
 
-public final class SpringKafkaProperties {  //NOSONAR
+public final class SpringKafkaProperties {
 
   public static final String KAFKA_SECURITY_PROTOCOL = "spring.kafka.security.protocol";
 

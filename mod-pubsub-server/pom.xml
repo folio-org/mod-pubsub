@@ -12,7 +12,6 @@
     <basedir>${project.parent.basedir}</basedir>
     <ramlfiles_path>${project.parent.basedir}/ramls</ramlfiles_path>
     <sonar.exclusions>**/OkapiConnectionParams.java</sonar.exclusions>
-    <sonar.exclusions>org.folio.kafka.SpringKafkaProperties</sonar.exclusions>
   </properties>
 
   <dependencies>
