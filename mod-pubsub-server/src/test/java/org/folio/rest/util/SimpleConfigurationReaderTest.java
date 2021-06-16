@@ -24,7 +24,7 @@ public class SimpleConfigurationReaderTest {
   @Test
   public void shouldReturnDefaultValueIfSysAndSpringPropertiesAreEmpty() {
     String defaultValue = "default";
-    String actualValue = SimpleConfigurationReader.getValue(null, "test.props", "default");
+    String actualValue = SimpleConfigurationReader.getValue(null, "test2.props", "default");
     Assert.assertEquals(defaultValue, actualValue);
   }
 }
