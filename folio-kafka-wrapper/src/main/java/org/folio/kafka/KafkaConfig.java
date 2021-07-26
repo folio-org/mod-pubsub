@@ -65,6 +65,7 @@ public class KafkaConfig {
   private final String okapiUrl;
   private final int replicationFactor;
   private final String envId;
+  private final int maxRequestSize;
 
   public Map<String, String> getProducerProps() {
     Map<String, String> producerProps = new HashMap<>();
@@ -72,6 +73,7 @@ public class KafkaConfig {
     producerProps.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
     producerProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
     producerProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
+    producerProps.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, String.valueOf(getMaxRequestSize()));
     ensureSecurityProps(producerProps);
     return producerProps;
   }
