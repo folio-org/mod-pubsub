@@ -207,7 +207,7 @@ public class KafkaConsumerWrapper<K, V> implements Handler<KafkaConsumerRecord<K
         }
       } catch (Exception er) {
         LOGGER.error("KafkaConsumerWrapper::businessHandlerCompletionHandler", er.fillInStackTrace());
-      }finally {
+      } finally {
         int actualCurrentLoad = localLoadSensor.decrementAndGet();
         int globalLoad = globalLoadSensor != null ? globalLoadSensor.decrement() : GLOBAL_SENSOR_NA;
         if (!backPressureGauge.isThresholdExceeded(globalLoad, actualCurrentLoad, loadBottomGreenLine)) {
