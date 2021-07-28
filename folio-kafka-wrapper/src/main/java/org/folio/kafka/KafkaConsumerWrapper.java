@@ -83,6 +83,7 @@ public class KafkaConsumerWrapper<K, V> implements Handler<KafkaConsumerRecord<K
   }
 
   public Future<Void> start(AsyncRecordHandler<K, V> businessHandler, String moduleName) {
+    LOGGER.info("KafkaConsumerWrapper::start {}", moduleName);
     if (businessHandler == null) {
       String failureMessage = "businessHandler must be provided and can't be null.";
       LOGGER.error(failureMessage);
@@ -127,6 +128,7 @@ public class KafkaConsumerWrapper<K, V> implements Handler<KafkaConsumerRecord<K
   }
 
   public Future<Void> stop() {
+    LOGGER.info("KafkaConsumerWrapper::stop");
     Promise<Void> stopPromise = Promise.promise();
     kafkaConsumer.unsubscribe(uar -> {
         if (uar.succeeded()) {
@@ -150,11 +152,12 @@ public class KafkaConsumerWrapper<K, V> implements Handler<KafkaConsumerRecord<K
 
   @Override
   public void handle(KafkaConsumerRecord<K, V> record) {
+    LOGGER.info("KafkaConsumerWrapper::handle, globalLoadSensor: {}", globalLoadSensor);
     int globalLoad = globalLoadSensor != null ? globalLoadSensor.increment() : GLOBAL_SENSOR_NA;
-
     int currentLoad = localLoadSensor.incrementAndGet();
 
     if (backPressureGauge.isThresholdExceeded(globalLoad, currentLoad, loadLimit)) {
+      LOGGER.info("KafkaConsumerWrapper::handle -> isThresholdExceeded, pauseRequests: {}", pauseRequests);
       int requestNo = pauseRequests.getAndIncrement();
       if (requestNo == 0) {
         kafkaConsumer.pause();
@@ -162,19 +165,20 @@ public class KafkaConsumerWrapper<K, V> implements Handler<KafkaConsumerRecord<K
       }
     }
 
-    if (LOGGER.isDebugEnabled()) {
-      LOGGER.debug("Consumer - id: " + id +
+    //if (LOGGER.isDebugEnabled()) {
+      LOGGER.info("Consumer - id: " + id +
         " subscriptionPattern: " + subscriptionDefinition +
         " a Record has been received. key: " + record.key() +
         " currentLoad: " + currentLoad +
         " globalLoad: " + (globalLoadSensor != null ? String.valueOf(globalLoadSensor.current()) : "N/A"));
-    }
+    //}
 
     businessHandler.handle(record).onComplete(businessHandlerCompletionHandler(record));
 
   }
 
   private Handler<AsyncResult<K>> businessHandlerCompletionHandler(KafkaConsumerRecord<K, V> record) {
+    LOGGER.info("KafkaConsumerWrapper::businessHandlerCompletionHandler, globalLoadSensor: {}", globalLoadSensor);
     return har -> {
       try {
         long offset = record.offset() + 1;
@@ -182,14 +186,14 @@ public class KafkaConsumerWrapper<K, V> implements Handler<KafkaConsumerRecord<K
         TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
         OffsetAndMetadata offsetAndMetadata = new OffsetAndMetadata(offset, null);
         offsets.put(topicPartition, offsetAndMetadata);
-        if (LOGGER.isDebugEnabled()) {
-          LOGGER.info("Consumer - id: " + id + " subscriptionPattern: " + subscriptionDefinition + " Committing offset: " + offset);
-        }
+        //if (LOGGER.isDebugEnabled()) {
+        LOGGER.info("Consumer - id: " + id + " subscriptionPattern: " + subscriptionDefinition + " Committing offset: " + offset);
+        //}
         kafkaConsumer.commit(offsets, ar -> {
           if (ar.succeeded()) {
-            if (LOGGER.isDebugEnabled()) {
-              LOGGER.debug("Consumer - id: " + id + " subscriptionPattern: " + subscriptionDefinition + " Committed offset: " + offset);
-            }
+            //if (LOGGER.isDebugEnabled()) {
+            LOGGER.info("Consumer - id: " + id + " subscriptionPattern: " + subscriptionDefinition + " Committed offset: " + offset);
+            //}
           } else {
             LOGGER.error("Consumer - id: " + id + " subscriptionPattern: " + subscriptionDefinition + " Error while commit offset: " + offset, ar.cause());
           }
@@ -201,11 +205,11 @@ public class KafkaConsumerWrapper<K, V> implements Handler<KafkaConsumerRecord<K
             processRecordErrorHandler.handle(har.cause(), record);
           }
         }
-      } finally {
+      } catch (Exception er) {
+        LOGGER.error("KafkaConsumerWrapper::businessHandlerCompletionHandler", er.fillInStackTrace());
+      }finally {
         int actualCurrentLoad = localLoadSensor.decrementAndGet();
-
         int globalLoad = globalLoadSensor != null ? globalLoadSensor.decrement() : GLOBAL_SENSOR_NA;
-
         if (!backPressureGauge.isThresholdExceeded(globalLoad, actualCurrentLoad, loadBottomGreenLine)) {
           int requestNo = pauseRequests.decrementAndGet();
           if (requestNo == 0) {
