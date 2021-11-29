@@ -5,10 +5,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
@@ -82,7 +79,7 @@ public final class RestUtil {
     try {
       Map<String, String> headers = params.getHeaders();
       String requestUrl = params.getOkapiUrl() + url;
-      WebClient client = WebClient.wrap(getHttpClient(params));
+      WebClient client = params.getWebClient();
 
       HttpRequest<Buffer> request = client.requestAbs(method, requestUrl);
       if (headers != null) {
@@ -120,18 +117,5 @@ public final class RestUtil {
         promise.fail(ar.cause());
       }
     };
-  }
-
-  /**
-   * Prepare HttpClient from OkapiConnection params
-   *
-   * @param params - Okapi connection params
-   * @return - Vertx Http Client
-   */
-  private static HttpClient getHttpClient(OkapiConnectionParams params) {
-    HttpClientOptions options = new HttpClientOptions();
-    options.setConnectTimeout(params.getTimeout());
-    options.setIdleTimeout(params.getTimeout());
-    return params.getVertx() != null ? params.getVertx().createHttpClient(options) : Vertx.currentContext().owner().createHttpClient(options);
   }
 }

@@ -112,8 +112,7 @@ public class SecurityManagerTest {
     stubFor(post(LOGIN_URL)
       .willReturn(created().withHeader(OKAPI_HEADER_TOKEN, pubSubToken)));
 
-    OkapiConnectionParams params = new OkapiConnectionParams();
-    params.setVertx(vertx);
+    OkapiConnectionParams params = new OkapiConnectionParams(vertx);
     params.setOkapiUrl(headers.get(OKAPI_URL_HEADER));
     params.setTenantId(TENANT);
     params.setToken(TOKEN);

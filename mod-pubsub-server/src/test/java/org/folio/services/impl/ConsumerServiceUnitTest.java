@@ -191,7 +191,6 @@ public class ConsumerServiceUnitTest {
     params.setOkapiUrl(headers.getOrDefault("x-okapi-url", "localhost"));
     params.setTenantId(headers.getOrDefault("x-okapi-tenant", TENANT));
     params.setToken(headers.getOrDefault("x-okapi-token", TOKEN));
-    params.setTimeout(2000);
 
     Set<MessagingModule> messagingModuleList = new HashSet<>();
     messagingModuleList.add(new MessagingModule()
@@ -241,7 +240,6 @@ public class ConsumerServiceUnitTest {
     params.setOkapiUrl(headers.getOrDefault("x-okapi-url", "localhost"));
     params.setTenantId(headers.getOrDefault("x-okapi-tenant", TENANT));
     params.setToken(headers.getOrDefault("x-okapi-token", TOKEN));
-    params.setTimeout(2000);
 
     Set<MessagingModule> messagingModuleList = new HashSet<>();
     messagingModuleList.add(new MessagingModule()

@@ -1,7 +1,10 @@
 package org.folio.rest.util;
 
 import io.vertx.core.Vertx;
+import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public final class OkapiConnectionParams {
@@ -13,22 +16,21 @@ public final class OkapiConnectionParams {
   private String tenantId;
   private String token;
   private Map<String, String> headers;
-  private Vertx vertx;
-  private int timeout = 2000;
-
-  public OkapiConnectionParams() {
-  }
+  private final WebClient webClient;
+  private static final Map<Vertx, WebClient> clients = new HashMap<>();
+  private static final WebClientOptions WEB_CLIENT_OPTIONS = new WebClientOptions()
+    .setConnectTimeout(2000).setIdleTimeout(2000);
 
   public OkapiConnectionParams(Vertx vertx) {
-    this.vertx = vertx;
+    this.webClient = init(vertx);
   }
 
   public OkapiConnectionParams(Map<String, String> okapiHeaders, Vertx vertx) {
+    this(vertx);
     this.okapiUrl = okapiHeaders.getOrDefault(OKAPI_URL_HEADER, "localhost");
     this.tenantId = okapiHeaders.getOrDefault(OKAPI_TENANT_HEADER, "");
     this.token = okapiHeaders.getOrDefault(OKAPI_TOKEN_HEADER, "dummy");
     this.headers = okapiHeaders;
-    this.vertx = vertx;
   }
 
   public String getOkapiUrl() {
@@ -63,19 +65,17 @@ public final class OkapiConnectionParams {
     this.headers = headers;
   }
 
-  public Vertx getVertx() {
-    return vertx;
+  public WebClient getWebClient() {
+    return webClient;
   }
 
-  public void setVertx(Vertx vertx) {
-    this.vertx = vertx;
+  private static synchronized WebClient init(Vertx vertx) {
+    if (clients.containsKey(vertx)) {
+      return clients.get(vertx);
+    }
+    WebClient webClient = WebClient.create(vertx, WEB_CLIENT_OPTIONS);
+    clients.put(vertx, webClient);
+    return webClient;
   }
 
-  public int getTimeout() {
-    return timeout;
-  }
-
-  public void setTimeout(int timeout) {
-    this.timeout = timeout;
-  }
 }
