@@ -5,6 +5,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
 import static com.github.tomakehurst.wiremock.client.WireMock.forbidden;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.noContent;
+import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
@@ -30,6 +31,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
+import com.github.tomakehurst.wiremock.matching.RegexPattern;
+import com.github.tomakehurst.wiremock.matching.UrlPattern;
 import org.folio.dao.MessagingModuleDao;
 import org.folio.dao.impl.MessagingModuleDaoImpl;
 import org.folio.config.user.SystemUserConfig;
@@ -60,6 +63,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import scala.concurrent.impl.FutureConvertersImpl;
 
 @RunWith(VertxUnitRunner.class)
 public class SecurityManagerTest {
@@ -143,7 +147,15 @@ public class SecurityManagerTest {
       .put("totalRecords", 1).encode();
 
     stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
-    stubFor(post(permissionsByUserIdUrl(userId)).willReturn(ok()));
+
+    String permId = UUID.randomUUID().toString();
+    JsonObject permUser = new JsonObject()
+      .put("id", permId)
+      .put("userId", userId)
+      .put("permissions", new JsonArray());
+
+    stubFor(get(PERMISSIONS_URL + "/" + userId + "?indexField=userId").willReturn(ok().withBody(permUser.encode())));
+    stubFor(put(PERMISSIONS_URL + "/" + permId).willReturn(ok()));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
@@ -151,13 +163,16 @@ public class SecurityManagerTest {
 
     future.map(ar -> {
       List<LoggedRequest> requests = findAll(RequestPatternBuilder.allRequests());
-      assertEquals(2, requests.size());
+      assertEquals(3, requests.size());
 
       assertEquals(USERS_URL_WITH_QUERY, requests.get(0).getUrl());
       assertEquals("GET", requests.get(0).getMethod().getName());
 
-      assertEquals(permissionsByUserIdUrl(userId), requests.get(1).getUrl());
-      assertEquals("POST", requests.get(1).getMethod().getName());
+      assertEquals(PERMISSIONS_URL + "/" + userId + "?indexField=userId", requests.get(1).getUrl());
+      assertEquals("GET", requests.get(1).getMethod().getName());
+
+      assertEquals(PERMISSIONS_URL + "/" + permId, requests.get(2).getUrl());
+      assertEquals("PUT", requests.get(2).getMethod().getName());
 
       // Verify user create request has not sent
       verify(0, new RequestPatternBuilder(POST, urlEqualTo(USERS_URL)));
@@ -169,6 +184,7 @@ public class SecurityManagerTest {
   @Test
   public void shouldCreatePubSubUser(TestContext context) {
     String userId = UUID.randomUUID().toString();
+    System.out.println("Userid=" + userId);
     String userCollection = new JsonObject()
       .put("users", new JsonArray().add(existingUser(userId)))
       .put("totalRecords", 1).encode();
@@ -178,6 +194,7 @@ public class SecurityManagerTest {
     stubFor(post(USERS_URL).willReturn(created().withBody(userCollection)));
     stubFor(post(CREDENTIALS_URL).willReturn(created()));
     stubFor(post(PERMISSIONS_URL).willReturn(created()));
+    stubFor(get(new UrlPattern(new RegexPattern(PERMISSIONS_URL + "/.*"), true)).willReturn(notFound()));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
@@ -185,7 +202,7 @@ public class SecurityManagerTest {
 
     future.map(ar -> {
       List<LoggedRequest> requests = findAll(RequestPatternBuilder.allRequests());
-      assertEquals(4, requests.size());
+      assertEquals(5, requests.size());
 
       assertEquals(USERS_URL_WITH_QUERY, requests.get(0).getUrl());
       assertEquals("GET", requests.get(0).getMethod().getName());
@@ -197,8 +214,11 @@ public class SecurityManagerTest {
       assertEquals(CREDENTIALS_URL, requests.get(2).getUrl());
       assertEquals("POST", requests.get(2).getMethod().getName());
 
-      assertEquals(PERMISSIONS_URL, requests.get(3).getUrl());
-      assertEquals("POST", requests.get(3).getMethod().getName());
+      assertTrue( requests.get(4).getUrl().startsWith(PERMISSIONS_URL));
+      assertEquals("GET", requests.get(3).getMethod().getName());
+
+      assertTrue( requests.get(4).getUrl().startsWith(PERMISSIONS_URL));
+      assertEquals("POST", requests.get(4).getMethod().getName());
 
       return null;
     }).onComplete(context.asyncAssertSuccess());
@@ -243,14 +263,21 @@ public class SecurityManagerTest {
   @Test
   public void shouldUpdateExistingUser(TestContext context) {
     final String userId = UUID.randomUUID().toString();
-    final String permUrl = PERMISSIONS_URL + "/" + userId + "/permissions?indexField=userId";
     final String userCollection = new JsonObject()
       .put("users", new JsonArray().add(existingUser(userId)))
       .put("totalRecords", 1).encode();
 
     stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
     stubFor(put(USERS_URL + "/" + userId).willReturn(noContent()));
-    stubFor(post(permUrl).willReturn(ok()));
+
+    String permId = UUID.randomUUID().toString();
+    JsonObject permUser = new JsonObject()
+      .put("id", permId)
+      .put("userId", userId)
+      .put("permissions", new JsonArray());
+
+    stubFor(get(PERMISSIONS_URL + "/" + userId + "?indexField=userId").willReturn(ok().withBody(permUser.encode())));
+    stubFor(put(PERMISSIONS_URL + "/" + permId).willReturn(ok()));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
@@ -258,7 +285,7 @@ public class SecurityManagerTest {
 
     future.map(ar -> {
       final List<LoggedRequest> requests = findAll(RequestPatternBuilder.allRequests());
-      assertEquals(3, requests.size());
+      assertEquals(4, requests.size());
 
       assertEquals(USERS_URL_WITH_QUERY, requests.get(0).getUrl());
       assertEquals("GET", requests.get(0).getMethod().getName());
@@ -267,44 +294,18 @@ public class SecurityManagerTest {
       assertEquals("PUT", requests.get(1).getMethod().getName());
       verifyUser(requests.get(1));
 
-      assertEquals(permUrl, requests.get(2).getUrl());
-      assertEquals("POST", requests.get(2).getMethod().getName());
+      assertEquals(PERMISSIONS_URL + "/" + userId + "?indexField=userId", requests.get(2).getUrl());
+      assertEquals("GET", requests.get(2).getMethod().getName());
+
+      assertEquals(PERMISSIONS_URL + "/" + permId, requests.get(3).getUrl());
+      assertEquals("PUT", requests.get(3).getMethod().getName());
 
       return null;
     }).onComplete(context.asyncAssertSuccess());
   }
 
   @Test
-  public void shouldNotUpdateExistingUserIfUpToDate(TestContext context) {
-    final String userId = UUID.randomUUID().toString();
-    final String userCollection = new JsonObject()
-      .put("users", new JsonArray().add(existingUpToDateUser(userId)))
-      .put("totalRecords", 1).encode();
-
-    stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
-    stubFor(post(permissionsByUserIdUrl(userId)).willReturn(ok()));
-
-    OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
-
-    Future<Void> future = securityManager.createPubSubUser(params);
-
-    future.map(ar -> {
-      final List<LoggedRequest> requests = findAll(RequestPatternBuilder.allRequests());
-      assertEquals(2, requests.size());
-
-      assertEquals(USERS_URL_WITH_QUERY, requests.get(0).getUrl());
-      assertEquals("GET", requests.get(0).getMethod().getName());
-
-      assertEquals(permissionsByUserIdUrl(userId), requests.get(1).getUrl());
-      assertEquals("POST", requests.get(1).getMethod().getName());
-
-      return null;
-    }).onComplete(context.asyncAssertSuccess());
-  }
-
-
-  @Test
-  public void shouldFailPubSubUser(TestContext context) {
+  public void permissionsFailGet(TestContext context) {
     String userId = UUID.randomUUID().toString();
     String userCollection = new JsonObject()
       .put("users", new JsonArray().add(existingUser(userId)))
@@ -314,14 +315,62 @@ public class SecurityManagerTest {
       .willReturn(ok().withBody(emptyUsersResponse().encode())));
     stubFor(post(USERS_URL).willReturn(created().withBody(userCollection)));
     stubFor(post(CREDENTIALS_URL).willReturn(created()));
-    stubFor(post(PERMISSIONS_URL).willReturn(forbidden()));
+    stubFor(get(new UrlPattern(new RegexPattern(PERMISSIONS_URL + "/.*"), true)).willReturn(forbidden().withBody("x")));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
-    securityManager.createPubSubUser(params).onComplete(context.asyncAssertFailure(x ->
+    securityManager.createPubSubUser(params).onComplete(context.asyncAssertFailure(res -> {
+       assertEquals("Failed to get permissions for test-pubsub-username user. Received status code 403: x", res.getMessage());
+    }));
+  }
+
+  @Test
+  public void permissionsFailPost(TestContext context) {
+    String userId = UUID.randomUUID().toString();
+    String userCollection = new JsonObject()
+      .put("users", new JsonArray().add(existingUser(userId)))
+      .put("totalRecords", 1).encode();
+
+    stubFor(get(USERS_URL_WITH_QUERY)
+      .willReturn(ok().withBody(emptyUsersResponse().encode())));
+    stubFor(post(USERS_URL).willReturn(created().withBody(userCollection)));
+    stubFor(post(CREDENTIALS_URL).willReturn(created()));
+    stubFor(get(new UrlPattern(new RegexPattern(PERMISSIONS_URL + "/.*"), true)).willReturn(notFound()));
+    stubFor(post(PERMISSIONS_URL).willReturn(forbidden().withBody("x")));
+
+    OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
+
+    securityManager.createPubSubUser(params).onComplete(context.asyncAssertFailure(res -> {
       assertEquals("Failed to add permissions inventory.all for test-pubsub-username user."
-          + " Received status code 403: null", x.getMessage())
-    ));
+        + " Received status code 403: x", res.getMessage());
+    }));
+  }
+
+  @Test
+  public void permissionsFailPut(TestContext context) {
+    final String userId = UUID.randomUUID().toString();
+    final String userCollection = new JsonObject()
+      .put("users", new JsonArray().add(existingUser(userId)))
+      .put("totalRecords", 1).encode();
+
+    stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
+    stubFor(put(USERS_URL + "/" + userId).willReturn(noContent()));
+
+    String permId = UUID.randomUUID().toString();
+    JsonObject permUser = new JsonObject()
+      .put("id", permId)
+      .put("userId", userId)
+      .put("permissions", new JsonArray());
+
+    stubFor(get(PERMISSIONS_URL + "/" + userId + "?indexField=userId").willReturn(ok().withBody(permUser.encode())));
+    stubFor(put(PERMISSIONS_URL + "/" + permId).willReturn(forbidden().withBody("x")));
+
+    OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
+
+    securityManager.createPubSubUser(params).onComplete(context.asyncAssertFailure(res -> {
+      assertEquals("Failed to update permissions inventory.all for test-pubsub-username user."
+        + " Received status code 403: x", res.getMessage());
+    }));
   }
 
   @Test(expected = NoSuchElementException.class)
@@ -361,10 +410,6 @@ public class SecurityManagerTest {
       .put("addresses", new JsonArray());
 
     return existingUser(id).put("personal", personal);
-  }
-
-  private String permissionsByUserIdUrl(String userId) {
-    return PERMISSIONS_URL + "/" + userId + "/permissions?indexField=userId";
   }
 
   private JsonObject emptyUsersResponse() {

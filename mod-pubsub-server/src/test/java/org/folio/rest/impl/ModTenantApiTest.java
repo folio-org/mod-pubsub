@@ -5,10 +5,12 @@ import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static java.lang.String.format;
@@ -62,8 +64,15 @@ public class ModTenantApiTest extends AbstractRestTest {
       .willReturn(okJson(userCollection.toString())));
     wireMockRule.stubFor(put(userByIdUrl(user.getId()))
         .willReturn(aResponse().withStatus(204)));
-    wireMockRule.stubFor(post(permissionsUrl(user.getId()))
-        .willReturn(aResponse().withStatus(200)));
+
+    String permId = UUID.randomUUID().toString();
+    JsonObject permUser = new JsonObject()
+      .put("id", permId)
+      .put("userId", user.getId())
+      .put("permissions", new JsonArray());
+
+    wireMockRule.stubFor(get("/perms/users/" + user.getId() + "?indexField=userId").willReturn(ok().withBody(permUser.encode())));
+    wireMockRule.stubFor(put("/perms/users/" + permId).willReturn(ok()));
 
     getTenant();
 
@@ -126,10 +135,6 @@ public class ModTenantApiTest extends AbstractRestTest {
 
   private String userByIdUrl(String id) {
     return USERS_URL + "/" + id;
-  }
-
-  private String permissionsUrl(String id) {
-    return "/perms/users/" + id + "/permissions?indexField=userId";
   }
 
   private String mockOkapiUrl() {
