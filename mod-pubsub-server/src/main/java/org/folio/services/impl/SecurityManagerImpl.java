@@ -206,6 +206,9 @@ public class SecurityManagerImpl implements SecurityManager {
     return doRequest(params, PERMISSIONS_URL + "/" + userId + "?indexField=userId", HttpMethod.GET,
       null).compose(res1 -> {
       if (res1.getCode() == HttpStatus.HTTP_OK.toInt()) {
+        if (res1.getJson().getJsonArray("permissions").equals(new JsonArray(PERMISSIONS))) {
+          return Future.succeededFuture();
+        }
         JsonObject requestBody = res1.getJson()
           .put("permissions", new JsonArray(PERMISSIONS));
         return doRequest(params, PERMISSIONS_URL + "/" + requestBody.getString("id"), HttpMethod.PUT,

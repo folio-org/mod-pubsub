@@ -13,6 +13,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.github.tomakehurst.wiremock.http.RequestMethod.POST;
 import static io.vertx.core.json.Json.decodeValue;
@@ -31,8 +32,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
-import com.github.tomakehurst.wiremock.matching.RegexPattern;
-import com.github.tomakehurst.wiremock.matching.UrlPattern;
 import org.folio.dao.MessagingModuleDao;
 import org.folio.dao.impl.MessagingModuleDaoImpl;
 import org.folio.config.user.SystemUserConfig;
@@ -181,6 +180,46 @@ public class SecurityManagerTest {
   }
 
   @Test
+  public void shouldNotCreatePermUserAndSamePermissions(TestContext context) {
+    String userId = UUID.randomUUID().toString();
+    String userCollection = new JsonObject()
+      .put("users", new JsonArray().add(existingUpToDateUser(userId)))
+      .put("totalRecords", 1).encode();
+
+    stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
+
+    String permId = UUID.randomUUID().toString();
+    JsonObject permUser = new JsonObject()
+      .put("id", permId)
+      .put("userId", userId)
+      .put("permissions", new JsonArray().add("inventory.all"));
+
+    stubFor(get(PERMISSIONS_URL + "/" + userId + "?indexField=userId").willReturn(ok().withBody(permUser.encode())));
+    stubFor(put(PERMISSIONS_URL + "/" + permId).willReturn(ok()));
+
+    OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
+
+    Future<Void> future = securityManager.createPubSubUser(params);
+
+    future.map(ar -> {
+      List<LoggedRequest> requests = findAll(RequestPatternBuilder.allRequests());
+      assertEquals(2, requests.size());
+
+      assertEquals(USERS_URL_WITH_QUERY, requests.get(0).getUrl());
+      assertEquals("GET", requests.get(0).getMethod().getName());
+
+      assertEquals(PERMISSIONS_URL + "/" + userId + "?indexField=userId", requests.get(1).getUrl());
+      assertEquals("GET", requests.get(1).getMethod().getName());
+
+      // Verify user create request has not sent
+      verify(0, new RequestPatternBuilder(POST, urlEqualTo(USERS_URL)));
+
+      return null;
+    }).onComplete(context.asyncAssertSuccess());
+  }
+
+
+  @Test
   public void shouldCreatePubSubUser(TestContext context) {
     String userId = UUID.randomUUID().toString();
     System.out.println("Userid=" + userId);
@@ -193,7 +232,7 @@ public class SecurityManagerTest {
     stubFor(post(USERS_URL).willReturn(created().withBody(userCollection)));
     stubFor(post(CREDENTIALS_URL).willReturn(created()));
     stubFor(post(PERMISSIONS_URL).willReturn(created()));
-    stubFor(get(new UrlPattern(new RegexPattern(PERMISSIONS_URL + "/.*"), true)).willReturn(notFound()));
+    stubFor(get(urlPathMatching(PERMISSIONS_URL + "/.*")).willReturn(notFound()));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
@@ -314,7 +353,7 @@ public class SecurityManagerTest {
       .willReturn(ok().withBody(emptyUsersResponse().encode())));
     stubFor(post(USERS_URL).willReturn(created().withBody(userCollection)));
     stubFor(post(CREDENTIALS_URL).willReturn(created()));
-    stubFor(get(new UrlPattern(new RegexPattern(PERMISSIONS_URL + "/.*"), true)).willReturn(forbidden().withBody("x")));
+    stubFor(get(urlPathMatching(PERMISSIONS_URL + "/.*")).willReturn(forbidden().withBody("x")));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
@@ -334,7 +373,7 @@ public class SecurityManagerTest {
       .willReturn(ok().withBody(emptyUsersResponse().encode())));
     stubFor(post(USERS_URL).willReturn(created().withBody(userCollection)));
     stubFor(post(CREDENTIALS_URL).willReturn(created()));
-    stubFor(get(new UrlPattern(new RegexPattern(PERMISSIONS_URL + "/.*"), true)).willReturn(notFound()));
+    stubFor(get(urlPathMatching(PERMISSIONS_URL + "/.*")).willReturn(notFound()));
     stubFor(post(PERMISSIONS_URL).willReturn(forbidden().withBody("x")));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
