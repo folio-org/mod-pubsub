@@ -56,34 +56,6 @@ public class ModTenantApiTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldLoginWithEnvVarCredentials() {
-    final User user = existingUser();
-    final JsonObject userCollection = buildUserCollection(user);
-
-    wireMockRule.stubFor(get(GET_PUBSUB_USER_URL)
-      .willReturn(okJson(userCollection.toString())));
-    wireMockRule.stubFor(put(userByIdUrl(user.getId()))
-        .willReturn(aResponse().withStatus(204)));
-
-    String permId = UUID.randomUUID().toString();
-    JsonObject permUser = new JsonObject()
-      .put("id", permId)
-      .put("userId", user.getId())
-      .put("permissions", new JsonArray());
-
-    wireMockRule.stubFor(get("/perms/users/" + user.getId() + "?indexField=userId").willReturn(ok().withBody(permUser.encode())));
-    wireMockRule.stubFor(put("/perms/users/" + permId).willReturn(ok()));
-
-    getTenant();
-
-    verify(1, postRequestedFor(urlEqualTo(LOGIN_URL))
-      .withRequestBody(equalTo(new JsonObject()
-        .put("username", SYSTEM_USER_NAME)
-        .put("password", SYSTEM_USER_PASSWORD)
-        .encode())));
-  }
-
-  @Test
   public void shouldForwardUserUpdateError() {
     final String expectedErrorMessage = "User is broken";
 
