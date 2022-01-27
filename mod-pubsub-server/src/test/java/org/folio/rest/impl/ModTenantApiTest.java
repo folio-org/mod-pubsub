@@ -5,9 +5,12 @@ import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static java.lang.String.format;
@@ -50,25 +53,6 @@ public class ModTenantApiTest extends AbstractRestTest {
     // forward to okapi by default
     wireMockRule.stubFor(any(anyUrl()).willReturn(aResponse().proxiedFrom(OKAPI_URL))
       .atPriority(Integer.MAX_VALUE));
-  }
-
-  @Test
-  public void shouldLoginWithEnvVarCredentials() {
-    final User user = existingUser();
-    final JsonObject userCollection = buildUserCollection(user);
-
-    wireMockRule.stubFor(get(GET_PUBSUB_USER_URL)
-      .willReturn(okJson(userCollection.toString())));
-    wireMockRule.stubFor(put(userByIdUrl(user.getId()))
-      .willReturn(aResponse().withStatus(204)));
-
-    getTenant();
-
-    verify(1, postRequestedFor(urlEqualTo(LOGIN_URL))
-      .withRequestBody(equalTo(new JsonObject()
-        .put("username", SYSTEM_USER_NAME)
-        .put("password", SYSTEM_USER_PASSWORD)
-        .encode())));
   }
 
   @Test
