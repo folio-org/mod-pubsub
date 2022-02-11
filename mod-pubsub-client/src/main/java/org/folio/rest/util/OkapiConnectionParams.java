@@ -13,11 +13,8 @@ public final class OkapiConnectionParams {
   private String tenantId;
   private String token;
   private Map<String, String> headers;
-  private Vertx vertx;
+  private final Vertx vertx;
   private int timeout = 2000;
-
-  public OkapiConnectionParams() {
-  }
 
   public OkapiConnectionParams(Vertx vertx) {
     this.vertx = vertx;
@@ -65,10 +62,6 @@ public final class OkapiConnectionParams {
 
   public Vertx getVertx() {
     return vertx;
-  }
-
-  public void setVertx(Vertx vertx) {
-    this.vertx = vertx;
   }
 
   public int getTimeout() {

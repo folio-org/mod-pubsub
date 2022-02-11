@@ -12,7 +12,7 @@ public class WebClientProvider {
   private WebClientProvider() {
   }
 
-  public static WebClient getWebClient(Vertx vertx) {
+  public static synchronized WebClient getWebClient(Vertx vertx) {
     return webClients.computeIfAbsent(vertx, WebClient::create);
   }
 }

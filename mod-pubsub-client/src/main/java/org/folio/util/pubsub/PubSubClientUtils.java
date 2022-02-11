@@ -188,11 +188,12 @@ public class PubSubClientUtils {
     String moduleId = getModuleId();
 
     return unregisterModuleByIdAndRole(moduleId, PUBLISHER, params)
-      .thenCompose(ar -> unregisterModuleByIdAndRole(moduleId, SUBSCRIBER, params));
+      .thenCompose(unused -> unregisterModuleByIdAndRole(moduleId, SUBSCRIBER, params));
   }
 
   private static CompletableFuture<Boolean> unregisterModuleByIdAndRole(String moduleId,
     MessagingModule.ModuleRole moduleRole, OkapiConnectionParams params) {
+
     Promise<Boolean> promise = Promise.promise();
     CompletableFuture<Boolean> future = new CompletableFuture<>();
     try {
@@ -290,9 +291,7 @@ public class PubSubClientUtils {
   }
 
   private static PubsubClient createPubSubClient(OkapiConnectionParams params) {
-    if (params.getVertx() == null) {
-      throw new NullPointerException("The vertex object is required, should not be null!");
-    }
+
     return new PubsubClient(params.getOkapiUrl(), params.getTenantId(),
       params.getToken(), WebClientProvider.getWebClient(params.getVertx()));
   }
