@@ -64,8 +64,7 @@ public class PubSubClientUtils {
   public static CompletableFuture<Boolean> sendEventMessage(Event eventMessage, OkapiConnectionParams params) {
     CompletableFuture<Boolean> result = new CompletableFuture<>();
     try {
-      PubsubClient client = createPubSubClient(params);
-      client.postPubsubPublish(eventMessage, ar -> {
+      createPubSubClient(params).postPubsubPublish(eventMessage, ar -> {
         if (ar.result().statusCode() == HttpStatus.HTTP_NO_CONTENT.toInt()) {
           result.complete(true);
         } else {
@@ -197,9 +196,8 @@ public class PubSubClientUtils {
     Promise<Boolean> promise = Promise.promise();
     CompletableFuture<Boolean> future = new CompletableFuture<>();
     try {
-      PubsubClient client = createPubSubClient(params);
       LOGGER.info("Trying to unregister module with name '{}' as {}", moduleId, moduleRole);
-      client.deletePubsubMessagingModules(moduleId, moduleRole.value(), response -> {
+      createPubSubClient(params).deletePubsubMessagingModules(moduleId, moduleRole.value(), response -> {
         if (response.result().statusCode() == HttpStatus.HTTP_NO_CONTENT.toInt()) {
           LOGGER.info("Module {} was successfully unregistered as '{}'", moduleId, moduleRole);
           future.complete(true);
@@ -291,7 +289,6 @@ public class PubSubClientUtils {
   }
 
   private static PubsubClient createPubSubClient(OkapiConnectionParams params) {
-
     return new PubsubClient(params.getOkapiUrl(), params.getTenantId(),
       params.getToken(), WebClientProvider.getWebClient(params.getVertx()));
   }
