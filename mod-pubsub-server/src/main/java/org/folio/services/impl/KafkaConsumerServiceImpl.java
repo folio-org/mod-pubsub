@@ -80,21 +80,17 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
     List<Future<Void>> futures = topics.stream()
       .filter(topic -> !cache.containsSubscription(topic))
       .map(topic -> {
-        Promise<Void> promise = Promise.promise();
         consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, topic);
-        KafkaConsumer.<String, String>create(vertx, consumerProps)
-          .subscribe(topic, ar -> {
-            if (ar.succeeded()) {
-              cache.addSubscription(topic);
-              LOGGER.info(format("Subscribed to topic {%s}", topic));
-              promise.complete();
-            } else {
-              LOGGER.error(format("Could not subscribe to some of the topic {%s}", topic),
-                ar.cause());
-              promise.fail(ar.cause());
-            }
-          }).handler(getEventReceivedHandler(params));
-        return promise.future();
+        return KafkaConsumer.<String, String>create(vertx, consumerProps)
+          .handler(getEventReceivedHandler(params))
+          .subscribe(topic)
+          .onSuccess(x -> {
+            cache.addSubscription(topic);
+            LOGGER.info(format("Subscribed to topic {%s}", topic));
+          })
+          .onFailure(e -> {
+            LOGGER.error(format("Could not subscribe to some of the topic {%s}", topic), e);
+          });
       }).collect(Collectors.toList());
     return GenericCompositeFuture.all(futures).mapEmpty();
   }
