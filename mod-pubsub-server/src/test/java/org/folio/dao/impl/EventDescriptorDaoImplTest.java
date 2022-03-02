@@ -46,10 +46,9 @@ public class EventDescriptorDaoImplTest {
       .thenReturn(Future.succeededFuture(new LocalRowSet(rowCount)));
     // when
     eventDescriptorDao.delete("event-type")
-      // then
-      .onComplete(context.asyncAssertSuccess(x -> {
-        verify(postgresClient).execute(anyString(), any(Tuple.class));
-      }));
+    // then
+    .onComplete(context.asyncAssertSuccess(x ->
+      verify(postgresClient).execute(anyString(), any(Tuple.class))));
   }
 
   @Test
