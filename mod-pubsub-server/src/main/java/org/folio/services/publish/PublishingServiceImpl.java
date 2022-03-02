@@ -42,8 +42,8 @@ public class PublishingServiceImpl implements PublishingService {
   }
 
   @Override
-  public Future<Boolean> sendEvent(Event event, String tenantId) {
-    Promise<Boolean> promise = Promise.promise();
+  public Future<Void> sendEvent(Event event, String tenantId) {
+    Promise<Void> promise = Promise.promise();
     PubSubConfig config = new PubSubConfig(kafkaConfig.getEnvId(), tenantId, event.getEventType());
     executor.executeBlocking(future -> {
         try {
@@ -54,7 +54,7 @@ public class PublishingServiceImpl implements PublishingService {
             if (done.succeeded()) {
               LOGGER.info("Sent {} event with id '{}' to topic {}", event.getEventType(), event.getId(), config.getTopicName());
               auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.PUBLISHED));
-              future.complete(true);
+              future.complete();
             } else {
               String errorMessage = "Event was not sent";
               LOGGER.error(errorMessage, done.cause());

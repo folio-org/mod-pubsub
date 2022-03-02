@@ -82,7 +82,7 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
   }
 
   @Override
-  public Future<Boolean> createMissingEventTypes(SubscriberDescriptor subscriberDescriptor) {
+  public Future<Void> createMissingEventTypes(SubscriberDescriptor subscriberDescriptor) {
     List<String> eventTypes = subscriberDescriptor.getSubscriptionDefinitions().stream()
       .map(SubscriptionDefinition::getEventType)
       .collect(Collectors.toList());
@@ -91,7 +91,7 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
       .compose(existingDescriptorList -> {
         Map<String, EventDescriptor> descriptorsMap = existingDescriptorList.stream()
           .collect(Collectors.toMap(EventDescriptor::getEventType, descriptor -> descriptor));
-        List<Future> futures = new ArrayList<>();
+        List<Future<Void>> futures = new ArrayList<>();
         for (String eventType : eventTypes) {
           if (descriptorsMap.get(eventType) == null) {
             LOGGER.info("Event type {} does not exist, creating a temporary definition", eventType);
@@ -99,37 +99,37 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
               new EventDescriptor()
                 .withEventType(eventType)
                 .withEventTTL(1)
-                .withTmp(true)));
+                .withTmp(true)).mapEmpty());
           }
         }
         return GenericCompositeFuture.join(futures);
-      }).map(true);
+      }).mapEmpty();
   }
 
   @Override
-  public Future<Boolean> savePublisher(PublisherDescriptor publisherDescriptor, String tenantId) {
+  public Future<Void> savePublisher(PublisherDescriptor publisherDescriptor, String tenantId) {
     List<String> eventTypes = publisherDescriptor.getEventDescriptors().stream()
       .map(EventDescriptor::getEventType).collect(Collectors.toList());
     List<MessagingModule> messagingModules = createMessagingModules(publisherDescriptor.getModuleId(), eventTypes, PUBLISHER, tenantId);
     if (messagingModules.isEmpty()) {
       LOGGER.info("List of Publishers is empty");
-      return Future.succeededFuture(true);
+      return Future.succeededFuture();
     }
 
     return messagingModuleDao.save(messagingModules)
       .onSuccess(ar -> cache.invalidate())
-      .compose(ar -> kafkaTopicService.createTopics(eventTypes, tenantId));
+      .compose(ar -> kafkaTopicService.createTopics(eventTypes, tenantId)).mapEmpty();
   }
 
   @Override
-  public Future<Boolean> saveSubscriber(SubscriberDescriptor subscriberDescriptor, OkapiConnectionParams params) {
+  public Future<Void> saveSubscriber(SubscriberDescriptor subscriberDescriptor, OkapiConnectionParams params) {
     List<String> eventTypes = subscriberDescriptor.getSubscriptionDefinitions().stream()
       .map(SubscriptionDefinition::getEventType)
       .collect(Collectors.toList());
     List<MessagingModule> messagingModules = createMessagingModules(subscriberDescriptor.getModuleId(), eventTypes, SUBSCRIBER, params.getTenantId());
     if (messagingModules.isEmpty()) {
       LOGGER.info("List of Subscribers is empty");
-      return Future.succeededFuture(true);
+      return Future.succeededFuture();
     }
 
     Map<String, String> subscriberCallbacksMap = subscriberDescriptor.getSubscriptionDefinitions().stream()
@@ -139,7 +139,7 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
     return messagingModuleDao.save(messagingModules)
       .onSuccess(ar -> cache.invalidate())
       .compose(ar -> kafkaTopicService.createTopics(eventTypes, params.getTenantId()))
-      .compose(ar -> consumerService.subscribe(eventTypes, params));
+      .compose(ar -> consumerService.subscribe(eventTypes, params)).mapEmpty();
   }
 
   @Override

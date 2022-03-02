@@ -13,7 +13,7 @@ public interface PublisherService {
    *
    * @param event    event to publish
    * @param tenantId tenant id
-   * @return future with true if succeeded
+   * @return a future completed with a result
    */
-  Future<Boolean> publishEvent(Event event, String tenantId);
+  Future<Void> publishEvent(Event event, String tenantId);
 }

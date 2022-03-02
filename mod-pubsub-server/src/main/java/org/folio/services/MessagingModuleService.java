@@ -28,18 +28,18 @@ public interface MessagingModuleService {
    *
    * @param publisherDescriptor publisher descriptor
    * @param tenantId            tenant id
-   * @return future with boolean
+   * @return a future completed with a result
    */
-  Future<Boolean> savePublisher(PublisherDescriptor publisherDescriptor, String tenantId);
+  Future<Void> savePublisher(PublisherDescriptor publisherDescriptor, String tenantId);
 
   /**
    * Checks whether all EventTypes specified in SubscriberDescriptor exist,
    * creates temporary EventDescriptor to allow Subscriber to be registered before the Publisher
    *
    * @param subscriberDescriptor subscriber descriptor
-   * @return future with true if succeeded
+   * @return a future completed with a result
    */
-  Future<Boolean> createMissingEventTypes(SubscriberDescriptor subscriberDescriptor);
+  Future<Void> createMissingEventTypes(SubscriberDescriptor subscriberDescriptor);
 
   /**
    * Creates subscriber of event types specified in subscriberDescriptor
@@ -48,9 +48,9 @@ public interface MessagingModuleService {
    *
    * @param subscriberDescriptor subscriber descriptor
    * @param params               Okapi connection params
-   * @return future with boolean
+   * @return a future completed with a result
    */
-  Future<Boolean> saveSubscriber(SubscriberDescriptor subscriberDescriptor, OkapiConnectionParams params);
+  Future<Void> saveSubscriber(SubscriberDescriptor subscriberDescriptor, OkapiConnectionParams params);
 
   /**
    * Deletes module matching filter criteria

@@ -30,18 +30,18 @@ public class KafkaTopicServiceImpl implements KafkaTopicService {
   }
 
   @Override
-  public Future<Boolean> createTopics(List<String> eventTypes, String tenantId) {
-    Promise<Boolean> promise = Promise.promise();
+  public Future<Void> createTopics(List<String> eventTypes, String tenantId) {
+    Promise<Void> promise = Promise.promise();
     List<NewTopic> topics = eventTypes.stream()
       .map(eventType -> new NewTopic(new PubSubConfig(kafkaConfig.getEnvId(), tenantId, eventType).getTopicName(), kafkaConfig.getNumberOfPartitions(), (short) kafkaConfig.getReplicationFactor()))
       .collect(Collectors.toList());
     kafkaAdminClient.createTopics(topics, ar -> {
       if (ar.succeeded()) {
         LOGGER.info("Created topics: [{}]", StringUtils.join(eventTypes, ","));
-        promise.complete(true);
+        promise.complete();
       } else {
         LOGGER.info("Some of the topics [{}] were not created. Cause: {}", StringUtils.join(eventTypes, ","), ar.cause().getMessage());
-        promise.complete(false);
+        promise.fail(ar.cause());
       }
     });
     return promise.future();
