@@ -119,16 +119,14 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
 
   @Override
   public Future<Void> delete(String eventType) {
-    Promise<RowSet<Row>> promise = Promise.promise();
     String query = format(DELETE_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
-    pgClientFactory.getInstance().execute(query, Tuple.of(eventType), promise);
-
-    return promise.future().flatMap(result -> {
-      if (result.rowCount() > 0) {
-        return Future.succeededFuture();
-      }
-      return Future.failedFuture(new NotFoundException(
-        format("EventDescriptor with event type '%s' was not deleted", eventType)));
+    return pgClientFactory.getInstance().execute(query, Tuple.of(eventType))
+      .flatMap(result -> {
+        if (result.rowCount() > 0) {
+          return Future.succeededFuture();
+        }
+        return Future.failedFuture(new NotFoundException(
+          format("EventDescriptor with event type '%s' was not deleted", eventType)));
     });
   }
 
