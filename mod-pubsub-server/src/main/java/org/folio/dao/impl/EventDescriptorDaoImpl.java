@@ -125,8 +125,10 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
         if (result.rowCount() > 0) {
           return Future.succeededFuture();
         }
-        return Future.failedFuture(new NotFoundException(
-          format("EventDescriptor with event type '%s' was not deleted", eventType)));
+        NotFoundException exception = new NotFoundException(
+          format("EventDescriptor with event type '%s' was not deleted", eventType));
+        LOGGER.error("Error deleting EventDescriptor with event type '{}'", eventType, exception);
+        return Future.failedFuture(exception);
     });
   }
 
