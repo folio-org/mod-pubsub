@@ -50,6 +50,10 @@ public class EventDescriptorDaoImplTest {
     .onComplete(context.asyncAssertSuccess(x ->
       verify(postgresClient).execute(anyString(), any(Tuple.class))));
   }
+  @Test(expected = NotFoundException.class)
+  public void shouldFailOnDeleteMoreThanOneRow(TestContext context) {
+    shouldSucceedOnDelete(context, 2);
+  }
 
   @Test
   public void shouldSucceedOnDeleteExisting(TestContext context) {
@@ -57,7 +61,7 @@ public class EventDescriptorDaoImplTest {
   }
 
   @Test(expected = NotFoundException.class)
-  public void shouldSucceedOnDeleteNotFound(TestContext context) {
+  public void shouldFailOnDeleteNotFound(TestContext context) {
     shouldSucceedOnDelete(context, 0);
   }
 }
