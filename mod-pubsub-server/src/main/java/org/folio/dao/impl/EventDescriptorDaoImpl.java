@@ -6,6 +6,8 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
+import liquibase.pro.packaged.F;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.dao.EventDescriptorDao;
@@ -122,13 +124,14 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
     String query = format(DELETE_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
     return pgClientFactory.getInstance().execute(query, Tuple.of(eventType))
       .flatMap(result -> {
-        if (result.rowCount() > 0) {
+        if (result.rowCount() == 1) {
           return Future.succeededFuture();
         }
-        NotFoundException exception = new NotFoundException(
-          format("EventDescriptor with event type '%s' was not deleted", eventType));
-        LOGGER.error("Error deleting EventDescriptor with event type '{}'", eventType, exception);
-        return Future.failedFuture(exception);
+        else if (result.rowCount() > 1) {
+          LOGGER.error("Error deleting EventDescriptor with event type '{}'", eventType);
+        }
+        return Future.failedFuture(new NotFoundException(
+          format("EventDescriptor with event type '%s' was not deleted", eventType)));
     });
   }
 
