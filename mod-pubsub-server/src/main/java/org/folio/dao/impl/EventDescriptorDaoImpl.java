@@ -123,8 +123,8 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
     String query = format(DELETE_BY_ID_SQL, MODULE_SCHEMA, TABLE_NAME);
     pgClientFactory.getInstance().execute(query, Tuple.of(eventType), promise);
 
-    return promise.future().flatMap(updatedRow -> {
-      if(updatedRow.rowCount() == 1) {
+    return promise.future().flatMap(result -> {
+      if (result.rowCount() > 0) {
         return Future.succeededFuture();
       }
       return Future.failedFuture(new NotFoundException(
