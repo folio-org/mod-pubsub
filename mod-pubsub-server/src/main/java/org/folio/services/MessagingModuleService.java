@@ -48,7 +48,7 @@ public interface MessagingModuleService {
    *
    * @param subscriberDescriptor subscriber descriptor
    * @param params               Okapi connection params
-   * @return succeeded Future
+   * @return a future completed with a result
    */
   Future<Void> saveSubscriber(SubscriberDescriptor subscriberDescriptor, OkapiConnectionParams params);
 
