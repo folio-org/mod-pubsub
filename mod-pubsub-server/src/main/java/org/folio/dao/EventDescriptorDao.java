@@ -54,7 +54,7 @@ public interface EventDescriptorDao {
    * Deletes {@link EventDescriptor} by event type
    *
    * @param eventType eventDescriptor event type
-   * @return succeeded Future if deleted or not found
+   * @return a future completed with a result
    */
   Future<Void> delete(String eventType);
 }
