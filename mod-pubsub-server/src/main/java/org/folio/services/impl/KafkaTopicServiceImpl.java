@@ -1,6 +1,7 @@
 package org.folio.services.impl;
 
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.kafka.admin.NewTopic;
 
@@ -31,6 +32,20 @@ public class KafkaTopicServiceImpl implements KafkaTopicService {
 
   @Override
   public Future<Void> createTopics(List<String> eventTypes, String tenantId) {
+   /* Promise<Void> promise = Promise.promise();
+    List<NewTopic> topics = eventTypes.stream()
+      .map(eventType -> new NewTopic(new PubSubConfig(kafkaConfig.getEnvId(), tenantId, eventType).getTopicName(), kafkaConfig.getNumberOfPartitions(), (short) kafkaConfig.getReplicationFactor()))
+      .collect(Collectors.toList());
+    kafkaAdminClient.createTopics(topics, ar -> {
+      if (ar.succeeded()) {
+        LOGGER.info("Created topics: [{}]", StringUtils.join(eventTypes, ","));
+        promise.complete();
+      } else {
+        LOGGER.info("Some of the topics [{}] were not created. Cause: {}", StringUtils.join(eventTypes, ","), ar.cause().getMessage());
+        promise.complete();
+      }
+    });
+    return promise.future();*/
     List<NewTopic> topics = eventTypes.stream()
       .map(eventType -> new NewTopic(new PubSubConfig(kafkaConfig.getEnvId(), tenantId, eventType).getTopicName(), kafkaConfig.getNumberOfPartitions(), (short) kafkaConfig.getReplicationFactor()))
       .collect(Collectors.toList());

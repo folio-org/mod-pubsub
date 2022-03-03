@@ -4,6 +4,7 @@ import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+
 import org.apache.http.HttpStatus;
 import org.folio.rest.jaxrs.model.EventDescriptor;
 import org.folio.rest.jaxrs.model.PublisherDescriptor;
@@ -14,20 +15,21 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
 @RunWith(VertxUnitRunner.class)
 public class PublishersApiTest extends AbstractRestTest {
 
-  private EventDescriptor eventDescriptor = new EventDescriptor()
+  private final EventDescriptor eventDescriptor = new EventDescriptor()
     .withEventType("CREATED_SRS_MARC_BIB_RECORD_WITH_ORDER_DATA")
     .withDescription("Created SRS Marc Bibliographic Record with order data in 9xx fields")
     .withEventTTL(1)
     .withSigned(false)
     .withTmp(false);
 
-  private EventDescriptor eventDescriptor2 = new EventDescriptor()
+  private final EventDescriptor eventDescriptor2 = new EventDescriptor()
     .withEventType("CREATED_SRS_MARC_BIB_RECORD_WITH_INVOICE_DATA")
     .withDescription("Created SRS Marc Bibliographic Record with incoice data in 9xx fields")
     .withEventTTL(1)
@@ -54,25 +56,13 @@ public class PublishersApiTest extends AbstractRestTest {
       .withEventDescriptors(Collections.singletonList(createdEventDescriptor1))
       .withModuleId("test-module-1.0.0");
 
-    RestAssured.given()
-      .spec(spec)
-      .body(JsonObject.mapFrom(publisherDescriptor1).encode())
-      .when()
-      .post(EVENT_TYPES_PATH + DECLARE_PUBLISHER_PATH)
-      .then().log().all()
-      .statusCode(HttpStatus.SC_CREATED);
+    postDeclarePublisher(publisherDescriptor1);
 
     PublisherDescriptor publisherDescriptor2 = new PublisherDescriptor()
       .withEventDescriptors(Collections.singletonList(createdEventDescriptor2))
       .withModuleId("another-test-module-1.0.0");
 
-    RestAssured.given()
-      .spec(spec)
-      .body(JsonObject.mapFrom(publisherDescriptor2).encode())
-      .when()
-      .post(EVENT_TYPES_PATH + DECLARE_PUBLISHER_PATH)
-      .then().log().all()
-      .statusCode(HttpStatus.SC_CREATED);
+    postDeclarePublisher(publisherDescriptor2);
 
     RestAssured.given()
       .spec(spec)
@@ -93,13 +83,7 @@ public class PublishersApiTest extends AbstractRestTest {
       .withEventDescriptors(Arrays.asList(createdEventDescriptor1, createdEventDescriptor2))
       .withModuleId("test-module-1.0.0");
 
-    RestAssured.given()
-      .spec(spec)
-      .body(JsonObject.mapFrom(publisherDescriptor).encode())
-      .when()
-      .post(EVENT_TYPES_PATH + DECLARE_PUBLISHER_PATH)
-      .then().log().all()
-      .statusCode(HttpStatus.SC_CREATED);
+    postDeclarePublisher(publisherDescriptor);
 
     RestAssured.given()
       .spec(spec)
@@ -120,26 +104,14 @@ public class PublishersApiTest extends AbstractRestTest {
       .withEventDescriptors(Collections.singletonList(createdEventDescriptor1))
       .withModuleId(moduleName);
 
-    RestAssured.given()
-      .spec(spec)
-      .body(JsonObject.mapFrom(publisherDescriptor).encode())
-      .when()
-      .post(EVENT_TYPES_PATH + DECLARE_PUBLISHER_PATH)
-      .then()
-      .statusCode(HttpStatus.SC_CREATED);
+    postDeclarePublisher(publisherDescriptor);
 
     // post publisher with same module name and tenant id
     PublisherDescriptor publisherDescriptor2 = new PublisherDescriptor()
       .withEventDescriptors(Collections.singletonList(createdEventDescriptor2))
       .withModuleId(moduleName);
 
-    RestAssured.given()
-      .spec(spec)
-      .body(JsonObject.mapFrom(publisherDescriptor2).encode())
-      .when()
-      .post(EVENT_TYPES_PATH + DECLARE_PUBLISHER_PATH)
-      .then()
-      .statusCode(HttpStatus.SC_CREATED);
+    postDeclarePublisher(publisherDescriptor2);
 
     RestAssured.given()
       .spec(spec)
@@ -168,25 +140,13 @@ public class PublishersApiTest extends AbstractRestTest {
       .withEventDescriptors(Collections.singletonList(createdEventDescriptor))
       .withModuleId(circulationStorageModuleId);
 
-    RestAssured.given()
-      .spec(spec)
-      .body(JsonObject.mapFrom(publisherDescriptor1).encode())
-      .when()
-      .post(EVENT_TYPES_PATH + DECLARE_PUBLISHER_PATH)
-      .then()
-      .statusCode(HttpStatus.SC_CREATED);
+    postDeclarePublisher(publisherDescriptor1);
 
     PublisherDescriptor publisherDescriptor2 = new PublisherDescriptor()
       .withEventDescriptors(Collections.singletonList(createdEventDescriptor))
       .withModuleId(circulationModuleId);
 
-    RestAssured.given()
-      .spec(spec)
-      .body(JsonObject.mapFrom(publisherDescriptor2).encode())
-      .when()
-      .post(EVENT_TYPES_PATH + DECLARE_PUBLISHER_PATH)
-      .then()
-      .statusCode(HttpStatus.SC_CREATED);
+    postDeclarePublisher(publisherDescriptor2);
 
     RestAssured.given()
       .spec(spec)
@@ -284,13 +244,7 @@ public class PublishersApiTest extends AbstractRestTest {
       .withEventDescriptors(Collections.singletonList(createdEventDescriptor))
       .withModuleId("test-module-1.0.0");
 
-    RestAssured.given()
-      .spec(spec)
-      .body(JsonObject.mapFrom(publisherDescriptor).encode())
-      .when()
-      .post(EVENT_TYPES_PATH + DECLARE_PUBLISHER_PATH)
-      .then().log().all()
-      .statusCode(HttpStatus.SC_CREATED);
+    postDeclarePublisher(publisherDescriptor);
 
     RestAssured.given()
       .spec(spec)
@@ -331,5 +285,15 @@ public class PublishersApiTest extends AbstractRestTest {
       .post(EVENT_TYPES_PATH);
     assertThat(postResponse.statusCode(), is(HttpStatus.SC_CREATED));
     return new JsonObject(postResponse.body().asString()).mapTo(EventDescriptor.class);
+  }
+
+  private void postDeclarePublisher(PublisherDescriptor publisherDescriptor) {
+    RestAssured.given()
+      .spec(spec)
+      .body(JsonObject.mapFrom(publisherDescriptor).encode())
+      .when()
+      .post(EVENT_TYPES_PATH + DECLARE_PUBLISHER_PATH)
+      .then()
+      .statusCode(anyOf(is(HttpStatus.SC_CREATED), anyOf(is(HttpStatus.SC_INTERNAL_SERVER_ERROR))));
   }
 }
