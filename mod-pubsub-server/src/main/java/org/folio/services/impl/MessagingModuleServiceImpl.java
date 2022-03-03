@@ -91,7 +91,7 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
       .compose(existingDescriptorList -> {
         Map<String, EventDescriptor> descriptorsMap = existingDescriptorList.stream()
           .collect(Collectors.toMap(EventDescriptor::getEventType, descriptor -> descriptor));
-        List<Future<Void>> futures = new ArrayList<>();
+        List<Future<String>> futures = new ArrayList<>();
         for (String eventType : eventTypes) {
           if (descriptorsMap.get(eventType) == null) {
             LOGGER.info("Event type {} does not exist, creating a temporary definition", eventType);
@@ -99,7 +99,7 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
               new EventDescriptor()
                 .withEventType(eventType)
                 .withEventTTL(1)
-                .withTmp(true)).mapEmpty());
+                .withTmp(true)));
           }
         }
         return GenericCompositeFuture.join(futures);
@@ -118,7 +118,7 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
 
     return messagingModuleDao.save(messagingModules)
       .onSuccess(ar -> cache.invalidate())
-      .compose(ar -> kafkaTopicService.createTopics(eventTypes, tenantId)).mapEmpty();
+      .compose(ar -> kafkaTopicService.createTopics(eventTypes, tenantId));
   }
 
   @Override
@@ -139,7 +139,7 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
     return messagingModuleDao.save(messagingModules)
       .onSuccess(ar -> cache.invalidate())
       .compose(ar -> kafkaTopicService.createTopics(eventTypes, params.getTenantId()))
-      .compose(ar -> consumerService.subscribe(eventTypes, params)).mapEmpty();
+      .compose(ar -> consumerService.subscribe(eventTypes, params));
   }
 
   @Override
