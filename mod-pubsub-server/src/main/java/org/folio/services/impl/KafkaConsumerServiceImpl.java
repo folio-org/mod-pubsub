@@ -95,9 +95,9 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
   }
 
   private Handler<KafkaConsumerRecord<String, String>> getEventReceivedHandler(OkapiConnectionParams params) {
-    return record -> {
+    return consumerRecord -> {
       try {
-        String value = record.value();
+        String value = consumerRecord.value();
         Event event = new JsonObject(value).mapTo(Event.class);
         LOGGER.info("Received {} event with id '{}'", event.getEventType(), event.getId());
         auditService.saveAuditMessage(constructJsonAuditMessage(event, params.getTenantId(), AuditMessage.State.RECEIVED));

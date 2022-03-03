@@ -37,7 +37,7 @@ public interface MessagingModuleService {
    * creates temporary EventDescriptor to allow Subscriber to be registered before the Publisher
    *
    * @param subscriberDescriptor subscriber descriptor
-   * @return succeeded future if created missing types, failed future otherwise
+   * @return succeeded future if created missing event types, failed future otherwise
    */
   Future<Void> createMissingEventTypes(SubscriberDescriptor subscriberDescriptor);
 

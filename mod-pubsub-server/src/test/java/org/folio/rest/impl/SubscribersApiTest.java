@@ -16,7 +16,6 @@ import org.junit.runner.RunWith;
 import java.util.Arrays;
 import java.util.Collections;
 
-import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
@@ -261,6 +260,6 @@ public class SubscribersApiTest extends AbstractRestTest {
       .when()
       .post(EVENT_TYPES_PATH + DECLARE_SUBSCRIBER_PATH)
       .then()
-      .statusCode(anyOf(is(HttpStatus.SC_CREATED), anyOf(is(HttpStatus.SC_INTERNAL_SERVER_ERROR))));
+      .statusCode(HttpStatus.SC_CREATED);
   }
 }
