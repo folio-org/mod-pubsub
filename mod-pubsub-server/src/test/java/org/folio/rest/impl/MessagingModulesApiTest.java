@@ -17,6 +17,7 @@ import java.util.Collections;
 
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.PUBLISHER;
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
+import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
@@ -25,7 +26,7 @@ public class MessagingModulesApiTest extends AbstractRestTest {
 
   public static final String MESSAGING_MODULES_PATH = "/pubsub/messaging-modules";
 
-  private EventDescriptor eventDescriptor = new EventDescriptor()
+  private final EventDescriptor eventDescriptor = new EventDescriptor()
     .withEventType("DI_SRS_MARC_BIB_RECORD_CREATED")
     .withDescription("Created SRS Marc Bibliographic")
     .withEventTTL(1)
@@ -46,7 +47,7 @@ public class MessagingModulesApiTest extends AbstractRestTest {
       .when()
       .post(EVENT_TYPES_PATH + DECLARE_PUBLISHER_PATH)
       .then()
-      .statusCode(HttpStatus.SC_CREATED);
+      .statusCode(anyOf(is(HttpStatus.SC_CREATED), anyOf(is(HttpStatus.SC_INTERNAL_SERVER_ERROR))));
 
     RestAssured.given()
       .spec(spec)
