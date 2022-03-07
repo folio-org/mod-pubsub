@@ -15,7 +15,7 @@ public interface ConsumerService {
    *
    * @param eventTypes list of event types that specified module is subscribing to receive
    * @param params     Okapi connection params
-   * @return a future completed with a result
+   * @return succeeded future if subscribed, failed future otherwise
    */
   Future<Void> subscribe(List<String> eventTypes, OkapiConnectionParams params);
 }

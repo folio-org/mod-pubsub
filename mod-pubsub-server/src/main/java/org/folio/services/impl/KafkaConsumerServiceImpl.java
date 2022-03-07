@@ -82,14 +82,14 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
         return KafkaConsumer.<String, String>create(vertx, consumerProps)
           .handler(getEventReceivedHandler(params))
           .subscribe(topic)
-          .onSuccess(x -> {
+          .onSuccess(result -> {
             cache.addSubscription(topic);
             LOGGER.info(format("Subscribed to topic {%s}", topic));
           })
-          .onFailure(e -> {
-            LOGGER.error(format("Could not subscribe to some of the topic {%s}", topic), e);
-          });
-      }).collect(Collectors.toList());
+          .onFailure(e ->
+            LOGGER.error(format("Could not subscribe to some of the topic {%s}", topic), e));
+      })
+      .collect(Collectors.toList());
     return GenericCompositeFuture.all(futures).mapEmpty();
   }
 
