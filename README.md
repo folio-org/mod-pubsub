@@ -517,12 +517,12 @@ public class ModTenantAPI extends TenantAPI {
 ```
 Endpoint, which will receive the event from the publisher module has address: "/process/records".
 
-The following block should be included to Subscriber’s “ModuleDescriptor-template.json”. 
-It should have "pathPattern" and "permissionsRequired" to every callback address for receiving an Event payload listed within its MessagingDescriptor.json.
+- After that, let's include the following block into the list of provided interfaces within subscriber's `ModuleDescriptor-template.json`. 
+It should declare a handler for every event type listed in `subscriptions` block of its `MessagingDescriptor.json`. Each handler should have `pubsub.events.post` among its `requiredPermissions`.
 ```json
 {
   "id": "[module-name]-event-handlers",
-  "version": "0.1",
+  "version": "[version]",
   "handlers": [
     {
       "methods": [
