@@ -206,7 +206,7 @@ curl --location --request POST 'http://localhost:9130/pubsub/event-types/declare
     "subscriptionDefinitions": [
         {
           "eventType": "test-event",
-          "callbackAddress": "/test"
+          "callbackAddress": "/callback/address/example"
         }
     ]
 }'
@@ -318,11 +318,11 @@ MessagingDescriptor.json example:
   "subscriptions": [
     {
       "eventType": "CREATED_MARCCAT_BIB_RECORD",
-      "callbackAddress": "/source-storage/records"
+      "callbackAddress": "/callback/address/example"
     },
     {
       "eventType": "CREATED_INVENTORY_INSTANCE",
-      "callbackAddress": "/source-storage/records"
+      "callbackAddress": "/callback/address/example"
     }
   ]
 }
