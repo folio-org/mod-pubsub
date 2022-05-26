@@ -509,26 +509,26 @@ public class ModTenantAPI extends TenantAPI {
   "subscriptions": [
     {
       "eventType": "CREATED_TEST_EVENT",
-      "callbackAddress": "/process/records"
+      "callbackAddress": "/callback/address/example"
     }
   ]
 }
 
 ```
-Endpoint, which will receive the event from the publisher module has address: "/process/records".
+Endpoint, which will receive the event from the publisher module has address: "/callback/address/example".
 
 - After that, let's include the following block into the list of provided interfaces within subscriber's `ModuleDescriptor-template.json`. 
 It should declare a handler for every event type listed in `subscriptions` block of its `MessagingDescriptor.json`. Each handler should have `pubsub.events.post` among its `requiredPermissions`.
 ```json
 {
-  "id": "[module-name]-event-handlers",
-  "version": "[version]",
+  "id": "{module-name}-event-handlers",
+  "version": "{version}",
   "handlers": [
     {
       "methods": [
         "POST"
       ],
-      "pathPattern": "/process/records",
+      "pathPattern": "/callback/address/example",
       "permissionsRequired": [
         "pubsub.events.post"
       ],
@@ -543,7 +543,7 @@ It should declare a handler for every event type listed in `subscriptions` block
 
 - Create new endpoint which was declared as "callbackAddress" using raml:
 ```raml
-/process/records:
+/callback/address/example:
     displayName: Publish event
     description: API used by subscriber to catch events
     post:
