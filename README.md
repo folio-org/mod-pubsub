@@ -329,7 +329,7 @@ MessagingDescriptor.json example:
 ```
 In the example above the module will be registered as a Publisher for `CREATED_SRS_MARC_BIB_RECORD_WITH_ORDER_DATA` Events 
 and as a Subscriber for `CREATED_MARCCAT_BIB_RECORD` and `CREATED_INVENTORY_INSTANCE` Events. In case either `CREATED_MARCCAT_BIB_RECORD` or `CREATED_INVENTORY_INSTANCE`
-event is published a _POST_ request will be sent to _/source-storage/records_ endpoint with body provided by the Publisher of such Event in EventPayload section.
+event is published a _POST_ request will be sent to _/callback/address/example_ endpoint with body provided by the Publisher of such Event in EventPayload section.
 
 #### Module registration in pub-sub
 
