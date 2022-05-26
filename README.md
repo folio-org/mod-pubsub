@@ -331,6 +331,55 @@ In the example above the module will be registered as a Publisher for `CREATED_S
 and as a Subscriber for `CREATED_MARCCAT_BIB_RECORD` and `CREATED_INVENTORY_INSTANCE` Events. In case either `CREATED_MARCCAT_BIB_RECORD` or `CREATED_INVENTORY_INSTANCE`
 event is published a _POST_ request will be sent to _/source-storage/records_ endpoint with body provided by the Publisher of such Event in EventPayload section.
 
+#### Subscriber’s callback API endpoint setup
+
+Endpoint which is declared in field `callbackAddress` for Subscriber’s module should correspond to the following requirements:
+```
+title: Event handlers API
+version: {version}
+baseUri: http://localhost:9130
+protocols: [ HTTP, HTTPS ]
+method and path: [POST] "/callback/address/example"
+
+Request:
+Headers: no specific headers
+Body
+Content-Type: application/json
+Content: specific to designed endpoint, no requirements from pubsub
+
+Response:
+HTTP status code 204
+Event received successfully
+
+HTTP status code [ 201, 200 ]
+Body
+Content-Type: application/json
+Content: specific to designed endpoint, no requirements from pubsub
+
+HTTP status code 400
+Bad request
+Body
+Content-Type: application/json
+Content:
+"required": ["message"]
+
+HTTP status code 500
+Internal server error
+Body
+Content-Type: text/plain
+```
+
+Mod-pubsub callback API endpoint error handling process:
+\
+Errors are handled using logs with the following format: `"{eventType} event with id '{eventId}' was not delivered to {/callback/address/example}"`
+or
+`"Error delivering {eventType} event with id '{eventId}' to {/callback/address/example}, response status code is {responseCode}, {responseStatusMessage}"`. 
+Such json response will be saved as AuditMessage with state `REJECTED` and there is 5 attempts to retry to deliver the event to Subscriber.
+
+In case of successful delivery, the following log will be created:
+`"Delivered {eventType} event with id '{eventId}' to {/callback/address/example}"`
+And json response will be saved as AuditMessage with state `DELIVERED`.
+
 #### Module registration in pub-sub
 
 The module should be registered in pub-sub at the time when it is being enabled for a tenant. To do so `PubSubClientUtils` class provides `registerModule` method, 
