@@ -517,8 +517,9 @@ public class ModTenantAPI extends TenantAPI {
 ```
 Endpoint, which will receive the event from the publisher module has address: "/callback/address/example".
 
-- After that, let's include the following block into the list of provided interfaces within subscriber's `ModuleDescriptor-template.json`. 
-It should declare a handler for every event type listed in `subscriptions` block of its `MessagingDescriptor.json`. Each handler should have `pubsub.events.post` among its `requiredPermissions`.
+- Subscriber module needs to provide endpoints for all subscriptions listed in the `subscriptions` block of its `MessagingDescriptor.json`. 
+Let's add an interface to the subscriber's `provides` block in the `ModuleDescriptor-template.json`. 
+Note that each handler should have `pubsub.events.post` permission in the `requiredPermissions` which would allow `mod-pubsub` to call this endpoint.
 ```json
 {
   "id": "{module-name}-event-handlers",
