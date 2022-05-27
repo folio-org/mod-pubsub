@@ -333,41 +333,8 @@ event is published a _POST_ request will be sent to _/source-storage/records_ en
 
 #### Subscriber’s callback API endpoint setup
 
-Endpoint which is declared in field `callbackAddress` for Subscriber’s module should correspond to the following requirements:
-```
-title: Event handlers API
-version: {version}
-baseUri: http://localhost:9130
-protocols: [ HTTP, HTTPS ]
-method and path: [POST] "/callback/address/example"
-
-Request:
-Headers: no specific headers
-Body
-Content-Type: application/json
-Content: specific to designed endpoint, no requirements from pubsub
-
-Response:
-HTTP status code 204
-Event received successfully
-
-HTTP status code [ 201, 200 ]
-Body
-Content-Type: application/json
-Content: specific to designed endpoint, no requirements from pubsub
-
-HTTP status code 400
-Bad request
-Body
-Content-Type: application/json
-Content:
-"required": ["message"]
-
-HTTP status code 500
-Internal server error
-Body
-Content-Type: text/plain
-```
+A callback endpoint should be able to handle a POST request with an event payload in the body. 
+An event is considered delivered when mod-pubsub gets a response with one of these status codes: 200, 201, 204.
 
 Mod-pubsub callback API endpoint error handling process:
 \
