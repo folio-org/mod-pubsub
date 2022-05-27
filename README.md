@@ -333,12 +333,12 @@ event is published a _POST_ request will be sent to _/source-storage/records_ en
 
 #### Subscriber’s callback API endpoint setup
 
-A callback endpoint should be able to handle a POST request with an event payload in the body. 
+A callback endpoint should be able to handle a `POST` request with an event payload in the body. 
 An event is considered delivered when `mod-pubsub` receives a response with one of these status codes: `200`, `201`, 
-`204`. In such case, an AuditMessage is created with the state `DELIVERED` and the following message will be logged on 
+`204`. In such case, an `AuditMessage` is created with the state `DELIVERED` and the following message will be logged on 
 `mod-pubsub` side: "Delivered {eventType} event with id '{eventId}' to {callbackUrl}".
 Any other status code is considered a rejection and there will be 5 attempts to retry the delivery. In case of 
-a rejection an AuditMessage is created with the state `REJECTED` and the following message will be logged on 
+a rejection an `AuditMessage` is created with the state `REJECTED` and the following message will be logged on 
 `mod-pubsub` side: "Error delivering {eventType} event with id '{eventId}' to {callbackUrl}, response status code is 
 {responseCode}, {responseStatusMessage}".
 
