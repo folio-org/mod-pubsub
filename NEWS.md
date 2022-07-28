@@ -1,3 +1,6 @@
+## v2.6.2 IN-PROGRESS
+* [MODPUBSUB-241] (https://issues.folio.org/browse/MODPUBSUB-241) Supports users interface versions 15.1 16.0
+
 ## 2022-09-06 v2.6.1
 * [MODPUBSUB-246](https://issues.folio.org/browse/MODPUBSUB-246) Upgrade dependencies fixing vulnerabilities
 
