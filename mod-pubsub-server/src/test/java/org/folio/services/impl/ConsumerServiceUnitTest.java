@@ -266,7 +266,7 @@ public class ConsumerServiceUnitTest {
     future.onComplete(ar -> {
       assertTrue(ar.succeeded());
       async.complete();
+      verify(securityManager, times(5)).invalidateToken(TENANT);
     });
   }
-
 }

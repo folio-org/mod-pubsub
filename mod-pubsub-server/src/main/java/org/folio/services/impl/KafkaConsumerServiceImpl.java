@@ -149,9 +149,6 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
         String errorMessage = format("%s event with id '%s' was not delivered to %s", event.getEventType(), event.getId(), subscriber.getSubscriberCallback());
         LOGGER.error(errorMessage, ar.cause());
         auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.REJECTED, errorMessage));
-        if (statusCode >= 400 && statusCode < 500) {
-          securityManager.invalidateToken(tenantId);
-        }
         retryDelivery(event, subscriber, params, retry);
       } else if (statusCode != HttpStatus.HTTP_OK.toInt()
         && statusCode != HttpStatus.HTTP_CREATED.toInt()
@@ -160,6 +157,9 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
           event.getEventType(), event.getId(), subscriber.getSubscriberCallback(), statusCode, ar.result().getResponse().statusMessage());
         LOGGER.error(error);
         auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.REJECTED, error));
+        if (statusCode >= 400 && statusCode < 500) {
+          securityManager.invalidateToken(tenantId);
+        }
         retryDelivery(event, subscriber, params, retry);
       } else {
         LOGGER.info("Delivered {} event with id '{}' to {}", event.getEventType(), event.getId(), subscriber.getSubscriberCallback());
