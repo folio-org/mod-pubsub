@@ -267,6 +267,7 @@ public class ConsumerServiceUnitTest {
       assertTrue(ar.succeeded());
       async.complete();
       verify(securityManager, times(5)).invalidateToken(TENANT);
+      verify(cache, times(5)).invalidateToken(TENANT);
     });
   }
 }
