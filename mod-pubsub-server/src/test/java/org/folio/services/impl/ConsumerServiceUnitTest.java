@@ -268,9 +268,53 @@ public class ConsumerServiceUnitTest {
 
     future.onComplete(ar -> {
       assertTrue(ar.succeeded());
+      verify(securityManager, times(messagingModuleList.size())).invalidateToken(TENANT);
       async.complete();
-      verify(securityManager, times(5)).invalidateToken(TENANT);
-      verify(cache, times(5)).invalidateToken(TENANT);
+    });
+  }
+
+  @Test
+  public void shouldInvalidateCacheOnceAndRetry(TestContext context) {
+    Async async = context.async();
+    Event event = new Event()
+      .withId(UUID.randomUUID().toString())
+      .withEventType(EVENT_TYPE)
+      .withEventMetadata(new EventMetadata()
+        .withTenantId(TENANT)
+        .withEventTTL(30)
+        .withPublishedBy("mod-very-important-1.0.0"));
+
+    OkapiConnectionParams params = new OkapiConnectionParams(vertx);
+    params.setHeaders(headers);
+    params.setOkapiUrl(headers.getOrDefault("x-okapi-url", "localhost"));
+    params.setTenantId(headers.getOrDefault("x-okapi-tenant", TENANT));
+    params.setToken(headers.getOrDefault("x-okapi-token", TOKEN));
+    params.setTimeout(2000);
+
+    Set<MessagingModule> messagingModuleList = new HashSet<>();
+    messagingModuleList.add(new MessagingModule()
+      .withId(UUID.randomUUID().toString())
+      .withEventType(EVENT_TYPE)
+      .withModuleId("mod-source-record-storage-1.0.0")
+      .withTenantId(TENANT)
+      .withModuleRole(MessagingModule.ModuleRole.SUBSCRIBER)
+      .withActivated(true)
+      .withSubscriberCallback(CALLBACK_ADDRESS));
+
+    when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(messagingModuleList));
+
+    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.badRequest()));
+    consumerService.deliverEvent(event, params).onComplete(ar -> {
+      assertTrue(ar.succeeded());
+      verify(securityManager, times(1)).invalidateToken(TENANT);
+      async.complete();
+    });
+
+    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.noContent()));
+    consumerService.deliverEvent(event, params).onComplete(ar -> {
+      assertTrue(ar.succeeded());
+      verify(securityManager, times(0)).invalidateToken(TENANT);
+      async.complete();
     });
   }
 }
