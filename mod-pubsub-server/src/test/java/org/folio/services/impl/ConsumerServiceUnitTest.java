@@ -35,6 +35,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.common.Slf4jNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
@@ -300,20 +301,24 @@ public class ConsumerServiceUnitTest {
       .withModuleRole(MessagingModule.ModuleRole.SUBSCRIBER)
       .withActivated(true)
       .withSubscriberCallback(CALLBACK_ADDRESS));
-
     when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(messagingModuleList));
 
-    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.badRequest()));
-    consumerService.deliverEvent(event, params).onComplete(ar -> {
-      assertTrue(ar.succeeded());
-      verify(securityManager, times(1)).invalidateToken(TENANT);
-      async.complete();
-    });
+    checkTokenInvalidation(WireMock.badRequest(), event, params, 1, async);
+    checkTokenInvalidation(WireMock.forbidden(), event, params, 1, async);
+    checkTokenInvalidation(WireMock.badRequestEntity(), event, params, 1, async);
+    checkTokenInvalidation(WireMock.noContent(), event, params, 0, async);
+    checkTokenInvalidation(WireMock.ok(), event, params, 0, async);
+    checkTokenInvalidation(WireMock.created(), event, params, 0, async);
+    checkTokenInvalidation(WireMock.serverError(), event, params, 0, async);
+  }
 
-    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.noContent()));
+  private void checkTokenInvalidation(ResponseDefinitionBuilder responseDefinitionBuilder,
+    Event event, OkapiConnectionParams params, int wantedNumberOfInvocations, Async async) {
+
+    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(responseDefinitionBuilder));
     consumerService.deliverEvent(event, params).onComplete(ar -> {
       assertTrue(ar.succeeded());
-      verify(securityManager, times(0)).invalidateToken(TENANT);
+      verify(securityManager, times(wantedNumberOfInvocations)).invalidateToken(TENANT);
       async.complete();
     });
   }
