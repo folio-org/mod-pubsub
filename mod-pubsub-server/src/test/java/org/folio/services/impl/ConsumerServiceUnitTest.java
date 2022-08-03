@@ -302,21 +302,22 @@ public class ConsumerServiceUnitTest {
       .withActivated(true)
       .withSubscriberCallback(CALLBACK_ADDRESS));
     when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(messagingModuleList));
+    Future<Void> future = consumerService.deliverEvent(event, params);
 
-    checkTokenInvalidation(WireMock.badRequest(), event, params, 1, async);
-    checkTokenInvalidation(WireMock.forbidden(), event, params, 1, async);
-    checkTokenInvalidation(WireMock.badRequestEntity(), event, params, 1, async);
-    checkTokenInvalidation(WireMock.noContent(), event, params, 0, async);
-    checkTokenInvalidation(WireMock.ok(), event, params, 0, async);
-    checkTokenInvalidation(WireMock.created(), event, params, 0, async);
-    checkTokenInvalidation(WireMock.serverError(), event, params, 0, async);
+    checkTokenInvalidation(future, WireMock.badRequest(), 1, async);
+    checkTokenInvalidation(future, WireMock.forbidden(), 1, async);
+    checkTokenInvalidation(future, WireMock.badRequestEntity(), 1, async);
+    checkTokenInvalidation(future, WireMock.noContent(), 0, async);
+    checkTokenInvalidation(future, WireMock.ok(), 0, async);
+    checkTokenInvalidation(future, WireMock.created(), 0, async);
+    checkTokenInvalidation(future, WireMock.serverError(), 0, async);
   }
 
-  private void checkTokenInvalidation(ResponseDefinitionBuilder responseDefinitionBuilder,
-    Event event, OkapiConnectionParams params, int wantedNumberOfInvocations, Async async) {
+  private void checkTokenInvalidation(Future<Void> future, ResponseDefinitionBuilder responseDefinitionBuilder,
+    int wantedNumberOfInvocations, Async async) {
 
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(responseDefinitionBuilder));
-    consumerService.deliverEvent(event, params).onComplete(ar -> {
+    future.onComplete(ar -> {
       assertTrue(ar.succeeded());
       verify(securityManager, times(wantedNumberOfInvocations)).invalidateToken(TENANT);
       async.complete();
