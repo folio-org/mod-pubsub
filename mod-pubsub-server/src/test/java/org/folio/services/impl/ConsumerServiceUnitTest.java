@@ -7,6 +7,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.folio.config.user.SystemUserConfig;
 import org.folio.kafka.KafkaConfig;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
@@ -64,7 +66,9 @@ public class ConsumerServiceUnitTest {
   @Mock
   private Cache cache;
   @Mock
-  private SecurityManager securityManager;
+  private SystemUserConfig systemUserConfig;
+  @Spy
+  private SecurityManager securityManager = new SecurityManagerImpl(vertx, cache, systemUserConfig);
   @Spy
   @InjectMocks
   private KafkaConsumerServiceImpl consumerService = new KafkaConsumerServiceImpl(vertx, kafkaConfig, securityManager, cache);
@@ -80,7 +84,8 @@ public class ConsumerServiceUnitTest {
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
-    when(securityManager.getJWTToken(any(OkapiConnectionParams.class))).thenReturn(Future.succeededFuture(TOKEN));
+//    when(securityManager.getJWTToken(any(OkapiConnectionParams.class))).thenReturn(Future.succeededFuture(TOKEN));
+    doReturn(Future.succeededFuture(TOKEN)).when(securityManager).getJWTToken(any(OkapiConnectionParams.class));
 
     headers.put(OKAPI_URL_HEADER, "http://localhost:" + mockServer.port());
     headers.put(OKAPI_TENANT_HEADER, TENANT);
@@ -319,6 +324,7 @@ public class ConsumerServiceUnitTest {
     consumerService.deliverEvent(event, params).onComplete(ar -> {
       assertTrue(ar.succeeded());
       verify(securityManager, times(wantedNumberOfInvocations)).invalidateToken(TENANT);
+      verify(cache, times(wantedNumberOfInvocations)).invalidateToken(TENANT);
       async.complete();
     });
   }

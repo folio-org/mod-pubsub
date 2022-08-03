@@ -113,7 +113,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
     Promise<Void> result = Promise.promise();
     Map<MessagingModule, AtomicInteger> retry = new ConcurrentHashMap<>();
     return securityManager.getJWTToken(params)
-      .onSuccess(params::setToken)
+      .onSuccess(token -> params.setToken(token))
       .compose(ar -> cache.getMessagingModules())
       .map(messagingModules -> filter(messagingModules,
         new MessagingModuleFilter()
@@ -144,20 +144,19 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
     retry.get(subscriber).incrementAndGet();
     return ar -> {
       LOGGER.info("Delivering was complete. Checking for response...");
-      int statusCode = ar.result().getCode();
       if (ar.failed()) {
         String errorMessage = format("%s event with id '%s' was not delivered to %s", event.getEventType(), event.getId(), subscriber.getSubscriberCallback());
         LOGGER.error(errorMessage, ar.cause());
         auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.REJECTED, errorMessage));
         retryDelivery(event, subscriber, params, retry);
-      } else if (statusCode != HttpStatus.HTTP_OK.toInt()
-        && statusCode != HttpStatus.HTTP_CREATED.toInt()
-        && statusCode != HttpStatus.HTTP_NO_CONTENT.toInt()) {
+      } else if (ar.result().getCode() != HttpStatus.HTTP_OK.toInt()
+        && ar.result().getCode() != HttpStatus.HTTP_CREATED.toInt()
+        && ar.result().getCode() != HttpStatus.HTTP_NO_CONTENT.toInt()) {
         String error = format("Error delivering %s event with id '%s' to %s, response status code is %s, %s",
-          event.getEventType(), event.getId(), subscriber.getSubscriberCallback(), statusCode, ar.result().getResponse().statusMessage());
+          event.getEventType(), event.getId(), subscriber.getSubscriberCallback(), ar.result().getCode(), ar.result().getResponse().statusMessage());
         LOGGER.error(error);
         auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.REJECTED, error));
-        if (statusCode >= 400 && statusCode < 500) {
+        if (ar.result().getCode() >= 400 && ar.result().getCode() < 500) {
           securityManager.invalidateToken(tenantId);
         }
         retryDelivery(event, subscriber, params, retry);
