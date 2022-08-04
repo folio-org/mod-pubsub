@@ -26,14 +26,15 @@ import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.MessagingModule;
 import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.rest.util.RestUtil;
-import org.folio.services.SecurityManager;
 import org.folio.services.cache.Cache;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
@@ -67,11 +68,15 @@ public class ConsumerServiceUnitTest {
   private Cache cache;
   @Mock
   private SystemUserConfig systemUserConfig;
-  @Spy
-  private SecurityManager securityManager = new SecurityManagerImpl(vertx, cache, systemUserConfig);
+
   @Spy
   @InjectMocks
-  private KafkaConsumerServiceImpl consumerService = new KafkaConsumerServiceImpl(vertx, kafkaConfig, securityManager, cache);
+  private SecurityManagerImpl securityManager = Mockito.spy(new SecurityManagerImpl(vertx, cache, systemUserConfig));
+
+  @Spy
+  @InjectMocks
+  private KafkaConsumerServiceImpl consumerService = Mockito.spy(new KafkaConsumerServiceImpl(
+    vertx, kafkaConfig, securityManager, cache));
 
   private Map<String, String> headers = new HashMap<>();
 
@@ -98,15 +103,8 @@ public class ConsumerServiceUnitTest {
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS)
       .willReturn(WireMock.ok()));
 
-    Event event = new Event()
-      .withId(UUID.randomUUID().toString())
-      .withEventType(EVENT_TYPE)
-      .withEventMetadata(new EventMetadata()
-        .withTenantId(TENANT)
-        .withEventTTL(30)
-        .withPublishedBy("mod-very-important-1.0.0"));
-
-    OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
+    var event = prepareEvent();
+    var params = new OkapiConnectionParams(headers, vertx);
 
     Future<RestUtil.WrappedResponse> future = RestUtil.doRequest(params, CALLBACK_ADDRESS, HttpMethod.POST, event.getEventPayload());
 
@@ -123,11 +121,10 @@ public class ConsumerServiceUnitTest {
   @Test
   public void shouldSendRequestWithPayloadToSubscriber(TestContext context) {
     Async async = context.async();
-
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS)
       .willReturn(WireMock.created()));
 
-    Event event = new Event()
+    var event = new Event()
       .withId(UUID.randomUUID().toString())
       .withEventType(EVENT_TYPE)
       .withEventMetadata(new EventMetadata()
@@ -135,9 +132,7 @@ public class ConsumerServiceUnitTest {
         .withEventTTL(30)
         .withPublishedBy("mod-very-important-1.0.0"))
       .withEventPayload("Very important");
-
-    OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
-
+    var params = new OkapiConnectionParams(headers, vertx);
     Future<RestUtil.WrappedResponse> future = RestUtil.doRequest(params, CALLBACK_ADDRESS, HttpMethod.POST, event.getEventPayload());
 
     future.onComplete(ar -> {
@@ -154,17 +149,8 @@ public class ConsumerServiceUnitTest {
   @Test
   public void shouldNotSendRequestIfNoSubscribersFound(TestContext context) {
     Async async = context.async();
-
-    Event event = new Event()
-      .withId(UUID.randomUUID().toString())
-      .withEventType(EVENT_TYPE)
-      .withEventMetadata(new EventMetadata()
-        .withTenantId(TENANT)
-        .withEventTTL(30)
-        .withPublishedBy("mod-very-important-1.0.0"));
-
-    OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
-
+    var event = prepareEvent();
+    var params = new OkapiConnectionParams(headers, vertx);
     when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(new HashSet<>()));
 
     Future<Void> future = consumerService.deliverEvent(event, params);
@@ -180,25 +166,11 @@ public class ConsumerServiceUnitTest {
   @Test
   public void shouldSendRequestToFoundSubscribers(TestContext context) {
     Async async = context.async();
-
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS)
       .willReturn(WireMock.noContent()));
 
-    Event event = new Event()
-      .withId(UUID.randomUUID().toString())
-      .withEventType(EVENT_TYPE)
-      .withEventMetadata(new EventMetadata()
-        .withTenantId(TENANT)
-        .withEventTTL(30)
-        .withPublishedBy("mod-very-important-1.0.0"));
-
-    OkapiConnectionParams params = new OkapiConnectionParams(vertx);
-    params.setHeaders(headers);
-    params.setOkapiUrl(headers.getOrDefault("x-okapi-url", "localhost"));
-    params.setTenantId(headers.getOrDefault("x-okapi-tenant", TENANT));
-    params.setToken(headers.getOrDefault("x-okapi-token", TOKEN));
-    params.setTimeout(2000);
-
+    var event = prepareEvent();
+    var params = prepareOkapiConnectionParams();
     Set<MessagingModule> messagingModuleList = new HashSet<>();
     messagingModuleList.add(new MessagingModule()
       .withId(UUID.randomUUID().toString())
@@ -235,21 +207,8 @@ public class ConsumerServiceUnitTest {
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS)
       .willReturn(WireMock.forbidden()));
 
-    Event event = new Event()
-      .withId(UUID.randomUUID().toString())
-      .withEventType(EVENT_TYPE)
-      .withEventMetadata(new EventMetadata()
-        .withTenantId(TENANT)
-        .withEventTTL(30)
-        .withPublishedBy("mod-very-important-1.0.0"));
-
-    OkapiConnectionParams params = new OkapiConnectionParams(vertx);
-    params.setHeaders(headers);
-    params.setOkapiUrl(headers.getOrDefault("x-okapi-url", "localhost"));
-    params.setTenantId(headers.getOrDefault("x-okapi-tenant", TENANT));
-    params.setToken(headers.getOrDefault("x-okapi-token", TOKEN));
-    params.setTimeout(2000);
-
+    var event = prepareEvent();
+    var params = prepareOkapiConnectionParams();
     Set<MessagingModule> messagingModuleList = new HashSet<>();
     messagingModuleList.add(new MessagingModule()
       .withId(UUID.randomUUID().toString())
@@ -279,25 +238,127 @@ public class ConsumerServiceUnitTest {
   }
 
   @Test
-  public void shouldInvalidateCacheOnceAndRetry(TestContext context) {
+  public void shouldInvalidateCacheBeforeRetryIfBadRequest(TestContext context) {
     Async async = context.async();
-    Event event = new Event()
-      .withId(UUID.randomUUID().toString())
-      .withEventType(EVENT_TYPE)
-      .withEventMetadata(new EventMetadata()
-        .withTenantId(TENANT)
-        .withEventTTL(30)
-        .withPublishedBy("mod-very-important-1.0.0"));
+    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.badRequest()));
 
-    OkapiConnectionParams params = new OkapiConnectionParams(vertx);
-    params.setHeaders(headers);
-    params.setOkapiUrl(headers.getOrDefault("x-okapi-url", "localhost"));
-    params.setTenantId(headers.getOrDefault("x-okapi-tenant", TENANT));
-    params.setToken(headers.getOrDefault("x-okapi-token", TOKEN));
-    params.setTimeout(2000);
+    var event = prepareEvent();
+    var params = prepareOkapiConnectionParams();
+    when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(prepareMessagingModules()));
 
-    Set<MessagingModule> messagingModuleList = new HashSet<>();
-    messagingModuleList.add(new MessagingModule()
+    consumerService.deliverEvent(event, params).onComplete(ar -> {
+      assertTrue(ar.succeeded());
+      verify(securityManager, times(1)).invalidateToken(TENANT);
+      verify(cache, times(1)).invalidateToken(TENANT);
+      async.complete();
+    });
+  }
+
+  @Test
+  public void shouldInvalidateCacheBeforeRetryIfForbidden(TestContext context) {
+    Async async = context.async();
+    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.badRequest()));
+
+    var event = prepareEvent();
+    var params = prepareOkapiConnectionParams();
+    when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(prepareMessagingModules()));
+
+    consumerService.deliverEvent(event, params).onComplete(ar -> {
+      assertTrue(ar.succeeded());
+      verify(securityManager, times(1)).invalidateToken(TENANT);
+      verify(cache, times(1)).invalidateToken(TENANT);
+      async.complete();
+    });
+  }
+
+  @Test
+  public void shouldInvalidateCacheBeforeRetryIfBadRequestEntity(TestContext context) {
+    Async async = context.async();
+    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.badRequestEntity()));
+
+    var event = prepareEvent();
+    var params = prepareOkapiConnectionParams();
+    when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(prepareMessagingModules()));
+
+    consumerService.deliverEvent(event, params).onComplete(ar -> {
+      assertTrue(ar.succeeded());
+      verify(securityManager, times(1)).invalidateToken(TENANT);
+      verify(cache, times(1)).invalidateToken(TENANT);
+      async.complete();
+    });
+  }
+
+  @Test
+  public void shouldNotInvalidateCacheBeforeRetryIfNotContent(TestContext context) {
+    Async async = context.async();
+    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.noContent()));
+
+    var event = prepareEvent();
+    var params = prepareOkapiConnectionParams();
+    when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(prepareMessagingModules()));
+
+    consumerService.deliverEvent(event, params).onComplete(ar -> {
+      assertTrue(ar.succeeded());
+      verify(securityManager, times(0)).invalidateToken(TENANT);
+      verify(cache, times(0)).invalidateToken(TENANT);
+      async.complete();
+    });
+  }
+
+  @Test
+  public void shouldNotInvalidateCacheBeforeRetryIfOk(TestContext context) {
+    Async async = context.async();
+    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.ok()));
+
+    var event = prepareEvent();
+    var params = prepareOkapiConnectionParams();
+    when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(prepareMessagingModules()));
+
+    consumerService.deliverEvent(event, params).onComplete(ar -> {
+      assertTrue(ar.succeeded());
+      verify(securityManager, times(0)).invalidateToken(TENANT);
+      verify(cache, times(0)).invalidateToken(TENANT);
+      async.complete();
+    });
+  }
+
+  @Test
+  public void shouldNotInvalidateCacheBeforeRetryIfCreated(TestContext context) {
+    Async async = context.async();
+    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.created()));
+
+    var event = prepareEvent();
+    var params = prepareOkapiConnectionParams();
+    when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(prepareMessagingModules()));
+
+    consumerService.deliverEvent(event, params).onComplete(ar -> {
+      assertTrue(ar.succeeded());
+      verify(securityManager, times(0)).invalidateToken(TENANT);
+      verify(cache, times(0)).invalidateToken(TENANT);
+      async.complete();
+    });
+  }
+
+  @Test
+  public void shouldNotInvalidateCacheBeforeRetryIfServerError(TestContext context) {
+    Async async = context.async();
+    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.serverError()));
+
+    var event = prepareEvent();
+    var params = prepareOkapiConnectionParams();
+    when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(prepareMessagingModules()));
+
+    consumerService.deliverEvent(event, params).onComplete(ar -> {
+      assertTrue(ar.succeeded());
+      verify(securityManager, times(0)).invalidateToken(TENANT);
+      verify(cache, times(0)).invalidateToken(TENANT);
+      async.complete();
+    });
+  }
+
+  private Set<MessagingModule> prepareMessagingModules() {
+    Set<MessagingModule> messagingModules = new HashSet<>();
+    messagingModules.add(new MessagingModule()
       .withId(UUID.randomUUID().toString())
       .withEventType(EVENT_TYPE)
       .withModuleId("mod-source-record-storage-1.0.0")
@@ -305,15 +366,30 @@ public class ConsumerServiceUnitTest {
       .withModuleRole(MessagingModule.ModuleRole.SUBSCRIBER)
       .withActivated(true)
       .withSubscriberCallback(CALLBACK_ADDRESS));
-    when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(messagingModuleList));
 
-    checkTokenInvalidation(WireMock.badRequest(), 1, event, params, async);
-    checkTokenInvalidation(WireMock.forbidden(), 1, event, params, async);
-    checkTokenInvalidation(WireMock.badRequestEntity(), 1, event, params, async);
-    checkTokenInvalidation(WireMock.noContent(), 0, event, params, async);
-    checkTokenInvalidation(WireMock.ok(), 0, event, params, async);
-    checkTokenInvalidation(WireMock.created(), 0, event, params, async);
-    checkTokenInvalidation(WireMock.serverError(), 0, event, params, async);
+    return messagingModules;
+  }
+
+  private Event prepareEvent() {
+    return new Event()
+      .withId(UUID.randomUUID().toString())
+      .withEventType(EVENT_TYPE)
+      .withEventMetadata(new EventMetadata()
+        .withTenantId(TENANT)
+        .withEventTTL(30)
+        .withPublishedBy("mod-very-important-1.0.0"));
+  }
+
+  @NotNull
+  private OkapiConnectionParams prepareOkapiConnectionParams() {
+    OkapiConnectionParams params = new OkapiConnectionParams(vertx);
+    params.setHeaders(headers);
+    params.setOkapiUrl(headers.getOrDefault("x-okapi-url", "localhost"));
+    params.setTenantId(headers.getOrDefault("x-okapi-tenant", TENANT));
+    params.setToken(headers.getOrDefault("x-okapi-token", TOKEN));
+    params.setTimeout(2000);
+
+    return params;
   }
 
   private void checkTokenInvalidation(ResponseDefinitionBuilder responseDefinitionBuilder,
