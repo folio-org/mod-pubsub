@@ -239,43 +239,48 @@ public class ConsumerServiceUnitTest {
 
   @Test
   public void shouldInvalidateCacheBeforeRetryIfBadRequest(TestContext context) {
-    Async async = context.async();
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.badRequest()));
-
-    var event = prepareEvent();
-    var params = prepareOkapiConnectionParams();
-    when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(prepareMessagingModules()));
-
-    consumerService.deliverEvent(event, params).onComplete(ar -> {
-      assertTrue(ar.succeeded());
-      verify(securityManager, times(1)).invalidateToken(TENANT);
-      verify(cache, times(1)).invalidateToken(TENANT);
-      async.complete();
-    });
+    checkThatInvalidateTokenWasInvoked(context);
   }
 
   @Test
   public void shouldInvalidateCacheBeforeRetryIfForbidden(TestContext context) {
-    Async async = context.async();
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.badRequest()));
-
-    var event = prepareEvent();
-    var params = prepareOkapiConnectionParams();
-    when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(prepareMessagingModules()));
-
-    consumerService.deliverEvent(event, params).onComplete(ar -> {
-      assertTrue(ar.succeeded());
-      verify(securityManager, times(1)).invalidateToken(TENANT);
-      verify(cache, times(1)).invalidateToken(TENANT);
-      async.complete();
-    });
+    checkThatInvalidateTokenWasInvoked(context);
   }
 
   @Test
   public void shouldInvalidateCacheBeforeRetryIfBadRequestEntity(TestContext context) {
-    Async async = context.async();
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.badRequestEntity()));
+    checkThatInvalidateTokenWasInvoked(context);
+  }
 
+  @Test
+  public void shouldNotInvalidateCacheBeforeRetryIfNotContent(TestContext context) {
+    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.noContent()));
+    checkThatInvalidateTokenWasNotInvoked(context);
+  }
+
+  @Test
+  public void shouldNotInvalidateCacheBeforeRetryIfOk(TestContext context) {
+    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.ok()));
+    checkThatInvalidateTokenWasNotInvoked(context);
+  }
+
+  @Test
+  public void shouldNotInvalidateCacheBeforeRetryIfCreated(TestContext context) {
+    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.created()));
+    checkThatInvalidateTokenWasNotInvoked(context);
+  }
+
+  @Test
+  public void shouldNotInvalidateCacheBeforeRetryIfServerError(TestContext context) {
+    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.serverError()));
+    checkThatInvalidateTokenWasNotInvoked(context);
+  }
+
+  private void checkThatInvalidateTokenWasInvoked(TestContext context) {
+    Async async = context.async();
     var event = prepareEvent();
     var params = prepareOkapiConnectionParams();
     when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(prepareMessagingModules()));
@@ -288,62 +293,8 @@ public class ConsumerServiceUnitTest {
     });
   }
 
-  @Test
-  public void shouldNotInvalidateCacheBeforeRetryIfNotContent(TestContext context) {
+  private void checkThatInvalidateTokenWasNotInvoked(TestContext context) {
     Async async = context.async();
-    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.noContent()));
-
-    var event = prepareEvent();
-    var params = prepareOkapiConnectionParams();
-    when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(prepareMessagingModules()));
-
-    consumerService.deliverEvent(event, params).onComplete(ar -> {
-      assertTrue(ar.succeeded());
-      verify(securityManager, times(0)).invalidateToken(TENANT);
-      verify(cache, times(0)).invalidateToken(TENANT);
-      async.complete();
-    });
-  }
-
-  @Test
-  public void shouldNotInvalidateCacheBeforeRetryIfOk(TestContext context) {
-    Async async = context.async();
-    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.ok()));
-
-    var event = prepareEvent();
-    var params = prepareOkapiConnectionParams();
-    when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(prepareMessagingModules()));
-
-    consumerService.deliverEvent(event, params).onComplete(ar -> {
-      assertTrue(ar.succeeded());
-      verify(securityManager, times(0)).invalidateToken(TENANT);
-      verify(cache, times(0)).invalidateToken(TENANT);
-      async.complete();
-    });
-  }
-
-  @Test
-  public void shouldNotInvalidateCacheBeforeRetryIfCreated(TestContext context) {
-    Async async = context.async();
-    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.created()));
-
-    var event = prepareEvent();
-    var params = prepareOkapiConnectionParams();
-    when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(prepareMessagingModules()));
-
-    consumerService.deliverEvent(event, params).onComplete(ar -> {
-      assertTrue(ar.succeeded());
-      verify(securityManager, times(0)).invalidateToken(TENANT);
-      verify(cache, times(0)).invalidateToken(TENANT);
-      async.complete();
-    });
-  }
-
-  @Test
-  public void shouldNotInvalidateCacheBeforeRetryIfServerError(TestContext context) {
-    Async async = context.async();
-    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.serverError()));
-
     var event = prepareEvent();
     var params = prepareOkapiConnectionParams();
     when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(prepareMessagingModules()));
