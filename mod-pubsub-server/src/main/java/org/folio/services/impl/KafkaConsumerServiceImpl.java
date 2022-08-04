@@ -113,7 +113,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
     Promise<Void> result = Promise.promise();
     Map<MessagingModule, AtomicInteger> retry = new ConcurrentHashMap<>();
     return securityManager.getJWTToken(params)
-      .onSuccess(token -> params.setToken(token))
+      .onSuccess(params::setToken)
       .compose(ar -> cache.getMessagingModules())
       .map(messagingModules -> filter(messagingModules,
         new MessagingModuleFilter()
