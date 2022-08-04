@@ -26,6 +26,7 @@ import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.MessagingModule;
 import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.rest.util.RestUtil;
+import org.folio.services.SecurityManager;
 import org.folio.services.cache.Cache;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
@@ -71,12 +72,12 @@ public class ConsumerServiceUnitTest {
 
   @Spy
   @InjectMocks
-  private SecurityManagerImpl securityManager = Mockito.spy(new SecurityManagerImpl(vertx, cache, systemUserConfig));
+  private SecurityManager securityManager = Mockito.spy(new SecurityManagerImpl(vertx, cache, systemUserConfig));
 
   @Spy
   @InjectMocks
-  private KafkaConsumerServiceImpl consumerService = Mockito.spy(new KafkaConsumerServiceImpl(
-    vertx, kafkaConfig, securityManager, cache));
+  private KafkaConsumerServiceImpl consumerService = new KafkaConsumerServiceImpl(
+    vertx, kafkaConfig, securityManager, cache);
 
   private Map<String, String> headers = new HashMap<>();
 
@@ -341,17 +342,5 @@ public class ConsumerServiceUnitTest {
     params.setTimeout(2000);
 
     return params;
-  }
-
-  private void checkTokenInvalidation(ResponseDefinitionBuilder responseDefinitionBuilder,
-    int wantedNumberOfInvocations, Event event, OkapiConnectionParams params, Async async) {
-
-    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(responseDefinitionBuilder));
-    consumerService.deliverEvent(event, params).onComplete(ar -> {
-      assertTrue(ar.succeeded());
-      verify(securityManager, times(wantedNumberOfInvocations)).invalidateToken(TENANT);
-      verify(cache, times(wantedNumberOfInvocations)).invalidateToken(TENANT);
-      async.complete();
-    });
   }
 }
