@@ -157,6 +157,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
         LOGGER.error(error);
         auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.REJECTED, error));
         if (ar.result().getCode() >= 400 && ar.result().getCode() < 500) {
+          LOGGER.info("Invalidating token for tenant {}", tenantId);
           securityManager.invalidateToken(tenantId);
         }
         retryDelivery(event, subscriber, params, retry);
