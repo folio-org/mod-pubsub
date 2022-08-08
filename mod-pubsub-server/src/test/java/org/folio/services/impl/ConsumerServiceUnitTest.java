@@ -245,7 +245,7 @@ public class ConsumerServiceUnitTest {
 
   @Test
   public void shouldInvalidateCacheBeforeRetryIfForbidden(TestContext context) {
-    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.badRequest()));
+    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.forbidden()));
     checkThatInvalidateTokenWasInvoked(context);
   }
 
@@ -256,7 +256,7 @@ public class ConsumerServiceUnitTest {
   }
 
   @Test
-  public void shouldNotInvalidateCacheBeforeRetryIfNotContent(TestContext context) {
+  public void shouldNotInvalidateCacheBeforeRetryIfNoContent(TestContext context) {
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.noContent()));
     checkThatInvalidateTokenWasNotInvoked(context);
   }
