@@ -8,9 +8,11 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.internal.verification.VerificationModeFactory.atLeast;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -287,8 +289,8 @@ public class ConsumerServiceUnitTest {
 
     consumerService.deliverEvent(event, params).onComplete(ar -> {
       assertTrue(ar.succeeded());
-      verify(securityManager, times(1)).invalidateToken(TENANT);
-      verify(cache, times(1)).invalidateToken(TENANT);
+      verify(securityManager, atLeast(1)).invalidateToken(TENANT);
+      verify(cache, atLeast(1)).invalidateToken(TENANT);
       async.complete();
     });
   }
@@ -301,8 +303,8 @@ public class ConsumerServiceUnitTest {
 
     consumerService.deliverEvent(event, params).onComplete(ar -> {
       assertTrue(ar.succeeded());
-      verify(securityManager, times(0)).invalidateToken(TENANT);
-      verify(cache, times(0)).invalidateToken(TENANT);
+      verify(securityManager, never()).invalidateToken(TENANT);
+      verify(cache, never()).invalidateToken(TENANT);
       async.complete();
     });
   }
