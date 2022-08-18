@@ -105,7 +105,7 @@ public class ConsumerServiceUnitTest {
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS)
       .willReturn(WireMock.ok()));
 
-    var event = prepareEvent();
+    var event = buildEvent();
     var params = new OkapiConnectionParams(headers, vertx);
 
     Future<RestUtil.WrappedResponse> future = RestUtil.doRequest(params, CALLBACK_ADDRESS, HttpMethod.POST, event.getEventPayload());
@@ -151,7 +151,7 @@ public class ConsumerServiceUnitTest {
   @Test
   public void shouldNotSendRequestIfNoSubscribersFound(TestContext context) {
     Async async = context.async();
-    var event = prepareEvent();
+    var event = buildEvent();
     var params = new OkapiConnectionParams(headers, vertx);
     when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(new HashSet<>()));
 
@@ -171,8 +171,8 @@ public class ConsumerServiceUnitTest {
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS)
       .willReturn(WireMock.noContent()));
 
-    var event = prepareEvent();
-    var params = prepareOkapiConnectionParams();
+    var event = buildEvent();
+    var params = buildOkapiConnectionParams();
     Set<MessagingModule> messagingModuleList = new HashSet<>();
     messagingModuleList.add(new MessagingModule()
       .withId(UUID.randomUUID().toString())
@@ -209,8 +209,8 @@ public class ConsumerServiceUnitTest {
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS)
       .willReturn(WireMock.forbidden()));
 
-    var event = prepareEvent();
-    var params = prepareOkapiConnectionParams();
+    var event = buildEvent();
+    var params = buildOkapiConnectionParams();
     Set<MessagingModule> messagingModuleList = new HashSet<>();
     messagingModuleList.add(new MessagingModule()
       .withId(UUID.randomUUID().toString())
@@ -283,9 +283,9 @@ public class ConsumerServiceUnitTest {
 
   private void checkThatInvalidateTokenWasInvoked(TestContext context) {
     Async async = context.async();
-    var event = prepareEvent();
-    var params = prepareOkapiConnectionParams();
-    when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(prepareMessagingModules()));
+    var event = buildEvent();
+    var params = buildOkapiConnectionParams();
+    when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(buildMessagingModules()));
 
     consumerService.deliverEvent(event, params).onComplete(ar -> {
       assertTrue(ar.succeeded());
@@ -297,9 +297,9 @@ public class ConsumerServiceUnitTest {
 
   private void checkThatInvalidateTokenWasNotInvoked(TestContext context) {
     Async async = context.async();
-    var event = prepareEvent();
-    var params = prepareOkapiConnectionParams();
-    when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(prepareMessagingModules()));
+    var event = buildEvent();
+    var params = buildOkapiConnectionParams();
+    when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(buildMessagingModules()));
 
     consumerService.deliverEvent(event, params).onComplete(ar -> {
       assertTrue(ar.succeeded());
@@ -309,7 +309,7 @@ public class ConsumerServiceUnitTest {
     });
   }
 
-  private Set<MessagingModule> prepareMessagingModules() {
+  private Set<MessagingModule> buildMessagingModules() {
     Set<MessagingModule> messagingModules = new HashSet<>();
     messagingModules.add(new MessagingModule()
       .withId(UUID.randomUUID().toString())
@@ -323,7 +323,7 @@ public class ConsumerServiceUnitTest {
     return messagingModules;
   }
 
-  private Event prepareEvent() {
+  private Event buildEvent() {
     return new Event()
       .withId(UUID.randomUUID().toString())
       .withEventType(EVENT_TYPE)
@@ -334,7 +334,7 @@ public class ConsumerServiceUnitTest {
   }
 
   @NotNull
-  private OkapiConnectionParams prepareOkapiConnectionParams() {
+  private OkapiConnectionParams buildOkapiConnectionParams() {
     OkapiConnectionParams params = new OkapiConnectionParams(vertx);
     params.setHeaders(headers);
     params.setOkapiUrl(headers.getOrDefault("x-okapi-url", "localhost"));
