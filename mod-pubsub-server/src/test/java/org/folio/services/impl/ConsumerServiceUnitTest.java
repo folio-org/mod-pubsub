@@ -258,19 +258,19 @@ public class ConsumerServiceUnitTest {
   }
 
   @Test
-  public void shouldNotInvalidateCacheBeforeRetryIfNoContent(TestContext context) {
+  public void shouldNotInvalidateCacheIfNoContent(TestContext context) {
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.noContent()));
     checkThatInvalidateTokenWasNotInvoked(context);
   }
 
   @Test
-  public void shouldNotInvalidateCacheBeforeRetryIfOk(TestContext context) {
+  public void shouldNotInvalidateCacheIfOk(TestContext context) {
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.ok()));
     checkThatInvalidateTokenWasNotInvoked(context);
   }
 
   @Test
-  public void shouldNotInvalidateCacheBeforeRetryIfCreated(TestContext context) {
+  public void shouldNotInvalidateCacheIfCreated(TestContext context) {
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.created()));
     checkThatInvalidateTokenWasNotInvoked(context);
   }
