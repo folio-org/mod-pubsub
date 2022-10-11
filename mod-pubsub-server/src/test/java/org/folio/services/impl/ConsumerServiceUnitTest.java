@@ -3,7 +3,9 @@ package org.folio.services.impl;
 import static org.folio.rest.util.OkapiConnectionParams.OKAPI_TENANT_HEADER;
 import static org.folio.rest.util.OkapiConnectionParams.OKAPI_TOKEN_HEADER;
 import static org.folio.rest.util.OkapiConnectionParams.OKAPI_URL_HEADER;
+import static org.folio.rest.util.OkapiConnectionParams.USER_ID;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -284,6 +286,7 @@ public class ConsumerServiceUnitTest {
   private void checkThatInvalidateTokenWasInvoked(TestContext context) {
     Async async = context.async();
     var event = buildEvent();
+    headers.put(USER_ID, UUID.randomUUID().toString());
     var params = buildOkapiConnectionParams();
     when(cache.getMessagingModules()).thenReturn(Future.succeededFuture(buildMessagingModules()));
 
@@ -291,6 +294,7 @@ public class ConsumerServiceUnitTest {
       assertTrue(ar.succeeded());
       verify(securityManager, atLeast(1)).invalidateToken(TENANT);
       verify(cache, atLeast(1)).invalidateToken(TENANT);
+      assertNull(headers.get(USER_ID));
       async.complete();
     });
   }
