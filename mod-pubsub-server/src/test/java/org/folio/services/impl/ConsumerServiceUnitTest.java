@@ -1,9 +1,5 @@
 package org.folio.services.impl;
 
-import static org.folio.rest.util.OkapiConnectionParams.OKAPI_TENANT_HEADER;
-import static org.folio.rest.util.OkapiConnectionParams.OKAPI_TOKEN_HEADER;
-import static org.folio.rest.util.OkapiConnectionParams.OKAPI_URL_HEADER;
-import static org.folio.rest.util.OkapiConnectionParams.USER_ID;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -64,6 +60,11 @@ public class ConsumerServiceUnitTest {
   private static final String TOKEN = "token";
   private static final String CALLBACK_ADDRESS = "/source-storage/records";
   private static final String EVENT_TYPE = "record_created";
+
+  private static final String OKAPI_URL_HEADER = "x-okapi-url";
+  private static final String OKAPI_TENANT_HEADER = "x-okapi-tenant";
+  private static final String OKAPI_TOKEN_HEADER = "x-okapi-token";
+  private static final String USER_ID = "X-Okapi-User-Id";
 
   private Vertx vertx = Vertx.vertx();
   @Mock
@@ -341,9 +342,9 @@ public class ConsumerServiceUnitTest {
   private OkapiConnectionParams buildOkapiConnectionParams() {
     OkapiConnectionParams params = new OkapiConnectionParams(vertx);
     params.setHeaders(headers);
-    params.setOkapiUrl(headers.getOrDefault("x-okapi-url", "localhost"));
-    params.setTenantId(headers.getOrDefault("x-okapi-tenant", TENANT));
-    params.setToken(headers.getOrDefault("x-okapi-token", TOKEN));
+    params.setOkapiUrl(headers.getOrDefault(OKAPI_URL_HEADER, "localhost"));
+    params.setTenantId(headers.getOrDefault(OKAPI_TENANT_HEADER, TENANT));
+    params.setToken(headers.getOrDefault(OKAPI_TOKEN_HEADER, TOKEN));
     params.setTimeout(2000);
 
     return params;
