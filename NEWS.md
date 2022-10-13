@@ -1,5 +1,10 @@
-## v2.6.2 IN-PROGRESS
-* [MODPUBSUB-241] (https://issues.folio.org/browse/MODPUBSUB-241) Supports users interface versions 15.1 16.0
+## 2022-10-13 v2.6.2
+* [MODPUBSUB-241](https://issues.folio.org/browse/MODPUBSUB-241) Supports users interface versions 15.1 16.0
+* [MODPUBSUB-243](https://issues.folio.org/browse/MODPUBSUB-243) Add cache tenantToken invalidation
+* [MODPUBSUB-251](https://issues.folio.org/browse/MODPUBSUB-251) kafka-clients 3.2.3 fixing out-of-memory vulnerability CVE-2022-34917
+* [MODPUBSUB-252](https://issues.folio.org/browse/MODPUBSUB-252) Upgrade to RMB 35.0.0
+* [MODPUBSUB-248](https://issues.folio.org/browse/MODPUBSUB-248) Invalid token ConsumerServiceImpl while delivering `LOG_RECORD` event
+* [MODPUBSUB-254](https://issues.folio.org/browse/MODPUBSUB-254) snakeyaml 1.33, Vert.x 4.3.4, RMB 35.0.1
 
 ## 2022-09-06 v2.6.1
 * [MODPUBSUB-246](https://issues.folio.org/browse/MODPUBSUB-246) Upgrade dependencies fixing vulnerabilities
