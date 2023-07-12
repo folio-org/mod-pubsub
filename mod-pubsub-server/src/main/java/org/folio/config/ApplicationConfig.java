@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
+import javax.annotation.PreDestroy;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,11 +22,18 @@ import java.util.Map;
   "org.folio.config.user"})
 public class ApplicationConfig {
 
+  private KafkaAdminClient adminClient;
   @Bean
   public KafkaAdminClient kafkaAdminClient(@Autowired Vertx vertx, @Autowired KafkaConfig config) {
     Map<String, String> configs = new HashMap<>();
     configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, config.getKafkaUrl());
-    return KafkaAdminClient.create(vertx, configs);
+    adminClient = KafkaAdminClient.create(vertx, configs);
+    return adminClient;
+  }
+
+  @PreDestroy
+  public void closeAdminClient(){
+    adminClient.close(1_000);
   }
 
 }

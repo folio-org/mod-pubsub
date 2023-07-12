@@ -9,7 +9,7 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
-
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -77,12 +77,18 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
         params.getTenantId(), eventType).getTopicName())
       .collect(Collectors.toSet());
     Map<String, String> consumerProps = kafkaConfig.getConsumerProps();
+
+    // update known OkapiConnectionParams
+    if (cache.getKnownOkapiParams(params.getTenantId()) == null) {
+      cache.setKnownOkapiParams(params.getTenantId(), params);
+    }
+
     List<Future<Void>> futures = topics.stream()
       .filter(topic -> !cache.containsSubscription(topic))
       .map(topic -> {
         consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, topic);
         return KafkaConsumer.<String, String>create(vertx, consumerProps)
-          .handler(getEventReceivedHandler(params))
+          .handler(getEventReceivedHandler())
           .subscribe(topic)
           .onSuccess(result -> {
             cache.addSubscription(topic);
@@ -95,14 +101,23 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
     return GenericCompositeFuture.all(futures).mapEmpty();
   }
 
-  private Handler<KafkaConsumerRecord<String, String>> getEventReceivedHandler(OkapiConnectionParams params) {
+  private Handler<KafkaConsumerRecord<String, String>> getEventReceivedHandler() {
     return consumerRecord -> {
       try {
         String value = consumerRecord.value();
         Event event = new JsonObject(value).mapTo(Event.class);
+        String tenantId = event.getEventMetadata().getTenantId();
+        if (StringUtils.isBlank(tenantId)) {
+          LOGGER.error("Kafka record does not contain a tenant id.");
+        }
         LOGGER.info("Received {} event with id '{}'", event.getEventType(), event.getId());
-        auditService.saveAuditMessage(constructJsonAuditMessage(event, params.getTenantId(), AuditMessage.State.RECEIVED));
-        deliverEvent(event, params);
+        auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.RECEIVED));
+        OkapiConnectionParams knownOkapiParams = cache.getKnownOkapiParams(tenantId);
+        if (knownOkapiParams == null) {
+          LOGGER.error("Could not find OkapiConnectionParams for tenantId={}", tenantId);
+          return;
+        }
+        deliverEvent(event, knownOkapiParams);
       } catch (Exception e) {
         LOGGER.error("Error reading event value", e);
       }
