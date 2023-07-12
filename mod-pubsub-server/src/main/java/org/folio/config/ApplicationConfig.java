@@ -32,7 +32,7 @@ public class ApplicationConfig {
   }
 
   @PreDestroy
-  public void closeAdminClient(){
+  public void closeAdminClient() {
     adminClient.close(1_000);
   }
 

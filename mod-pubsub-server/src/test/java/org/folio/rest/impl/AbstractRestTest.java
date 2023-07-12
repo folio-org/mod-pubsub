@@ -214,6 +214,7 @@ public abstract class AbstractRestTest {
     await()
       .atMost(15, TimeUnit.SECONDS)
       .pollInterval(3, TimeUnit.SECONDS)
+      .alias("Is Postgres Up?")
       .until(() -> {
         System.out.println("checking to see if postgres is up");
 
@@ -226,19 +227,19 @@ public abstract class AbstractRestTest {
     if (!isReady.get()) throw new RuntimeException("Could not connect to postgres");
   }
 
-  private static void waitForKafka(){
+  private static void waitForKafka() {
     Supplier<KafkaAdminClient> buildAdminClient = () -> {
       Map<String, String> configs = new HashMap<>();
       configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaContainer.getBootstrapServers());
       return KafkaAdminClient.create(vertx, configs);
     };
-    AtomicReference<Future<Boolean>> futureAtomicReference = new AtomicReference<>(Future.succeededFuture(false));
+    AtomicBoolean isReady = new AtomicBoolean();
 
     await()
       .atMost(15, TimeUnit.SECONDS)
       .pollDelay(3, TimeUnit.SECONDS)
       .pollInterval(3, TimeUnit.SECONDS)
-      .alias("Is Kafka up?")
+      .alias("Is Kafka Up?")
       .until(() -> {
         System.out.println("listing topics to see if kafka is up");
         KafkaAdminClient adminClient = buildAdminClient.get();
@@ -246,11 +247,11 @@ public abstract class AbstractRestTest {
           .onComplete(ar -> {
             if (ar.succeeded()) {
               System.out.println("Kafka is up");
-              futureAtomicReference.set(Future.succeededFuture(true));
+              isReady.set(true);
             }
             adminClient.close(1000);
           });
-        return futureAtomicReference.get().result();
+        return isReady.get();
       });
   }
 }
