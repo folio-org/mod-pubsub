@@ -97,7 +97,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
           .onFailure(e ->
             LOGGER.error(format("Could not subscribe to some of the topic {%s}", topic), e));
       })
-      .collect(Collectors.toList());
+      .toList();
     return GenericCompositeFuture.all(futures).mapEmpty();
   }
 

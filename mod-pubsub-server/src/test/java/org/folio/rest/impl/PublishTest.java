@@ -7,6 +7,7 @@ import io.restassured.response.Response;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.apache.http.HttpStatus;
+import org.folio.kafka.PubSubConfig;
 import org.folio.rest.jaxrs.model.EventDescriptor;
 import org.folio.rest.jaxrs.model.PublisherDescriptor;
 import org.folio.rest.jaxrs.model.SubscriberDescriptor;
@@ -103,7 +104,7 @@ public class PublishTest extends AbstractRestTest {
     registerSubscriber(eventDescriptor);
 
     // wait for kafka subscription to settle down
-    Thread.sleep(3000);
+    Thread.sleep(3000); //NOSONAR
 
     RestAssured.given()
       .spec(spec)
@@ -121,6 +122,16 @@ public class PublishTest extends AbstractRestTest {
       .untilAsserted(() -> {
         System.out.println("Asserting subscriber notification...");
         verify(postRequestedFor(urlEqualTo(CALLBACK_ADDRESS)));});
+  }
+
+  @Test
+  public void shouldPublishEventWithPayloadAndTenantCollectionTopicsEnabled() throws InterruptedException {
+    try {
+      PubSubConfig.setTenantCollectionTopicsQualifier("ALL");
+      shouldPublishEventWithPayload();
+    } finally {
+      PubSubConfig.setTenantCollectionTopicsQualifier(null);
+    }
   }
 
   private void registerPublisher(EventDescriptor eventDescriptor) {

@@ -20,7 +20,7 @@ import java.util.Map;
   "org.folio.rest",
   "org.folio.kafka",
   "org.folio.config.user"})
-public class ApplicationConfig { //NOSONAR
+public class ApplicationConfig {
 
   private KafkaAdminClient adminClient;
   @Bean

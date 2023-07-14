@@ -16,6 +16,7 @@
     <sonar.exclusions>**/PubsubClient.java</sonar.exclusions>
     <sonar.exclusions>**/PomReader.java</sonar.exclusions>
     <sonar.exclusions>**/WebClientProvider.java</sonar.exclusions>
+    <sonar.exclusions>**/ApplicationConfig.java</sonar.exclusions>
   </properties>
 
   <dependencies>

@@ -128,7 +128,19 @@ The partition count controls how many logs the topic will be sharded into.
         "value": "1"
       }
  ```   
-If these values are not set then topics will be created with 1 partition and 1 replica. 
+If these values are not set then topics will be created with 1 partition and 1 replica.
+
+There is one more parameter which will determine if tenant collection topics are used. Tenant collection topics are
+topics created for a tenants for a particular event type. The traditional behaviour is the create a topic for each
+tenant given a event type.
+```
+      {
+        "name": "KAFKA_PRODUCER_TENANT_COLLECTION",
+        "value": "ALL"
+      }
+```
+The value of the parameter above should match the regex [A-Z][A-Z0-9]{0,30}. If this parameter is not set, tenant
+collection topics will not be used.
 
 ****In case a single Kafka installation is shared between multiple environments, make sure to set a customized prefix for kafka topics, specifying the environment in which pubsub is deployed****
 This variable is used as a prefix to avoid any confusion with Kafka topics and consumer groups and is ****REQUIRED**** to prevent the situation when events are exchanged between pubsub instances belonging to different environments.
