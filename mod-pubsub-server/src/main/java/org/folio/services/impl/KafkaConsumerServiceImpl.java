@@ -109,6 +109,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
         String tenantId = event.getEventMetadata().getTenantId();
         if (StringUtils.isBlank(tenantId)) {
           LOGGER.error("Kafka record does not contain a tenant id.");
+          return;
         }
         LOGGER.info("Received {} event with id '{}'", event.getEventType(), event.getId());
         auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.RECEIVED));
