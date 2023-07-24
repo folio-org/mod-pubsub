@@ -20,16 +20,16 @@ public class PubSubConfigTest {
     assertTrue(pubSubConfig.getTopicName().contains("env.pub-sub.tenant.eventType"));
     assertTrue(pubSubConfig.getTopicName().contains(ENV + ".pub-sub." + TENANT + "." + EVENT_TYPE));
     assertTrue(pubSubConfig.getGroupId().contains(ENV + ".pub-sub." + TENANT + "." + EVENT_TYPE + ".mod-pubsub"));
-    assertEquals(pubSubConfig.getTenant(), TENANT);
-    assertEquals(pubSubConfig.getEventType(), EVENT_TYPE);
+    assertEquals(TENANT, pubSubConfig.getTenant());
+    assertEquals(EVENT_TYPE, pubSubConfig.getEventType());
 
     String qualifier = "ALL";
     PubSubConfig.setTenantCollectionTopicsQualifier(qualifier);
     pubSubConfig = pubSubConfigSupplier.get();
     assertTrue(pubSubConfig.getTopicName().contains(ENV + ".pub-sub." + qualifier + "." + EVENT_TYPE));
     assertTrue(pubSubConfig.getGroupId().contains(ENV + ".pub-sub." + qualifier + "." + EVENT_TYPE + ".mod-pubsub"));
-    assertEquals(pubSubConfig.getTenant(), TENANT);
-    assertEquals(pubSubConfig.getEventType(), EVENT_TYPE);
+    assertEquals(TENANT, pubSubConfig.getTenant());
+    assertEquals(EVENT_TYPE, pubSubConfig.getEventType());
   }
 
   @Test(expected = IllegalArgumentException.class)
