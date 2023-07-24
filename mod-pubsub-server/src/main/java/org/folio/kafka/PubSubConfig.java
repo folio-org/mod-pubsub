@@ -17,12 +17,15 @@ public class PubSubConfig {
   private String topicName;
 
   static {
-    tenantCollectionTopicQualifier = System.getenv(TENANT_COLLECTION_TOPICS_ENV_VAR_NAME);
+    setTenantCollectionTopicsQualifier();
+  }
+
+  public static void setTenantCollectionTopicsQualifier() {
     try {
-      setTenantCollectionTopicsQualifier(tenantCollectionTopicQualifier);
+      setTenantCollectionTopicsQualifier(System.getenv(TENANT_COLLECTION_TOPICS_ENV_VAR_NAME));
     } catch (IllegalArgumentException e) {
-      throw new IllegalArgumentException(String.format("%s environment variable value is not valid",
-        TENANT_COLLECTION_TOPICS_ENV_VAR_NAME), e);
+      throw new IllegalArgumentException(
+        String.format("%s environment variable: %s", TENANT_COLLECTION_TOPICS_ENV_VAR_NAME, e.getMessage()), e);
     }
   }
 
@@ -39,12 +42,12 @@ public class PubSubConfig {
 
   public static void setTenantCollectionTopicsQualifier(String value) {
     tenantCollectionTopicQualifier = value;
-    isTenantCollectionTopicsEnabled = !StringUtils.isEmpty(tenantCollectionTopicQualifier);
+    isTenantCollectionTopicsEnabled = StringUtils.isNotEmpty(tenantCollectionTopicQualifier);
 
     if (isTenantCollectionTopicsEnabled &&
       !tenantCollectionTopicQualifier.matches(TENANT_COLLECTION_MATCH_REGEX)) {
       throw new IllegalArgumentException(
-        String.format("Tenant collection qualifier not match %s",
+        String.format("Tenant collection qualifier doesn't match %s",
           TENANT_COLLECTION_MATCH_REGEX));
     }
   }

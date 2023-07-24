@@ -87,7 +87,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
       .filter(topic -> !cache.containsSubscription(topic))
       .map(topic -> {
         consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, topic);
-        return KafkaConsumer.<String, String>create(vertx, consumerProps)
+        return createKafkaConsumer(vertx, consumerProps)
           .handler(getEventReceivedHandler())
           .subscribe(topic)
           .onSuccess(result -> {
@@ -101,6 +101,12 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
     return GenericCompositeFuture.all(futures).mapEmpty();
   }
 
+  protected KafkaConsumer<String, String> createKafkaConsumer(Vertx vertx,
+    Map<String, String> consumerProps) {
+
+    return KafkaConsumer.create(vertx, consumerProps);
+  }
+
   private Handler<KafkaConsumerRecord<String, String>> getEventReceivedHandler() {
     return consumerRecord -> {
       try {
@@ -108,7 +114,8 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
         Event event = new JsonObject(value).mapTo(Event.class);
         String tenantId = event.getEventMetadata().getTenantId();
         if (StringUtils.isBlank(tenantId)) {
-          LOGGER.error("Kafka record does not contain a tenant id.");
+          LOGGER.error("Kafka record does not contain a tenant id. Event ID {}, published by {}",
+            event.getId(), event.getEventMetadata().getPublishedBy());
           return;
         }
         LOGGER.info("Received {} event with id '{}'", event.getEventType(), event.getId());

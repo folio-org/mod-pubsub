@@ -1,16 +1,17 @@
 package org.folio.kafka;
 
-import org.junit.After;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.function.Supplier;
 
-import static org.junit.Assert.*;
+import org.junit.After;
+import org.junit.Test;
 
 public class PubSubConfigTest {
-  private final String ENV = "env";
-  private final String EVENT_TYPE = "eventType";
-  private final String TENANT = "tenant";
+  private static final String ENV = "env";
+  private static final String EVENT_TYPE = "eventType";
+  private static final String TENANT = "tenant";
   private Supplier<PubSubConfig> pubSubConfigSupplier = () -> new PubSubConfig(ENV, TENANT, EVENT_TYPE);
 
   @Test

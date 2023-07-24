@@ -12,7 +12,7 @@
     <basedir>${project.parent.basedir}</basedir>
     <ramlfiles_path>${project.parent.basedir}/ramls</ramlfiles_path>
     <sonar.exclusions>**/OkapiConnectionParams.java</sonar.exclusions>
-    <sonar.exclusions>**/ApplicationConfig.java</sonar.exclusions>
+    <!--sonar.exclusions>**/ApplicationConfig.java</sonar.exclusions-->
   </properties>
 
   <dependencies>
