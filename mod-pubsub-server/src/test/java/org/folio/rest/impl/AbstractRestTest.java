@@ -1,16 +1,15 @@
 package org.folio.rest.impl;
 
-import io.restassured.builder.RequestSpecBuilder;
-import io.restassured.http.ContentType;
-import io.restassured.specification.RequestSpecification;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Future;
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.kafka.admin.KafkaAdminClient;
-import io.vertx.sqlclient.Tuple;
+import static java.lang.String.format;
+import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
+import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
+
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
@@ -27,16 +26,16 @@ import org.junit.BeforeClass;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
-
-import static java.lang.String.format;
-import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
-import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.http.ContentType;
+import io.restassured.specification.RequestSpecification;
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.unit.Async;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.kafka.admin.KafkaAdminClient;
+import io.vertx.sqlclient.Tuple;
 
 public abstract class AbstractRestTest {
   protected static final String TENANT_ID = "diku";

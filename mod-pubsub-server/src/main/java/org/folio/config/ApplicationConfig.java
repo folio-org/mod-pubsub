@@ -1,7 +1,10 @@
 package org.folio.config;
 
-import io.vertx.core.Vertx;
-import io.vertx.kafka.admin.KafkaAdminClient;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.PreDestroy;
+
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.folio.kafka.KafkaConfig;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,9 +12,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
-import javax.annotation.PreDestroy;
-import java.util.HashMap;
-import java.util.Map;
+import io.vertx.core.Vertx;
+import io.vertx.kafka.admin.KafkaAdminClient;
 
 @Configuration
 @ComponentScan(basePackages = {
