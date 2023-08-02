@@ -51,7 +51,7 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
     try {
       String query = format(SELECT_QUERY, convertToPsqlStandard(tenantId), AUDIT_MESSAGE_TABLE)
         .concat(constructWhereClauseForGetAuditMessagesQuery(filter));
-      pgClientFactory.getInstance(tenantId).select(query, promise);
+      pgClientFactory.getInstance(tenantId).selectRead(query, 0, promise);
     } catch (Exception e) {
       LOGGER.error("Error retrieving audit messages", e);
       promise.fail(e);
