@@ -102,7 +102,7 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
     Promise<RowSet<Row>> promise = Promise.promise();
     try {
       String query = format(GET_BY_EVENT_ID_QUERY, convertToPsqlStandard(tenantId), AUDIT_MESSAGE_PAYLOAD_TABLE);
-      pgClientFactory.getInstance(tenantId).select(query, Tuple.of(UUID.fromString(eventId)), promise);
+      pgClientFactory.getInstance(tenantId).selectRead(query, Tuple.of(UUID.fromString(eventId)), promise);
     } catch (Exception e) {
       LOGGER.error("Error while searching for audit message payload by event id {}", eventId, e);
       promise.fail(e);
