@@ -223,6 +223,7 @@
           <aspectDirectory>src/main/java/org/folio/rest/annotations</aspectDirectory>
           <XaddSerialVersionUID>true</XaddSerialVersionUID>
           <showWeaveInfo>true</showWeaveInfo>
+          <sources/>
           <aspectLibraries>
             <aspectLibrary>
               <groupId>org.folio</groupId>

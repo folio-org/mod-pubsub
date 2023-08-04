@@ -181,9 +181,4 @@ public class Cache {
   public void setKnownOkapiParams(String tenant, OkapiConnectionParams params) {
     knownOkapiParams.put(tenant, params);
   }
-
-  // TODO: remove
-  public void setTokensRefreshFunction(Consumer<ExpiryAwareToken> tokensRefreshFunction) {
-    this.tokensRefreshFunction = tokensRefreshFunction;
-  }
 }
