@@ -72,6 +72,8 @@ public class SecurityManagerImpl implements SecurityManager {
     // It's recommended that BE modules don't use /authn/refresh API because they have credentials
     if (this.cache != null) {
       this.cache.setTokensRefreshFunction(this::logInWithExpiry);
+    } else {
+      LOGGER.warn("SecurityManagerImpl:: cache is null, failed to set refresh function");
     }
   }
 
