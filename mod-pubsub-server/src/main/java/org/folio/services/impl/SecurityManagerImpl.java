@@ -1,5 +1,37 @@
 package org.folio.services.impl;
 
+import static io.vertx.core.http.HttpMethod.PUT;
+import static io.vertx.core.json.Json.encode;
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.folio.HttpStatus.HTTP_NO_CONTENT;
+import static org.folio.rest.util.RestUtil.doRequest;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.UUID;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.folio.HttpStatus;
+import org.folio.config.user.SystemUserConfig;
+import org.folio.representation.User;
+import org.folio.rest.util.ExpiryAwareToken;
+import org.folio.rest.util.OkapiConnectionParams;
+import org.folio.rest.util.RestUtil;
+import org.folio.services.SecurityManager;
+import org.folio.services.cache.Cache;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.google.common.io.Resources;
 
 import io.vertx.core.Future;
@@ -8,39 +40,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.folio.HttpStatus;
-import org.folio.config.user.SystemUserConfig;
-import org.folio.representation.User;
-import org.folio.rest.util.OkapiConnectionParams;
-import org.folio.rest.util.RestUtil;
-import org.folio.rest.util.ExpiryAwareToken;
-import org.folio.services.SecurityManager;
-import org.folio.services.cache.Cache;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.UUID;
-
-import static io.vertx.core.http.HttpMethod.PUT;
-import static io.vertx.core.json.Json.encode;
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.folio.HttpStatus.HTTP_NO_CONTENT;
-import static org.folio.rest.util.OkapiConnectionParams.OKAPI_TENANT_HEADER;
-import static org.folio.rest.util.RestUtil.doRequest;
 
 @Component
 public class SecurityManagerImpl implements SecurityManager {
@@ -48,7 +47,6 @@ public class SecurityManagerImpl implements SecurityManager {
   private static final Logger LOGGER = LogManager.getLogger();
 
   private static final String LOGIN_WITH_EXPIRY_URL = "/authn/login-with-expiry";
-  private static final String REFRESH_TOKENS_URL = "/authn/refresh";
   private static final String USERS_URL = "/users";
   private static final String CREDENTIALS_URL = "/authn/credentials";
   private static final String PERMISSIONS_URL = "/perms/users";

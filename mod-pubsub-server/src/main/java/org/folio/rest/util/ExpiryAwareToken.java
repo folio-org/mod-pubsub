@@ -1,18 +1,12 @@
 package org.folio.rest.util;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-
-//@Setter
-//@Getter
-//@AllArgsConstructor
 public class ExpiryAwareToken {
   private String token;
   private long maxAge;
   private OkapiConnectionParams okapiParams;
 
-  // TODO: remove
+  // TODO: replace constructor, getters, setters with lombok
+
   public ExpiryAwareToken(String token, long maxAge, OkapiConnectionParams okapiParams) {
     this.token = token;
     this.maxAge = maxAge;

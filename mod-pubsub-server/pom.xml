@@ -172,6 +172,7 @@
           <release>17</release>
           <encoding>UTF-8</encoding>
           <annotationProcessors>
+            <annotationProcessor>lombok.launch.AnnotationProcessorHider$AnnotationProcessor</annotationProcessor>
             <annotationProcessor>io.vertx.codegen.CodeGenProcessor</annotationProcessor>
           </annotationProcessors>
           <generatedSourcesDirectory>${project.build.directory}/generated-sources/services/audit</generatedSourcesDirectory>
