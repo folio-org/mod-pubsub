@@ -70,7 +70,9 @@ public class SecurityManagerImpl implements SecurityManager {
     this.systemUserConfig = systemUserConfig;
 
     // It's recommended that BE modules don't use /authn/refresh API because they have credentials
-    this.cache.setTokensRefreshFunction(this::logInWithExpiry);
+    if (this.cache != null) {
+      this.cache.setTokensRefreshFunction(this::logInWithExpiry);
+    }
   }
 
   @Override
