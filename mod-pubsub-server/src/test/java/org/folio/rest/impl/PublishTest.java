@@ -209,10 +209,6 @@ public class PublishTest extends AbstractRestTest {
         .withHeader("Set-Cookie", ACCESS_TOKEN_COOKIE)
         .withHeader("Set-Cookie", REFRESH_TOKEN_COOKIE)
       ));
-//    wireMockRule.stubFor(post(urlEqualTo(LOGIN_URL))
-//      .willReturn(aResponse()
-//        .withHeader(OKAPI_TOKEN_HEADER, "okapi_token")
-//        .withStatus(201)));
   }
 
   @After
