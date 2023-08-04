@@ -113,6 +113,7 @@ public class SecurityManagerImpl implements SecurityManager {
             return tokenFetchFailure(REFRESH_TOKEN_NAME);
           }
 
+          LOGGER.info("logInWithExpiry:: parsed access token and refresh token, caching");
           cache.setAccessToken(tenantId, accessToken);
           cache.setRefreshToken(tenantId, refreshToken);
           return Future.succeededFuture();

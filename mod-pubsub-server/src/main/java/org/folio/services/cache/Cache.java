@@ -129,11 +129,13 @@ public class Cache {
   }
 
   public void setAccessToken(String tenant, ExpiryAwareToken accessToken) {
+    LOGGER.info("setAccessToken:: updating access token cache for tenant {}", tenant);
     tenantAccessToken.invalidate(tenant);
     tenantAccessToken.put(tenant, accessToken);
   }
 
   public void setRefreshToken(String tenant, ExpiryAwareToken refreshToken) {
+    LOGGER.info("setRefreshToken:: updating refresh token cache for tenant {}", tenant);
     tenantRefreshToken.invalidate(tenant);
     tenantRefreshToken.put(tenant, refreshToken);
   }
