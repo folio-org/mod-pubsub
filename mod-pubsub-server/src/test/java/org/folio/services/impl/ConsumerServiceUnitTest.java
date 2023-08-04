@@ -99,7 +99,7 @@ public class ConsumerServiceUnitTest {
   @Before
   public void setUp() {
     MockitoAnnotations.openMocks(this);
-    doReturn(succeededFuture(TOKEN)).when(securityManager).getJWTToken(any(OkapiConnectionParams.class));
+    doReturn(succeededFuture(TOKEN)).when(securityManager).getAccessToken(any(OkapiConnectionParams.class));
 
     headers.put(OKAPI_URL_HEADER, "http://localhost:" + mockServer.port());
     headers.put(OKAPI_TENANT_HEADER, TENANT);
@@ -309,7 +309,7 @@ public class ConsumerServiceUnitTest {
     consumerService.deliverEvent(event, params)
     .onComplete(context.asyncAssertSuccess(x -> {
       verify(securityManager, atLeast(1)).invalidateToken(TENANT);
-      verify(cache, atLeast(1)).invalidateToken(TENANT);
+      verify(cache, atLeast(1)).invalidateAccessToken(TENANT);
       assertNull(headers.get(USER_ID));
     }));
   }
@@ -322,7 +322,7 @@ public class ConsumerServiceUnitTest {
     consumerService.deliverEvent(event, params)
     .onComplete(context.asyncAssertSuccess(x -> {
       verify(securityManager, never()).invalidateToken(TENANT);
-      verify(cache, never()).invalidateToken(TENANT);
+      verify(cache, never()).invalidateAccessToken(TENANT);
     }));
   }
 
