@@ -36,11 +36,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.common.Slf4jNotifier;
@@ -78,16 +76,8 @@ public class ConsumerServiceUnitTest {
   private Cache cache;
   @Mock
   private SystemUserConfig systemUserConfig;
-
-  @Spy
-  @InjectMocks
-  private SecurityManager securityManager = spy(new SecurityManagerImpl(cache, systemUserConfig));
-
-  @Spy
-  @InjectMocks
-  private KafkaConsumerServiceImpl consumerService = new KafkaConsumerServiceImpl(
-    vertx, kafkaConfig, securityManager, cache);
-
+  private SecurityManager securityManager;
+  private KafkaConsumerServiceImpl consumerService;
   private Map<String, String> headers = new HashMap<>();
 
   @Rule
@@ -99,6 +89,11 @@ public class ConsumerServiceUnitTest {
   @Before
   public void setUp() {
     MockitoAnnotations.openMocks(this);
+    securityManager = spy(new SecurityManagerImpl(cache, systemUserConfig));
+
+    consumerService = spy(new KafkaConsumerServiceImpl(
+      vertx, kafkaConfig, securityManager, cache));
+
     doReturn(succeededFuture(TOKEN)).when(securityManager).getAccessToken(any(OkapiConnectionParams.class));
 
     headers.put(OKAPI_URL_HEADER, "http://localhost:" + mockServer.port());

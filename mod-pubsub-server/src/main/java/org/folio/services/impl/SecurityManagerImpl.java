@@ -59,7 +59,9 @@ public class SecurityManagerImpl implements SecurityManager {
   private final Cache cache;
   private final SystemUserConfig systemUserConfig;
 
-  public SecurityManagerImpl(@Autowired Cache cache, @Autowired SystemUserConfig systemUserConfig) {
+  public SecurityManagerImpl(@Autowired Cache cache,
+    @Autowired SystemUserConfig systemUserConfig) {
+
     this.cache = cache;
     this.systemUserConfig = systemUserConfig;
 
