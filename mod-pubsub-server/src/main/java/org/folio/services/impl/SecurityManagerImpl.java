@@ -56,22 +56,19 @@ public class SecurityManagerImpl implements SecurityManager {
   private static final String ACCESS_TOKEN_NAME = "folioAccessToken";
   private static final String REFRESH_TOKEN_NAME = "folioRefreshToken";
 
-  private Vertx vertx;
-  private Cache cache;
-  private SystemUserConfig systemUserConfig;
+  private final Cache cache;
+  private final SystemUserConfig systemUserConfig;
 
-  public SecurityManagerImpl(@Autowired Vertx vertx, @Autowired Cache cache,
-    @Autowired SystemUserConfig systemUserConfig) {
-
-    this.vertx = vertx;
+  public SecurityManagerImpl(@Autowired Cache cache, @Autowired SystemUserConfig systemUserConfig) {
     this.cache = cache;
     this.systemUserConfig = systemUserConfig;
 
-    // It's recommended that BE modules don't use /authn/refresh API because they have credentials
     if (this.cache != null) {
+      // It's recommended that BE modules don't use /authn/refresh API because they always have
+      // credentials
       this.cache.setTokensRefreshFunction(this::logInWithExpiry);
     } else {
-      LOGGER.warn("SecurityManagerImpl:: cache is null, failed to set refresh function");
+      LOGGER.warn("SecurityManagerImpl:: Cache is null, failed to set refresh function");
     }
   }
 
@@ -82,7 +79,7 @@ public class SecurityManagerImpl implements SecurityManager {
 
     String cachedAccessToken = cache.getAccessToken(tenantId);
     if (!StringUtils.isEmpty(cachedAccessToken)) {
-      LOGGER.debug("getAccessToken:: using cached access token for tenant {}",
+      LOGGER.debug("getAccessToken:: Using cached access token for tenant {}",
         params.getTenantId());
       return Future.succeededFuture(cachedAccessToken);
     }
@@ -113,7 +110,7 @@ public class SecurityManagerImpl implements SecurityManager {
             return tokenFetchFailure(REFRESH_TOKEN_NAME);
           }
 
-          LOGGER.info("logInWithExpiry:: parsed access token and refresh token, caching");
+          LOGGER.info("logInWithExpiry:: Parsed 'access' and 'refresh' tokens, caching");
           cache.setAccessToken(tenantId, accessToken);
           cache.setRefreshToken(tenantId, refreshToken);
           return Future.succeededFuture();
@@ -140,16 +137,16 @@ public class SecurityManagerImpl implements SecurityManager {
     if (tokenCookie != null) {
       String token = Arrays.stream(tokenCookie.split(";"))
         .map(String::trim)
-        .filter(param -> param.startsWith(tokenName))
         .map(param -> param.split("="))
+        .filter(keyValuePair -> tokenName.equals(keyValuePair[0]))
         .map(keyValuePair -> keyValuePair[1])
         .findFirst()
         .orElse(null);
 
       long maxAge = Arrays.stream(tokenCookie.split(";"))
         .map(String::trim)
-        .filter(param -> param.startsWith("Max-Age"))
         .map(param -> param.split("="))
+        .filter(keyValuePair -> "Max-Age".equals(keyValuePair[0]))
         .map(keyValuePair -> keyValuePair[1])
         .mapToLong(Long::parseLong)
         .findFirst()

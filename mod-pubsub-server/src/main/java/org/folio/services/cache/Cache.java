@@ -54,7 +54,7 @@ public class Cache {
     this.subscriptions = Caffeine.newBuilder().build();
     this.tenantAccessToken = Caffeine.newBuilder()
       .scheduler(Scheduler.systemScheduler())
-      .expireAfter(buildTokenExpiryPolicy())
+      .expireAfter(new HalfMaxAgeTokenExpiryPolicy())
       .removalListener((tenant, token, cause) -> {
         LOGGER.info("Cache:: Access token removed for tenant {}", tenant);
         if (cause == RemovalCause.EXPIRED) {
@@ -65,7 +65,7 @@ public class Cache {
       .build();
     this.tenantRefreshToken = Caffeine.newBuilder()
       .scheduler(Scheduler.systemScheduler())
-      .expireAfter(buildTokenExpiryPolicy())
+      .expireAfter(new HalfMaxAgeTokenExpiryPolicy())
       .removalListener((tenant, token, cause) -> {
         LOGGER.info("Cache:: Refresh token removed for tenant {}", tenant);
         if (cause == RemovalCause.EXPIRED) {
@@ -75,29 +75,6 @@ public class Cache {
       })
       .build();
     this.knownOkapiParams = Caffeine.newBuilder().build();
-  }
-
-  private Expiry<String, ExpiryAwareToken> buildTokenExpiryPolicy() {
-    return new Expiry<>() {
-      @Override
-      public long expireAfterCreate(String key, ExpiryAwareToken token, long currentTime) {
-        return TimeUnit.SECONDS.toNanos(token.getMaxAge() / 2);
-      }
-
-      @Override
-      public long expireAfterUpdate(String key, ExpiryAwareToken token, long currentTime,
-        @NonNegative long currentDuration) {
-
-        return TimeUnit.SECONDS.toNanos(token.getMaxAge() / 2);
-      }
-
-      @Override
-      public long expireAfterRead(String key, ExpiryAwareToken token, long currentTime,
-        @NonNegative long currentDuration) {
-
-        return currentDuration;
-      }
-    };
   }
 
   public Future<Set<MessagingModule>> getMessagingModules() {

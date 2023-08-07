@@ -80,7 +80,7 @@ public class SecurityManagerTest {
 
 //  private static final ExpiryAwareToken TOKEN = new ExpiryAwareToken("token", 600);
 
-  long TOKEN_MAX_SHORT = 2;
+  long TOKEN_MAX_AGE_SHORT = 2;
   long TOKEN_MAX_AGE = 600;
   long TOKEN_MAX_AGE_LONG = 604800;
   String ACCESS_TOKEN = UUID.randomUUID().toString();
@@ -91,10 +91,10 @@ public class SecurityManagerTest {
       " 2023 19:44:44 GMT; Path=/authn; Secure; HTTPOnly; SameSite=None", REFRESH_TOKEN,
     TOKEN_MAX_AGE_LONG);
   String ACCESS_TOKEN_COOKIE_SHORT = format("folioAccessToken=%s; Max-Age=%d; Expires=Thu, 03 Aug" +
-    " 2023 19:54:44 GMT; Path=/; Secure; HTTPOnly; SameSite=None", ACCESS_TOKEN, TOKEN_MAX_SHORT);
+    " 2023 19:54:44 GMT; Path=/; Secure; HTTPOnly; SameSite=None", ACCESS_TOKEN, TOKEN_MAX_AGE_SHORT);
   String REFRESH_TOKEN_COOKIE_SHORT = format("folioRefreshToken=%s; Max-Age=%d; Expires=Thu, 10 A" +
       "ug 2023 19:44:44 GMT; Path=/authn; Secure; HTTPOnly; SameSite=None", REFRESH_TOKEN,
-    TOKEN_MAX_SHORT);
+    TOKEN_MAX_AGE_SHORT);
 
   private final Map<String, String> headers = new HashMap<>();
 
@@ -106,7 +106,7 @@ public class SecurityManagerTest {
   private final SystemUserConfig systemUserConfig = new SystemUserConfig(SYSTEM_USER_NAME,
     SYSTEM_USER_PASSWORD);
   @Spy
-  private final SecurityManagerImpl securityManager = new SecurityManagerImpl(vertx, cache,
+  private final SecurityManagerImpl securityManager = new SecurityManagerImpl(cache,
     systemUserConfig);
 
   private final Context vertxContext = vertx.getOrCreateContext();
@@ -469,7 +469,7 @@ public class SecurityManagerTest {
     Future<String> future = securityManager.getAccessToken(params);
 
     future.onComplete(ar -> {
-      context.assertEquals(TOKEN_MAX_SHORT, cache.getAccessExpiryAwareToken(TENANT).getMaxAge());
+      context.assertEquals(TOKEN_MAX_AGE_SHORT, cache.getAccessExpiryAwareToken(TENANT).getMaxAge());
       var accessToken = cache.getAccessExpiryAwareToken(TENANT);
       // Comparing links to make sure it expires
       Awaitility.await()

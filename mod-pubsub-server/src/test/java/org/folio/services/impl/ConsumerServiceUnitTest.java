@@ -81,7 +81,7 @@ public class ConsumerServiceUnitTest {
 
   @Spy
   @InjectMocks
-  private SecurityManager securityManager = spy(new SecurityManagerImpl(vertx, cache, systemUserConfig));
+  private SecurityManager securityManager = spy(new SecurityManagerImpl(cache, systemUserConfig));
 
   @Spy
   @InjectMocks
