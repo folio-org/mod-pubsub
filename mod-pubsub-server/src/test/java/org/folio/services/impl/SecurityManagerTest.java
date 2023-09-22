@@ -511,7 +511,7 @@ public class SecurityManagerTest {
       .put("lastName", "System")
       .put("addresses", new JsonArray());
 
-    return existingUser(id).put("type", "system").put("personal", personal);
+    return existingUser(id).put("type", SYSTEM_USER_TYPE).put("personal", personal);
   }
 
   private JsonObject emptyUsersResponse() {
