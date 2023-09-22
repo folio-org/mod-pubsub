@@ -366,14 +366,12 @@ public class SecurityManagerImpl implements SecurityManager {
 
   private boolean existingUserUpToDate(User existingUser) {
     return existingUser.getPersonal() != null
-      && isNotBlank(existingUser.getPersonal().getLastName())
-      && SYSTEM_USER_TYPE.equals(existingUser.getType());
+      && isNotBlank(existingUser.getPersonal().getLastName());
   }
 
   private User populateMissingUserProperties(User existingUser) {
     existingUser.setPersonal(new User.Personal());
     existingUser.getPersonal().setLastName(USER_LAST_NAME);
-    existingUser.setType(SYSTEM_USER_TYPE);
 
     return existingUser;
   }
