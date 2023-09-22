@@ -36,7 +36,6 @@ import com.google.common.io.Resources;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -55,7 +54,7 @@ public class SecurityManagerImpl implements SecurityManager {
   private static final List<String> PERMISSIONS = readPermissionsFromResource(PERMISSIONS_FILE_PATH);
   private static final String ACCESS_TOKEN_NAME = "folioAccessToken";
   private static final String REFRESH_TOKEN_NAME = "folioRefreshToken";
-  private static final String SYSTEM_USER_TYPE = "system";
+  public static final String SYSTEM_USER_TYPE = "system";
 
   private final Cache cache;
   private final SystemUserConfig systemUserConfig;

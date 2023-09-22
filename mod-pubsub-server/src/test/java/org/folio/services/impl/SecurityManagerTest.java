@@ -21,6 +21,7 @@ import static java.lang.String.format;
 import static org.folio.rest.util.OkapiConnectionParams.OKAPI_TENANT_HEADER;
 import static org.folio.rest.util.OkapiConnectionParams.OKAPI_TOKEN_HEADER;
 import static org.folio.rest.util.OkapiConnectionParams.OKAPI_URL_HEADER;
+import static org.folio.services.impl.SecurityManagerImpl.SYSTEM_USER_TYPE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -498,6 +499,7 @@ public class SecurityManagerTest {
       .put("id", id)
       .put("username", SYSTEM_USER_NAME)
       .put("active", "true")
+      .put("type", SYSTEM_USER_TYPE)
       .put("proxyFor", new JsonArray())
       .put("createdDate", Instant.now())
       .put("updatedDate", Instant.now())
