@@ -55,6 +55,7 @@ public class SecurityManagerImpl implements SecurityManager {
   private static final List<String> PERMISSIONS = readPermissionsFromResource(PERMISSIONS_FILE_PATH);
   private static final String ACCESS_TOKEN_NAME = "folioAccessToken";
   private static final String REFRESH_TOKEN_NAME = "folioRefreshToken";
+  private static final String SYSTEM_USER_TYPE = "system";
 
   private final Cache cache;
   private final SystemUserConfig systemUserConfig;
@@ -355,6 +356,7 @@ public class SecurityManagerImpl implements SecurityManager {
     user.setId(UUID.randomUUID().toString());
     user.setActive(true);
     user.setUsername(systemUserConfig.getName());
+    user.setType(SYSTEM_USER_TYPE);
 
     user.setPersonal(new User.Personal());
     user.getPersonal().setLastName(USER_LAST_NAME);
@@ -364,12 +366,14 @@ public class SecurityManagerImpl implements SecurityManager {
 
   private boolean existingUserUpToDate(User existingUser) {
     return existingUser.getPersonal() != null
-      && isNotBlank(existingUser.getPersonal().getLastName());
+      && isNotBlank(existingUser.getPersonal().getLastName())
+      && SYSTEM_USER_TYPE.equals(existingUser.getType());
   }
 
   private User populateMissingUserProperties(User existingUser) {
     existingUser.setPersonal(new User.Personal());
     existingUser.getPersonal().setLastName(USER_LAST_NAME);
+    existingUser.setType(SYSTEM_USER_TYPE);
 
     return existingUser;
   }
