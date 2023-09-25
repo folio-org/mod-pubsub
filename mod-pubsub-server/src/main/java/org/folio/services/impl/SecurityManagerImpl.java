@@ -54,7 +54,7 @@ public class SecurityManagerImpl implements SecurityManager {
   private static final List<String> PERMISSIONS = readPermissionsFromResource(PERMISSIONS_FILE_PATH);
   private static final String ACCESS_TOKEN_NAME = "folioAccessToken";
   private static final String REFRESH_TOKEN_NAME = "folioRefreshToken";
-  public static final String SYSTEM_USER_TYPE = "system";
+  private static final String SYSTEM_USER_TYPE = "system";
 
   private final Cache cache;
   private final SystemUserConfig systemUserConfig;
