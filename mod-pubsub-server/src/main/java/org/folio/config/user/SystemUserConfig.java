@@ -4,7 +4,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,11 +41,11 @@ public class SystemUserConfig {
     LOGGER.info("validateCredentials:: validating system user credentials");
     List<String> missingVariables = new ArrayList<>();
     if (isBlank(username)) {
-      LOGGER.error("validateCredentials:: username={}", quotedValueOrNull(username));
+      LOGGER.error("validateCredentials:: username is blank");
       missingVariables.add(SYSTEM_USER_NAME_VAR);
     }
     if (isBlank(password)) {
-      LOGGER.error("validateCredentials:: password={}", quotedValueOrNull(password));
+      LOGGER.error("validateCredentials:: password is blank");
       missingVariables.add(SYSTEM_USER_PASSWORD_VAR);
     }
     if (!missingVariables.isEmpty()) {
@@ -56,12 +55,6 @@ public class SystemUserConfig {
       throw new IllegalArgumentException(errorMessage);
     }
     LOGGER.info("validateCredentials:: system user credentials are valid");
-  }
-
-  private static String quotedValueOrNull(String s) {
-    return Optional.ofNullable(s)
-      .map(str -> "\"" + str + "\"")
-      .orElse(null);
   }
 
 }

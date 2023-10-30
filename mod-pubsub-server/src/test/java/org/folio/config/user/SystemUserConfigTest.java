@@ -17,7 +17,8 @@ public class SystemUserConfigTest {
 
   @Test
   public void validSystemUserCredentials() {
-    new SystemUserConfig(VALID_USERNAME, VALID_PASSWORD);
+    SystemUserConfig config = new SystemUserConfig(VALID_USERNAME, VALID_PASSWORD);
+    assertThat(config.getName(), is(VALID_USERNAME));
   }
 
   @Test
