@@ -18,17 +18,24 @@ public class SystemUserConfig {
   private static final Logger LOGGER = LogManager.getLogger();
   private static final String SYSTEM_USER_NAME_VAR = "SYSTEM_USER_NAME";
   private static final String SYSTEM_USER_PASSWORD_VAR = "SYSTEM_USER_PASSWORD";
+  private static final String SYSTEM_USER_CREATE_VAR = "SYSTEM_USER_CREATE";
 
   @Getter
   private final String name;
+  @Getter
+  private final boolean createUser;
   private final String password;
 
   public SystemUserConfig(@Value("${SYSTEM_USER_NAME:#{null}}") String name,
-    @Value("${SYSTEM_USER_PASSWORD:#{null}}") String password) {
+                          @Value("${SYSTEM_USER_PASSWORD:#{null}}") String password,
+                          @Value("${SYSTEM_USER_CREATE:true}") boolean createUser) {
 
-    validateCredentials(name, password);
+    if (createUser) {
+      validateCredentials(name, password);
+    }
     this.name = name;
     this.password = password;
+    this.createUser = createUser;
   }
 
   public JsonObject getUserCredentialsJson() {

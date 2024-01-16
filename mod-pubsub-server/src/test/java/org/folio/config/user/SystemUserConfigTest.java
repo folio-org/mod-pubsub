@@ -17,7 +17,7 @@ public class SystemUserConfigTest {
 
   @Test
   public void validSystemUserCredentials() {
-    SystemUserConfig config = new SystemUserConfig(VALID_USERNAME, VALID_PASSWORD);
+    SystemUserConfig config = new SystemUserConfig(VALID_USERNAME, VALID_PASSWORD, true);
     assertThat(config.getName(), is(VALID_USERNAME));
   }
 
@@ -41,10 +41,10 @@ public class SystemUserConfigTest {
   }
 
   private static void testFailedValidation(String username, String password,
-    String... missingVariables) {
+                                           String... missingVariables) {
 
     try {
-      new SystemUserConfig(username, password);
+      new SystemUserConfig(username, password, true);
     } catch (IllegalArgumentException e) {
       assertThat(e.getMessage(), is("Invalid system user credentials. " +
         "Please provide non-blank values for system variables: " + Arrays.toString(missingVariables)));
