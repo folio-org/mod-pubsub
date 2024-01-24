@@ -204,7 +204,7 @@ public class SecurityManagerTest {
   }
 
   @Test
-  public void shouldNotCreatePubSubUserIfEnvVariable(TestContext context) {
+  public void shouldNotCreatePubSubUserIfDisabled(TestContext context) {
     String userId = UUID.randomUUID().toString();
     String userCollection = new JsonObject()
       .put("users", new JsonArray().add(existingUpToDateUser(userId)))

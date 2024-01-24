@@ -18,7 +18,6 @@ public class SystemUserConfig {
   private static final Logger LOGGER = LogManager.getLogger();
   private static final String SYSTEM_USER_NAME_VAR = "SYSTEM_USER_NAME";
   private static final String SYSTEM_USER_PASSWORD_VAR = "SYSTEM_USER_PASSWORD";
-  private static final String SYSTEM_USER_CREATE_VAR = "SYSTEM_USER_CREATE";
 
   @Getter
   private final String name;
