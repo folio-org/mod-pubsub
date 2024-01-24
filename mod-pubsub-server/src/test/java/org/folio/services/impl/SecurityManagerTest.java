@@ -214,16 +214,13 @@ public class SecurityManagerTest {
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
-    Future<Void> future = securityManagerNoSystemUser.createPubSubUser(params);
-
-    future.map(ar -> {
+    securityManagerNoSystemUser.createPubSubUser(params)
+    .onSuccess(ar -> {
       List<LoggedRequest> requests = findAll(RequestPatternBuilder.allRequests());
       assertEquals(0, requests.size());
 
-      // Verify user create request has not sent
+      // Verify that user create request has not been sent
       verify(0, new RequestPatternBuilder(POST, urlEqualTo(USERS_URL)));
-
-      return null;
     }).onComplete(context.asyncAssertSuccess());
   }
 
