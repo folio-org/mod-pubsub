@@ -52,5 +52,4 @@ public class SystemUserConfigTest {
     }
     throw new AssertionError("IllegalArgumentException was expected");
   }
-
 }
