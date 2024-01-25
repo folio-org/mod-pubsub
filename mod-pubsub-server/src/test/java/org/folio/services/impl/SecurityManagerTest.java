@@ -109,9 +109,8 @@ public class SecurityManagerTest {
   @Spy
   private final SecurityManagerImpl securityManager = new SecurityManagerImpl(cache, systemUserConfig);
   @Spy
-  private final SecurityManagerImpl securityManagerNoSystemUser =
-    new SecurityManagerImpl(cache, new SystemUserConfig(SYSTEM_USER_NAME,
-      SYSTEM_USER_PASSWORD, false));
+  private final SecurityManagerImpl securityManagerNoSystemUser = new SecurityManagerImpl(
+    cache, new SystemUserConfig(SYSTEM_USER_NAME, SYSTEM_USER_PASSWORD, false));
 
   private final Context vertxContext = vertx.getOrCreateContext();
 
