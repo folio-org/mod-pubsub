@@ -26,8 +26,8 @@ public class SystemUserConfig {
   private final String password;
 
   public SystemUserConfig(@Value("${SYSTEM_USER_NAME:#{null}}") String name,
-   @Value("${SYSTEM_USER_PASSWORD:#{null}}") String password,
-   @Value("${SYSTEM_USER_CREATE:true}") boolean createUser) {
+    @Value("${SYSTEM_USER_PASSWORD:#{null}}") String password,
+    @Value("${SYSTEM_USER_CREATE:true}") boolean createUser) {
 
     if (createUser) {
       validateCredentials(name, password);
