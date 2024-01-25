@@ -168,7 +168,7 @@ public class SecurityManagerImpl implements SecurityManager {
 
   @Override
   public Future<Void> createPubSubUser(OkapiConnectionParams params) {
-    if (!systemUserConfig.isCreateUser()){
+    if (!systemUserConfig.isCreateUser()) {
       return Future.succeededFuture();
     }
 
