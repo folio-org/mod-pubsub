@@ -1,4 +1,4 @@
-## 2023-12-04 v2.11.4
+## 2024-01-29 v2.11.4
 * [MODPUBSUB-282](https://issues.folio.org/browse/MODPUBSUB-282) System User optional
 
 ## 2023-12-04 v2.11.3
