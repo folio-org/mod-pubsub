@@ -1,3 +1,6 @@
+## 2024-02-01 v2.12.0
+* [MODPUBSUB-282](https://issues.folio.org/browse/MODPUBSUB-282) System User optional
+
 ## 2023-12-04 v2.11.3
 * [MODPUBSUB-286](https://issues.folio.org/browse/MODPUBSUB-286) Fix memory leak issue related to Caffeine usage
 
