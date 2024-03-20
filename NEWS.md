@@ -1,3 +1,11 @@
+## 2024-03-20 v2.13.0
+* [MODPUBSUB-291](https://folio-org.atlassian.net/browse/MODPUBSUB-291) Upgrade to RMB 35.2.0, Vertx 4.5.5
+* [MODPUBSUB-286](https://folio-org.atlassian.net/browse/MODPUBSUB-286) Fix memory leak issue related to Caffeine usage
+* [MODPUBSUB-283](https://folio-org.atlassian.net/browse/MODPUBSUB-283) Upgrade to RMB 35.1.1, folio-di-support 2.0.1, kafka-clients 3.6.0
+* [MODPUBSUB-282](https://folio-org.atlassian.net/browse/MODPUBSUB-282) Allow disabling system user
+* [MODPUBSUB-278](https://folio-org.atlassian.net/browse/MODPUBSUB-278) Remove default user password
+* 
+
 ## 2023-10-13 v2.11.0
 * [FOLIO-3678](https://issues.folio.org/browse/FOLIO-3678) Use API-related Workflows
 * [FOLIO-1021](https://issues.folio.org/browse/FOLIO-1021) Update copyright year
