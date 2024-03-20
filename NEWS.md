@@ -1,3 +1,6 @@
+## 2023-10-13 v2.13.0
+* [MODPUBSUB-291](https://folio-org.atlassian.net/browse/MODPUBSUB-291) Upgrade to RMB 35.2.0, Vertx 4.5.5
+
 ## 2023-10-13 v2.11.0
 * [FOLIO-3678](https://issues.folio.org/browse/FOLIO-3678) Use API-related Workflows
 * [FOLIO-1021](https://issues.folio.org/browse/FOLIO-1021) Update copyright year
