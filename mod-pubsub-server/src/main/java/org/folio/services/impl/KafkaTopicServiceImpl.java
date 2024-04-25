@@ -40,11 +40,16 @@ public class KafkaTopicServiceImpl implements KafkaTopicService {
 //      .map(eventType -> new NewTopic(new PubSubConfig(kafkaConfig.getEnvId(), tenantId, eventType).getTopicName(), kafkaConfig.getNumberOfPartitions(), (short) kafkaConfig.getReplicationFactor()))
 //      .collect(Collectors.toList());
 
+    LOGGER.info("Building topics for events: {}", eventTypes);
+
     PubSubKafkaTopic[] topics = eventTypes.stream()
       .map(eventType -> new PubSubKafkaTopic("mod-pubsub", eventType))
       .toArray(PubSubKafkaTopic[]::new);
 
-    return kafkaAdminClientService.createKafkaTopics(topics, tenantId)
+    LOGGER.info("Topics built, creating");
+
+    return Future.succeededFuture()
+      .compose(r -> kafkaAdminClientService.createKafkaTopics(topics, tenantId))
       .onSuccess(r -> LOGGER.info("Created topics: [{}]", StringUtils.join(eventTypes, ",")))
       .onFailure(e -> LOGGER.error("Some of the topics [{}] were not created. Cause: {}",
         StringUtils.join(eventTypes, ","), e.getMessage(), e))
