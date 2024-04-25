@@ -31,7 +31,7 @@ public class KafkaTopicServiceImpl implements KafkaTopicService {
   public KafkaTopicServiceImpl(@Autowired KafkaAdminClient kafkaAdminClient, @Autowired KafkaConfig kafkaConfig) {
     this.kafkaAdminClient = kafkaAdminClient;
     this.kafkaConfig = kafkaConfig;
-    this.kafkaAdminClientService = new KafkaAdminClientService(Vertx.vertx());
+    this.kafkaAdminClientService = new KafkaAdminClientService(Vertx.currentContext().owner());
   }
 
   @Override
