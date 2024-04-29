@@ -22,7 +22,7 @@ import java.util.UUID;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.folio.config.user.SystemUserConfig;
-import org.folio.kafka.KafkaConfig;
+import org.folio.kafka.PubSubKafkaConfig;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.EventMetadata;
 import org.folio.rest.jaxrs.model.MessagingModule;
@@ -71,7 +71,7 @@ public class ConsumerServiceUnitTest {
 
   private Vertx vertx = Vertx.vertx();
   @Mock
-  private KafkaConfig kafkaConfig;
+  private PubSubKafkaConfig kafkaConfig;
   @Mock
   private Cache cache;
   @Mock
