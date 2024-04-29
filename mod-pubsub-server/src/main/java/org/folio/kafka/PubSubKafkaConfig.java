@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
-public class KafkaConfig {
+public class PubSubKafkaConfig {
 
   @Value("${KAFKA_HOST}")
   private String kafkaHost;
