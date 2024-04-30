@@ -6,11 +6,11 @@ import org.junit.Assert;
 import org.junit.Test;
 
 
-public class KafkaConfigTest {
+public class PubSubKafkaConfigTest {
 
   @Test
   public void shouldReturnProducerProperties() {
-    Map<String, String> producerProps = new KafkaConfig().getProducerProps();
+    Map<String, String> producerProps = new PubSubKafkaConfig().getProducerProps();
 
     Assert.assertEquals("PLAINTEXT", producerProps.get("security.protocol"));
     Assert.assertEquals("TLSv1.2", producerProps.get("ssl.protocol"));
@@ -21,7 +21,7 @@ public class KafkaConfigTest {
 
   @Test
   public void shouldReturnConsumerProperties() {
-    Map<String, String> consumerProps = new KafkaConfig().getConsumerProps();
+    Map<String, String> consumerProps = new PubSubKafkaConfig().getConsumerProps();
 
     Assert.assertEquals("PLAINTEXT", consumerProps.get("security.protocol"));
     Assert.assertEquals("TLSv1.2", consumerProps.get("ssl.protocol"));

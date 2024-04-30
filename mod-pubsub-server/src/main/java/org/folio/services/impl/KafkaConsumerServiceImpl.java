@@ -14,7 +14,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
-import org.folio.kafka.KafkaConfig;
+import org.folio.kafka.PubSubKafkaConfig;
 import org.folio.kafka.PubSubConfig;
 import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.rest.jaxrs.model.AuditMessage;
@@ -53,14 +53,14 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
   private static final Logger LOGGER = LogManager.getLogger();
 
   private Vertx vertx;
-  private KafkaConfig kafkaConfig;
+  private PubSubKafkaConfig kafkaConfig;
   private Cache cache;
   private AuditService auditService;
   private SecurityManager securityManager;
   private static final int RETRY_NUMBER = Integer.parseInt(MODULE_SPECIFIC_ARGS.getOrDefault("pubsub.delivery.retry.number", "5"));
 
   public KafkaConsumerServiceImpl(@Autowired Vertx vertx,
-                                  @Autowired KafkaConfig kafkaConfig,
+                                  @Autowired PubSubKafkaConfig kafkaConfig,
                                   @Autowired SecurityManager securityManager,
                                   @Autowired Cache cache) {
     this.vertx = vertx;

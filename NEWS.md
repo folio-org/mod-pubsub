@@ -1,3 +1,6 @@
+## 2024-04-30 v2.13.1
+* [MODPUBSUB-290](https://folio-org.atlassian.net/browse/MODPUBSUB-290) Use folio-kafka-wrapper to create topics
+
 ## 2024-03-20 v2.13.0
 * [MODPUBSUB-291](https://folio-org.atlassian.net/browse/MODPUBSUB-291) Upgrade to RMB 35.2.0, Vertx 4.5.5
 * [MODPUBSUB-286](https://folio-org.atlassian.net/browse/MODPUBSUB-286) Fix memory leak issue related to Caffeine usage
