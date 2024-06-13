@@ -1,5 +1,14 @@
 package org.folio.services.impl;
 
+import static java.lang.String.format;
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
+import static org.folio.rest.RestVerticle.MODULE_SPECIFIC_ARGS;
+import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
+import static org.folio.rest.util.OkapiConnectionParams.USER_ID;
+import static org.folio.rest.util.RestUtil.doRequest;
+import static org.folio.services.util.AuditUtil.constructJsonAuditMessage;
+import static org.folio.services.util.MessagingModulesUtil.filter;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -9,13 +18,21 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
-import org.folio.kafka.PubSubKafkaConfig;
+import org.folio.config.user.SystemUserConfig;
 import org.folio.kafka.PubSubConfig;
+import org.folio.kafka.PubSubKafkaConfig;
 import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.rest.jaxrs.model.AuditMessage;
 import org.folio.rest.jaxrs.model.Event;
@@ -30,23 +47,6 @@ import org.folio.services.cache.Cache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-
-import static java.lang.String.format;
-import static org.apache.commons.collections4.CollectionUtils.isEmpty;
-import static org.folio.rest.RestVerticle.MODULE_SPECIFIC_ARGS;
-import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
-import static org.folio.rest.util.OkapiConnectionParams.USER_ID;
-import static org.folio.rest.util.RestUtil.doRequest;
-import static org.folio.services.util.AuditUtil.constructJsonAuditMessage;
-import static org.folio.services.util.MessagingModulesUtil.filter;
-
 @Component
 public class KafkaConsumerServiceImpl implements ConsumerService {
 
@@ -57,6 +57,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
   private Cache cache;
   private AuditService auditService;
   private SecurityManager securityManager;
+  @Autowired private SystemUserConfig systemUserConfig;
   private static final int RETRY_NUMBER = Integer.parseInt(MODULE_SPECIFIC_ARGS.getOrDefault("pubsub.delivery.retry.number", "5"));
 
   public KafkaConsumerServiceImpl(@Autowired Vertx vertx,
@@ -136,9 +137,17 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
     List<Future<RestUtil.WrappedResponse>> futureList = new ArrayList<>(); //NOSONAR
     Promise<Void> result = Promise.promise();
     Map<MessagingModule, AtomicInteger> retry = new ConcurrentHashMap<>();
-    return securityManager.getAccessToken(params)
-      .onSuccess(params::setToken)
-      .compose(ar -> cache.getMessagingModules())
+    Future<Void> startProcess;
+    if (systemUserConfig.isCreateUser()) {
+      startProcess = securityManager.getAccessToken(params)
+        .onSuccess(params::setToken)
+        .mapEmpty();
+    } else {
+      LOGGER.info("System user creation is disabled. Skipping token obtaining");
+      startProcess = Future.succeededFuture();
+    }
+    return startProcess
+      .compose(ignored -> cache.getMessagingModules())
       .map(messagingModules -> filter(messagingModules,
         new MessagingModuleFilter()
           .withTenantId(params.getTenantId())
