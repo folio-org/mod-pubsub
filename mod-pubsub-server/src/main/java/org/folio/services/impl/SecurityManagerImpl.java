@@ -79,6 +79,11 @@ public class SecurityManagerImpl implements SecurityManager {
     params.setToken(EMPTY);
     final String tenantId = params.getTenantId();
 
+    if (!systemUserConfig.isCreateUser()) {
+      LOGGER.info("getAccessToken:: System user is disabled. Using empty token for tenant {}", tenantId);
+      return Future.succeededFuture(EMPTY);
+    }
+
     String cachedAccessToken = cache.getAccessToken(tenantId);
     if (!StringUtils.isEmpty(cachedAccessToken)) {
       LOGGER.debug("getAccessToken:: Using cached access token for tenant {}",

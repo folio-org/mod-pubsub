@@ -57,7 +57,6 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
   private Cache cache;
   private AuditService auditService;
   private SecurityManager securityManager;
-  @Autowired private SystemUserConfig systemUserConfig;
   private static final int RETRY_NUMBER = Integer.parseInt(MODULE_SPECIFIC_ARGS.getOrDefault("pubsub.delivery.retry.number", "5"));
 
   public KafkaConsumerServiceImpl(@Autowired Vertx vertx,
@@ -137,16 +136,8 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
     List<Future<RestUtil.WrappedResponse>> futureList = new ArrayList<>(); //NOSONAR
     Promise<Void> result = Promise.promise();
     Map<MessagingModule, AtomicInteger> retry = new ConcurrentHashMap<>();
-    Future<Void> startProcess;
-    if (systemUserConfig.isCreateUser()) {
-      startProcess = securityManager.getAccessToken(params)
-        .onSuccess(params::setToken)
-        .mapEmpty();
-    } else {
-      LOGGER.info("System user creation is disabled. Skipping token obtaining");
-      startProcess = Future.succeededFuture();
-    }
-    return startProcess
+    return securityManager.getAccessToken(params)
+      .onSuccess(params::setToken)
       .compose(ignored -> cache.getMessagingModules())
       .map(messagingModules -> filter(messagingModules,
         new MessagingModuleFilter()
