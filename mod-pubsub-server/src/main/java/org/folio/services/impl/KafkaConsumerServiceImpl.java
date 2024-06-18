@@ -138,7 +138,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
     Map<MessagingModule, AtomicInteger> retry = new ConcurrentHashMap<>();
     return securityManager.getAccessToken(params)
       .onSuccess(params::setToken)
-      .compose(ignored -> cache.getMessagingModules())
+      .compose(ar -> cache.getMessagingModules())
       .map(messagingModules -> filter(messagingModules,
         new MessagingModuleFilter()
           .withTenantId(params.getTenantId())
@@ -167,7 +167,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
   protected Handler<AsyncResult<RestUtil.WrappedResponse>> getEventDeliveredHandler(Event event, String tenantId, MessagingModule subscriber, OkapiConnectionParams params, Map<MessagingModule, AtomicInteger> retry) {
     retry.get(subscriber).incrementAndGet();
     return ar -> {
-      LOGGER.info("Delivering was complete. Checking for response...");
+      LOGGER.info("Delivering for event with ID {} was complete. Checking for response...", event.getId());
       if (ar.failed()) {
         String errorMessage = format("%s event with id '%s' was not delivered to %s", event.getEventType(), event.getId(), subscriber.getSubscriberCallback());
         LOGGER.error(errorMessage, ar.cause());
@@ -180,7 +180,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
           && statusCode != HttpStatus.HTTP_NO_CONTENT.toInt()) {
 
           String error = format("Error delivering %s event with id '%s' to %s, response status code is %s, %s",
-            event.getEventType(), event.getId(), subscriber.getSubscriberCallback(), statusCode, ar.result().getResponse().statusMessage());
+            event.getEventType(), event.getId(), subscriber.getSubscriberCallback(), statusCode, ar.result().getResponse().bodyAsJsonArray());
           LOGGER.error(error);
           auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.REJECTED, error));
           if (statusCode >= 400 && statusCode < 500) {
