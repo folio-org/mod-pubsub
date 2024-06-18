@@ -180,7 +180,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
           && statusCode != HttpStatus.HTTP_NO_CONTENT.toInt()) {
 
           String error = format("Error delivering %s event with id '%s' to %s, response status code is %s, %s",
-            event.getEventType(), event.getId(), subscriber.getSubscriberCallback(), statusCode, ar.result().getResponse().bodyAsJsonArray());
+            event.getEventType(), event.getId(), subscriber.getSubscriberCallback(), statusCode, ar.result().getResponse().bodyAsString());
           LOGGER.error(error);
           auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.REJECTED, error));
           if (statusCode >= 400 && statusCode < 500) {
