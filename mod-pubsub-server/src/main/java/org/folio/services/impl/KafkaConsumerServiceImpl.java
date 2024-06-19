@@ -1,5 +1,4 @@
 package org.folio.services.impl;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -167,7 +166,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
   protected Handler<AsyncResult<RestUtil.WrappedResponse>> getEventDeliveredHandler(Event event, String tenantId, MessagingModule subscriber, OkapiConnectionParams params, Map<MessagingModule, AtomicInteger> retry) {
     retry.get(subscriber).incrementAndGet();
     return ar -> {
-      LOGGER.info("Delivering was complete. Checking for response...");
+      LOGGER.info("Delivering for event with ID {} was complete. Checking for response...", event.getId());
       if (ar.failed()) {
         String errorMessage = format("%s event with id '%s' was not delivered to %s", event.getEventType(), event.getId(), subscriber.getSubscriberCallback());
         LOGGER.error(errorMessage, ar.cause());

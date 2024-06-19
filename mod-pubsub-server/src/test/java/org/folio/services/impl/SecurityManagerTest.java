@@ -345,6 +345,18 @@ public class SecurityManagerTest {
   }
 
   @Test
+  public void shouldReturnSuccessFutureWithEmptyTokenIfSystemUserCreationDisabled(TestContext context) {
+    OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
+
+    Future<String> future = securityManagerNoSystemUser.getAccessToken(params);
+
+    future.onComplete(ar -> {
+      context.assertTrue(ar.succeeded());
+      context.assertEquals("", ar.result());
+    });
+  }
+
+  @Test
   public void shouldUpdateExistingUser(TestContext context) {
     final String userId = UUID.randomUUID().toString();
     final String userCollection = new JsonObject()
