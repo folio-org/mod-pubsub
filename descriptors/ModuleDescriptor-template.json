@@ -303,6 +303,14 @@
       ]
     }
   ],
+  "metadata": {
+    "user": {
+      "type": "module",
+      "permissions": [
+        "pubsub.events.post"
+      ]
+    }
+  },
   "launchDescriptor": {
     "dockerImage": "${artifactId}:${version}",
     "dockerArgs": {
