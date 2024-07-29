@@ -305,7 +305,7 @@
   ],
   "metadata": {
     "user": {
-      "type": "module",
+      "type": "system",
       "permissions": [
         "pubsub.events.post"
       ]
