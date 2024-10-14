@@ -307,7 +307,8 @@
     "user": {
       "type": "system",
       "permissions": [
-        "pubsub.events.post"
+        "pubsub.events.post",
+        "audit.pub-sub-handlers.log-record-event.post"
       ]
     }
   },
