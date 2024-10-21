@@ -308,7 +308,8 @@
       "type": "system",
       "permissions": [
         "pubsub.events.post",
-        "audit.pub-sub-handlers.log-record-event.post"
+        "audit.pub-sub-handlers.log-record-event.post",
+        "remote-storage.pub-sub-handlers.log-record-event.post"
       ]
     }
   },
