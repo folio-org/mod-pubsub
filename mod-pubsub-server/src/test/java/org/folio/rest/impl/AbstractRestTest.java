@@ -236,7 +236,7 @@ public abstract class AbstractRestTest {
     AtomicBoolean isReady = new AtomicBoolean();
 
     await()
-      .atMost(120, TimeUnit.SECONDS)
+      .atMost(15, TimeUnit.SECONDS)
       .pollDelay(3, TimeUnit.SECONDS)
       .pollInterval(3, TimeUnit.SECONDS)
       .alias("Is Kafka Up?")
