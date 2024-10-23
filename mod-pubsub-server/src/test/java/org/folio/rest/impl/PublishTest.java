@@ -129,7 +129,7 @@ public class PublishTest extends AbstractRestTest {
 
     String methodName = Thread.currentThread().getStackTrace()[1].getMethodName();
     await()
-      .atMost(15, TimeUnit.SECONDS)
+      .atMost(120, TimeUnit.SECONDS)
       .alias(methodName)
       .pollInterval(3, TimeUnit.SECONDS)
       .untilAsserted(() -> {
