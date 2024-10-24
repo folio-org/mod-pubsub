@@ -1,22 +1,19 @@
 package org.folio.rest.impl;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.created;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
-import static com.github.tomakehurst.wiremock.client.WireMock.created;
-import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 
-import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
-import io.restassured.RestAssured;
-import io.restassured.builder.RequestSpecBuilder;
-import io.restassured.http.ContentType;
-import io.vertx.core.json.JsonObject;
 import java.nio.file.Path;
+import java.util.Objects;
+
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -28,6 +25,14 @@ import org.testcontainers.containers.Network;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.images.builder.ImageFromDockerfile;
+import org.testcontainers.utility.DockerImageName;
+
+import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+
+import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.http.ContentType;
+import io.vertx.core.json.JsonObject;
 
 /**
  * Test that the shaded fat uber jar works and that the Dockerfile works.
@@ -37,6 +42,9 @@ public class PubSubIT {
   private static final Logger LOGGER = LoggerFactory.getLogger(PubSubIT.class);
 
   private static final Network network = Network.newNetwork();
+
+  private static final DockerImageName POSTGRES_IMAGE_NAME = DockerImageName.parse(
+    Objects.toString(System.getenv("TESTCONTAINERS_POSTGRES_IMAGE"), "postgres:16-alpine"));
 
   @ClassRule
   public static final WireMockClassRule okapi = new WireMockClassRule();
@@ -58,13 +66,13 @@ public class PubSubIT {
 
   @ClassRule
   public static final PostgreSQLContainer<?> postgres =
-    new PostgreSQLContainer<>("postgres:12-alpine")
-    .withNetwork(network)
-    .withNetworkAliases("postgres")
-    .withExposedPorts(5432)
-    .withUsername("username")
-    .withPassword("password")
-    .withDatabaseName("postgres");
+    new PostgreSQLContainer<>(POSTGRES_IMAGE_NAME)
+      .withNetwork(network)
+      .withNetworkAliases("postgres")
+      .withExposedPorts(5432)
+      .withUsername("username")
+      .withPassword("password")
+      .withDatabaseName("postgres");
 
   @BeforeClass
   public static void beforeClass() {

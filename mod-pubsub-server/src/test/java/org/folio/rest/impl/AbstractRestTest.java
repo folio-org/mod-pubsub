@@ -212,7 +212,7 @@ public abstract class AbstractRestTest {
     String query = "Select 1";
     AtomicBoolean isReady = new AtomicBoolean();
     await()
-      .atMost(15, TimeUnit.SECONDS)
+      .atMost(120, TimeUnit.SECONDS)
       .pollInterval(3, TimeUnit.SECONDS)
       .alias("Is Postgres Up?")
       .until(() -> {
