@@ -26,7 +26,7 @@
           ],
           "pathPattern": "/pubsub/event-types",
           "permissionsRequired": [
-            "pubsub.event-types.get"
+            "pubsub.event-types.collection.get"
           ]
         },
         {
@@ -35,7 +35,7 @@
           ],
           "pathPattern": "/pubsub/event-types",
           "permissionsRequired": [
-            "pubsub.event-types.post"
+            "pubsub.event-types.item.post"
           ]
         },
         {
@@ -44,7 +44,7 @@
           ],
           "pathPattern": "/pubsub/event-types/{eventTypeName}",
           "permissionsRequired": [
-            "pubsub.event-types.get"
+            "pubsub.event-types.item.get"
           ]
         },
         {
@@ -53,7 +53,7 @@
           ],
           "pathPattern": "/pubsub/event-types/{eventTypeName}",
           "permissionsRequired": [
-            "pubsub.event-types.put"
+            "pubsub.event-types.item.put"
           ]
         },
         {
@@ -62,7 +62,7 @@
           ],
           "pathPattern": "/pubsub/event-types/{eventTypeName}",
           "permissionsRequired": [
-            "pubsub.event-types.delete"
+            "pubsub.event-types.item.delete"
           ]
         }
       ]
@@ -220,24 +220,32 @@
   ],
   "permissionSets": [
     {
-      "permissionName": "pubsub.event-types.get",
+      "permissionName": "pubsub.event-types.collection.get",
+      "displayName": "PubSub - get Event Descriptor collection",
+      "description": "Get Event Descriptor collection"
+    },
+    {
+      "permissionName": "pubsub.event-types.item.get",
       "displayName": "PubSub - get Event Descriptor",
       "description": "Get Event Descriptor"
     },
     {
-      "permissionName": "pubsub.event-types.post",
+      "permissionName": "pubsub.event-types.item.post",
       "displayName": "PubSub - create new Event Type",
-      "description": "Post Event Descriptor"
+      "description": "Post Event Descriptor",
+      "replaces": ["pubsub.event-types.post"]
     },
     {
-      "permissionName": "pubsub.event-types.put",
+      "permissionName": "pubsub.event-types.item.put",
       "displayName": "PubSub - update Event Descriptor for Event Type",
-      "description": "Put Event Descriptor"
+      "description": "Put Event Descriptor",
+      "replaces": ["pubsub.event-types.put"]
     },
     {
-      "permissionName": "pubsub.event-types.delete",
+      "permissionName": "pubsub.event-types.item.delete",
       "displayName": "PubSub - delete Event Type",
-      "description": "Delete Event Descriptor"
+      "description": "Delete Event Descriptor",
+      "replaces": ["pubsub.event-types.delete"]
     },
     {
       "permissionName": "pubsub.publishers.post",
