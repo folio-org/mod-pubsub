@@ -35,7 +35,7 @@
           ],
           "pathPattern": "/pubsub/event-types",
           "permissionsRequired": [
-            "pubsub.event-types.item.post"
+            "pubsub.event-types.post"
           ]
         },
         {
@@ -53,7 +53,7 @@
           ],
           "pathPattern": "/pubsub/event-types/{eventTypeName}",
           "permissionsRequired": [
-            "pubsub.event-types.item.put"
+            "pubsub.event-types.put"
           ]
         },
         {
@@ -62,7 +62,7 @@
           ],
           "pathPattern": "/pubsub/event-types/{eventTypeName}",
           "permissionsRequired": [
-            "pubsub.event-types.item.delete"
+            "pubsub.event-types.delete"
           ]
         }
       ]
@@ -227,25 +227,23 @@
     {
       "permissionName": "pubsub.event-types.item.get",
       "displayName": "PubSub - get Event Descriptor",
-      "description": "Get Event Descriptor"
+      "description": "Get Event Descriptor",
+      "replaces": ["pubsub.event-types.get"]
     },
     {
-      "permissionName": "pubsub.event-types.item.post",
+      "permissionName": "pubsub.event-types.post",
       "displayName": "PubSub - create new Event Type",
-      "description": "Post Event Descriptor",
-      "replaces": ["pubsub.event-types.post"]
+      "description": "Post Event Descriptor"
     },
     {
-      "permissionName": "pubsub.event-types.item.put",
+      "permissionName": "pubsub.event-types.put",
       "displayName": "PubSub - update Event Descriptor for Event Type",
-      "description": "Put Event Descriptor",
-      "replaces": ["pubsub.event-types.put"]
+      "description": "Put Event Descriptor"
     },
     {
-      "permissionName": "pubsub.event-types.item.delete",
+      "permissionName": "pubsub.event-types.delete",
       "displayName": "PubSub - delete Event Type",
-      "description": "Delete Event Descriptor",
-      "replaces": ["pubsub.event-types.delete"]
+      "description": "Delete Event Descriptor"
     },
     {
       "permissionName": "pubsub.publishers.post",
