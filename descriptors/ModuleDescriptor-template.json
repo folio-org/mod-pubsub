@@ -290,6 +290,16 @@
       "description": "Delete publishers or subscribers"
     },
     {
+      "permissionName": "remote-storage.pub-sub-handlers.log-record-event.post",
+      "displayName" : "log record events from pub-sub",
+      "description" : "log record events received from pub-sub"
+    },
+    {
+      "permissionName": "audit.pub-sub-handlers.log-record-event.post",
+      "displayName" : "log record events from pub-sub",
+      "description" : "log record events received from pub-sub"
+    },
+    {
       "permissionName": "pubsub.events.post",
       "displayName": "PubSub - post event.",
       "description": "Post all events.",
@@ -307,7 +317,9 @@
     "user": {
       "type": "system",
       "permissions": [
-        "pubsub.events.post"
+        "pubsub.events.post",
+        "audit.pub-sub-handlers.log-record-event.post",
+        "remote-storage.pub-sub-handlers.log-record-event.post"
       ]
     }
   },
