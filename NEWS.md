@@ -1,3 +1,6 @@
+## 2024-11-19 v2.15.1
+* [MODPUBSUB-302](https://folio-org.atlassian.net/browse/MODPUBSUB-302) Add permissions in pubsub module for MD file changes in Eureka
+
 ## 2024-10-29 v2.15.0
 * [MODPUBSUB-301](https://folio-org.atlassian.net/browse/MODPUBSUB-301) Circulation logs are not displayed
 * [MODPUBSUB-298](https://folio-org.atlassian.net/browse/MODPUBSUB-298) Upgrade to RMB v35.3.0
