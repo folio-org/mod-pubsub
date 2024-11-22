@@ -390,6 +390,16 @@
         </configuration>
       </plugin>
 
+      <plugin>
+        <groupId>org.folio</groupId>
+        <artifactId>folio-module-descriptor-validator</artifactId>
+        <version>${folio-module-descriptor-validator.version}</version>
+        <executions>
+          <execution>
+            <phase/>  <!-- skip execution, run in parent only -->
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
