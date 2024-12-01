@@ -1,3 +1,6 @@
+## 2024-12-01 v2.15.2
+* [MODPUBSUB-295](https://folio-org.atlassian.net/browse/MODPUBSUB-295) Review and cleanup Module Descriptor
+
 ## 2024-11-19 v2.15.1
 * [MODPUBSUB-302](https://folio-org.atlassian.net/browse/MODPUBSUB-302) Add permissions in pubsub module for MD file changes in Eureka
 
