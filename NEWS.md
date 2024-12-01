@@ -1,3 +1,12 @@
+## 2024-11-19 v2.15.1
+* [MODPUBSUB-302](https://folio-org.atlassian.net/browse/MODPUBSUB-302) Add permissions in pubsub module for MD file changes in Eureka
+
+## 2024-10-29 v2.15.0
+* [MODPUBSUB-301](https://folio-org.atlassian.net/browse/MODPUBSUB-301) Circulation logs are not displayed
+* [MODPUBSUB-298](https://folio-org.atlassian.net/browse/MODPUBSUB-298) Upgrade to RMB v35.3.0
+* [MODPUBSUB-296](https://folio-org.atlassian.net/browse/MODPUBSUB-296) Add new permission to the list of those granted to the pubsub system user
+* [EUREKA-225](https://folio-org.atlassian.net/browse/EUREKA-225) Update module descriptors to use the "metadata" field
+
 ## 2024-06-20 v2.14.0
 * [MODPUBSUB-290](https://folio-org.atlassian.net/browse/MODPUBSUB-290) Use folio-kafka-wrapper to create topics
 * [EUREKA-79](https://folio-org.atlassian.net/browse/EUREKA-79) Skip retrieving token if system user is disabled

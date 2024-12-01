@@ -26,7 +26,7 @@
           ],
           "pathPattern": "/pubsub/event-types",
           "permissionsRequired": [
-            "pubsub.event-types.get"
+            "pubsub.event-types.collection.get"
           ]
         },
         {
@@ -44,7 +44,7 @@
           ],
           "pathPattern": "/pubsub/event-types/{eventTypeName}",
           "permissionsRequired": [
-            "pubsub.event-types.get"
+            "pubsub.event-types.item.get"
           ]
         },
         {
@@ -220,9 +220,15 @@
   ],
   "permissionSets": [
     {
-      "permissionName": "pubsub.event-types.get",
+      "permissionName": "pubsub.event-types.collection.get",
+      "displayName": "PubSub - get Event Descriptor collection",
+      "description": "Get Event Descriptor collection"
+    },
+    {
+      "permissionName": "pubsub.event-types.item.get",
       "displayName": "PubSub - get Event Descriptor",
-      "description": "Get Event Descriptor"
+      "description": "Get Event Descriptor",
+      "replaces": ["pubsub.event-types.get"]
     },
     {
       "permissionName": "pubsub.event-types.post",
@@ -290,6 +296,16 @@
       "description": "Delete publishers or subscribers"
     },
     {
+      "permissionName": "remote-storage.pub-sub-handlers.log-record-event.post",
+      "displayName" : "log record events from pub-sub",
+      "description" : "log record events received from pub-sub"
+    },
+    {
+      "permissionName": "audit.pub-sub-handlers.log-record-event.post",
+      "displayName" : "log record events from pub-sub",
+      "description" : "log record events received from pub-sub"
+    },
+    {
       "permissionName": "pubsub.events.post",
       "displayName": "PubSub - post event.",
       "description": "Post all events.",
@@ -307,7 +323,9 @@
     "user": {
       "type": "system",
       "permissions": [
-        "pubsub.events.post"
+        "pubsub.events.post",
+        "audit.pub-sub-handlers.log-record-event.post",
+        "remote-storage.pub-sub-handlers.log-record-event.post"
       ]
     }
   },
