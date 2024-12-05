@@ -544,7 +544,7 @@ Endpoint, which will receive the event from the publisher module has address: "/
 
 - Subscriber module needs to provide endpoints for all subscriptions listed in the `subscriptions` block of its `MessagingDescriptor.json`. 
 Let's add an interface to the subscriber's `provides` block in the `ModuleDescriptor-template.json`. 
-Note that each handler should have `pubsub.events.post` permission in the `requiredPermissions` which would allow `mod-pubsub` to call this endpoint.
+Note that each handler should have `pubsub.events.post` permission in the `permissionsRequired` which would allow `mod-pubsub` to call this endpoint.
 ```json
 {
   "id": "{module-name}-event-handlers",
