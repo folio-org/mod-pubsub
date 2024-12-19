@@ -1,3 +1,6 @@
+## 2024-12-19 v2.15.3
+* [MODPUBSUB-307](https://folio-org.atlassian.net/browse/MODPUBSUB-307) Add permissions to call circulation event handlers
+
 ## 2024-12-01 v2.15.2
 * [MODPUBSUB-295](https://folio-org.atlassian.net/browse/MODPUBSUB-295) Review and cleanup Module Descriptor
 

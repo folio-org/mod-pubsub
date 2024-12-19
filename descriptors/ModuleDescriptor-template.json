@@ -306,6 +306,16 @@
       "description" : "log record events received from pub-sub"
     },
     {
+      "permissionName": "circulation.handlers.loan-related-fee-fine-closed.post",
+      "displayName": "circulation - loan-related fee/fine closed",
+      "description": "Loan-related fee/fine closed"
+    },
+    {
+      "permissionName": "circulation.handlers.fee-fine-balance-changed.post",
+      "displayName": "circulation - fee/fine balance changed",
+      "description": "Fee/fine balance changed"
+    },
+    {
       "permissionName": "pubsub.events.post",
       "displayName": "PubSub - post event.",
       "description": "Post all events.",
@@ -325,7 +335,9 @@
       "permissions": [
         "pubsub.events.post",
         "audit.pub-sub-handlers.log-record-event.post",
-        "remote-storage.pub-sub-handlers.log-record-event.post"
+        "remote-storage.pub-sub-handlers.log-record-event.post",
+        "circulation.handlers.loan-related-fee-fine-closed.post",
+        "circulation.handlers.fee-fine-balance-changed.post"
       ]
     }
   },
