@@ -1,3 +1,6 @@
+## 2025-01-16 v2.15.4
+* [MODPUBSUB-309](https://github.com/folio-org/mod-pubsub/pull/289) Upgrade to kafka-clients 3.9.0, folio-di-support 2.2.0, vertx 4.5.11
+
 ## 2024-12-19 v2.15.3
 * [MODPUBSUB-307](https://folio-org.atlassian.net/browse/MODPUBSUB-307) Add permissions to call circulation event handlers
 
