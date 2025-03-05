@@ -113,8 +113,8 @@ public class ConsumerServiceUnitTest {
     .onComplete(context.asyncAssertSuccess(x -> {
       List<LoggedRequest> requests = WireMock.findAll(RequestPatternBuilder.allRequests());
       assertEquals(1, requests.size());
-      assertEquals(CALLBACK_ADDRESS, requests.get(0).getUrl());
-      assertEquals("POST", requests.get(0).getMethod().getName());
+      assertEquals(CALLBACK_ADDRESS, requests.getFirst().getUrl());
+      assertEquals("POST", requests.getFirst().getMethod().getName());
     }));
   }
 
@@ -137,9 +137,9 @@ public class ConsumerServiceUnitTest {
     .onComplete(context.asyncAssertSuccess(x -> {
       List<LoggedRequest> requests = WireMock.findAll(RequestPatternBuilder.allRequests());
       assertEquals(1, requests.size());
-      assertEquals(CALLBACK_ADDRESS, requests.get(0).getUrl());
-      assertEquals("POST", requests.get(0).getMethod().getName());
-      assertEquals(event.getEventPayload(), requests.get(0).getBodyAsString());
+      assertEquals(CALLBACK_ADDRESS, requests.getFirst().getUrl());
+      assertEquals("POST", requests.getFirst().getMethod().getName());
+      assertEquals(event.getEventPayload(), requests.getFirst().getBodyAsString());
     }));
   }
 

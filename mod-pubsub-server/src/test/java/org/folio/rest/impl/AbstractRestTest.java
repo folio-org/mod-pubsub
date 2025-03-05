@@ -1,6 +1,5 @@
 package org.folio.rest.impl;
 
-import static java.lang.String.format;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
@@ -139,15 +138,15 @@ public abstract class AbstractRestTest {
               String error = res3.bodyAsJson(TenantJob.class).getError();
               // it would be better if this would actually succeed.. But we'll accept this error for now
               if (error != null) {
-                context.assertEquals(format("Failed to create %s user. Received status code 404",
-                  SYSTEM_USER_NAME), error);
+                context.assertEquals(
+                  "Failed to create %s user. Received status code 404".formatted(SYSTEM_USER_NAME), error);
               }
             }));
           } else {
             // if we get here and error is immediately returned from tenant init
             // it would be better if this would actually succeed.. But we'll accept this error for now
-            context.assertEquals(format("Failed to create %s user. Received status code 404",
-              SYSTEM_USER_NAME), res2.bodyAsString());
+            context.assertEquals(
+              "Failed to create %s user. Received status code 404".formatted(SYSTEM_USER_NAME), res2.bodyAsString());
           }
         }));
       } catch (Exception e) {
@@ -185,8 +184,8 @@ public abstract class AbstractRestTest {
   private void clearModuleSchemaTables(TestContext context) {
     Async async = context.async();
     PostgresClient pgClient = PostgresClient.getInstance(vertx);
-    pgClient.execute(format(DELETE_ALL_SQL, MESSAGING_MODULE_TABLE), Tuple.tuple(),event ->
-      pgClient.execute(format(DELETE_ALL_SQL, EVENT_DESCRIPTOR_TABLE), Tuple.tuple(), event1 -> {
+    pgClient.execute(DELETE_ALL_SQL.formatted(MESSAGING_MODULE_TABLE), Tuple.tuple(),event ->
+      pgClient.execute(DELETE_ALL_SQL.formatted(EVENT_DESCRIPTOR_TABLE), Tuple.tuple(), event1 -> {
         if (event.failed()) {
           context.fail(event.cause());
         }
