@@ -104,34 +104,6 @@
 
     <plugins>
       <plugin>
-        <groupId>org.openrewrite.maven</groupId>
-        <artifactId>rewrite-maven-plugin</artifactId>
-        <version>6.2.2</version>
-        <configuration>
-          <exportDatatables>true</exportDatatables>
-          <activeRecipes>
-            <recipe>org.openrewrite.java.migrate.UpgradeToJava21</recipe>
-            <recipe>org.openrewrite.java.migrate.RemoveIllegalSemicolons</recipe>
-            <recipe>org.openrewrite.java.migrate.lang.ThreadStopUnsupported</recipe>
-            <recipe>org.openrewrite.java.migrate.net.URLConstructorsToURIRecipes</recipe>
-            <recipe>org.openrewrite.java.migrate.util.SequencedCollection</recipe>
-            <recipe>org.openrewrite.java.migrate.util.UseLocaleOf</recipe>
-            <recipe>org.openrewrite.staticanalysis.ReplaceDeprecatedRuntimeExecMethods</recipe>
-            <recipe>org.openrewrite.github.SetupJavaUpgradeJavaVersion</recipe>
-            <recipe>org.openrewrite.java.migrate.UpgradePluginsForJava21</recipe>
-            <recipe>org.openrewrite.java.migrate.DeleteDeprecatedFinalize</recipe>
-            <recipe>org.openrewrite.java.migrate.RemovedSubjectMethods</recipe>
-          </activeRecipes>
-        </configuration>
-        <dependencies>
-          <dependency>
-            <groupId>org.openrewrite.recipe</groupId>
-            <artifactId>rewrite-migrate-java</artifactId>
-            <version>3.3.0</version>
-          </dependency>
-        </dependencies>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.14.0</version>
