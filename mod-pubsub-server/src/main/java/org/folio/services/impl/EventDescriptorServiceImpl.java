@@ -20,8 +20,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static java.lang.String.format;
-
 /**
  * Implementation for Event Descriptor service
  *
@@ -64,11 +62,11 @@ public class EventDescriptorServiceImpl implements EventDescriptorService {
             return eventDescriptorDao.update(eventDescriptor).map(EventDescriptor::getEventType);
           }
           if (EqualsBuilder.reflectionEquals(eventDescriptor, eventDescriptorOptional.get())) {
-            return Future.succeededFuture(format("Event descriptor for event type '%s' is registered", eventDescriptor.getEventType()));
+            return Future.succeededFuture("Event descriptor for event type '%s' is registered".formatted(eventDescriptor.getEventType()));
           } else {
             String descriptorContent = JsonObject.mapFrom(eventDescriptorOptional.get()).encodePrettily();
             return Future.failedFuture(new BadRequestException(
-              format("Event descriptor for event type '%s' already exists, but the content is different. Existing event descriptor: %s",
+              "Event descriptor for event type '%s' already exists, but the content is different. Existing event descriptor: %s".formatted(
                 eventDescriptor.getEventType(), descriptorContent)));
           }
         } else {
@@ -93,12 +91,12 @@ public class EventDescriptorServiceImpl implements EventDescriptorService {
             } else {
               List<String> modules = messagingModuleCollection.getMessagingModules().stream().map(MessagingModule::getModuleId).collect(Collectors.toList());
               return Future.failedFuture(new BadRequestException(
-                format("Event type %s cannot be deleted. Modules [%s] are registered as publishers or subscribers for this event type.", eventType,
+                "Event type %s cannot be deleted. Modules [%s] are registered as publishers or subscribers for this event type.".formatted(eventType,
                   StringUtils.join(modules, ","))));
             }
           })
         )
-        .orElse(Future.failedFuture(new NotFoundException(format("EventDescriptor with event type name '%s' was not found", eventType)))));
+        .orElse(Future.failedFuture(new NotFoundException("EventDescriptor with event type name '%s' was not found".formatted(eventType)))));
   }
 
 }

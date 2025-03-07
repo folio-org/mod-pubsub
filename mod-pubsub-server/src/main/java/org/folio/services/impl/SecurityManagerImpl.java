@@ -2,7 +2,6 @@ package org.folio.services.impl;
 
 import static io.vertx.core.http.HttpMethod.PUT;
 import static io.vertx.core.json.Json.encode;
-import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.folio.HttpStatus.HTTP_NO_CONTENT;
@@ -122,7 +121,7 @@ public class SecurityManagerImpl implements SecurityManager {
           cache.setRefreshToken(tenantId, refreshToken);
           return Future.succeededFuture();
         }
-        String message = String.format("%s user was not logged in, received status %d",
+        String message = "%s user was not logged in, received status %d".formatted(
           systemUserConfig.getName(), response.getCode());
         LOGGER.warn("logInWithExpiry:: {}", message);
         return Future.failedFuture(message);
@@ -166,7 +165,7 @@ public class SecurityManagerImpl implements SecurityManager {
   }
 
   private Future<Void> tokenFetchFailure(String tokenName) {
-    String logMessage = String.format("Failed to fetch %s from cookies", tokenName);
+    String logMessage = "Failed to fetch %s from cookies".formatted(tokenName);
     LOGGER.warn("tokenFetchFailure:: {}", logMessage);
     return Future.failedFuture(logMessage);
   }
@@ -228,7 +227,7 @@ public class SecurityManagerImpl implements SecurityManager {
           LOGGER.info("Created {} user", systemUserConfig.getName());
           promise.complete(id);
         } else {
-          String errorMessage = format("Failed to create %s user. Received status code %s",
+          String errorMessage = "Failed to create %s user. Received status code %s".formatted(
             systemUserConfig.getName(), response.getCode());
           LOGGER.error(errorMessage);
           promise.fail(errorMessage);
@@ -259,7 +258,7 @@ public class SecurityManagerImpl implements SecurityManager {
         } else {
           LOGGER.error("Unable to update the {} user [{}]", systemUserConfig.getName(),
             response.getBody());
-          promise.fail(format("Unable to update the %s user: %s", systemUserConfig.getName(),
+          promise.fail("Unable to update the %s user: %s".formatted(systemUserConfig.getName(),
             response.getBody()));
         }
         return promise.future();
@@ -277,7 +276,7 @@ public class SecurityManagerImpl implements SecurityManager {
               LOGGER.info("Saved {} user credentials", systemUserConfig.getName());
               promise.complete(userId);
             } else {
-              String errorMessage = format("Failed to save %s user credentials. Received status code %s",
+              String errorMessage = "Failed to save %s user credentials. Received status code %s".formatted(
                 systemUserConfig.getName(), response.getCode());
               LOGGER.error(errorMessage);
               promise.fail(errorMessage);
@@ -312,7 +311,7 @@ public class SecurityManagerImpl implements SecurityManager {
                 StringUtils.join(PERMISSIONS, ","));
               return Future.succeededFuture();
             }
-            String errorMessage = format("Failed to update permissions %s for %s user. Received status code %s: %s",
+            String errorMessage = "Failed to update permissions %s for %s user. Received status code %s: %s".formatted(
               StringUtils.join(PERMISSIONS, ","), systemUserConfig.getName(), res2.getCode(),
               res2.getBody());
             LOGGER.error(errorMessage);
@@ -330,14 +329,14 @@ public class SecurityManagerImpl implements SecurityManager {
                 StringUtils.join(PERMISSIONS, ","));
               return Future.succeededFuture();
             }
-            String errorMessage = format("Failed to add permissions %s for %s user. Received status code %s: %s",
+            String errorMessage = "Failed to add permissions %s for %s user. Received status code %s: %s".formatted(
               StringUtils.join(PERMISSIONS, ","), systemUserConfig.getName(), res2.getCode(),
               res2.getBody());
             LOGGER.error(errorMessage);
             return Future.failedFuture(errorMessage);
           });
       }
-      String errorMessage = format("Failed to get permissions for %s user. Received status code %s: %s",
+      String errorMessage = "Failed to get permissions for %s user. Received status code %s: %s".formatted(
         systemUserConfig.getName(), res1.getCode(), res1.getBody());
       LOGGER.error(errorMessage);
       return Future.failedFuture(errorMessage);

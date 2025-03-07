@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static java.lang.String.format;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.Every.everyItem;
@@ -111,7 +110,7 @@ public class AuditMessageAPITest extends AbstractRestTest {
     RestAssured.given()
       .spec(spec)
       .when()
-      .get(format(AUDIT_MESSAGES_PAYLOAD_PATH, UUID.randomUUID().toString()))
+      .get(AUDIT_MESSAGES_PAYLOAD_PATH.formatted(UUID.randomUUID().toString()))
       .then()
       .statusCode(HttpStatus.SC_NOT_FOUND);
   }
@@ -123,7 +122,7 @@ public class AuditMessageAPITest extends AbstractRestTest {
       RestAssured.given()
         .spec(spec)
         .when()
-        .get(format(AUDIT_MESSAGES_PAYLOAD_PATH, eventId_1))
+        .get(AUDIT_MESSAGES_PAYLOAD_PATH.formatted(eventId_1))
         .then()
         .statusCode(HttpStatus.SC_OK)
         .body("eventId", is(eventId_1));

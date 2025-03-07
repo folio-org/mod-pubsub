@@ -26,7 +26,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
 
@@ -49,7 +48,7 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
   public Future<List<AuditMessage>> getAuditMessages(AuditMessageFilter filter, String tenantId) {
     Promise<RowSet<Row>> promise = Promise.promise();
     try {
-      String query = format(SELECT_QUERY, convertToPsqlStandard(tenantId), AUDIT_MESSAGE_TABLE)
+      String query = SELECT_QUERY.formatted(convertToPsqlStandard(tenantId), AUDIT_MESSAGE_TABLE)
         .concat(constructWhereClauseForGetAuditMessagesQuery(filter));
       pgClientFactory.getInstance(tenantId).selectRead(query, 0, promise);
     } catch (Exception e) {
@@ -63,7 +62,7 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
   public Future<AuditMessage> saveAuditMessage(AuditMessage auditMessage) {
     Promise<RowSet<Row>> promise = Promise.promise();
     try {
-      String query = format(INSERT_AUDIT_MESSAGE_QUERY, convertToPsqlStandard(auditMessage.getTenantId()), AUDIT_MESSAGE_TABLE);
+      String query = INSERT_AUDIT_MESSAGE_QUERY.formatted(convertToPsqlStandard(auditMessage.getTenantId()), AUDIT_MESSAGE_TABLE);
       Tuple params = Tuple.of(UUID.fromString(auditMessage.getId()),
         UUID.fromString(auditMessage.getEventId()),
         auditMessage.getEventType(),
@@ -86,7 +85,7 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
   public Future<AuditMessagePayload> saveAuditMessagePayload(AuditMessagePayload auditMessagePayload, String tenantId) {
     Promise<RowSet<Row>> promise = Promise.promise();
     try {
-      String query = format(INSERT_AUDIT_MESSAGE_PAYLOAD_QUERY, convertToPsqlStandard(tenantId), AUDIT_MESSAGE_PAYLOAD_TABLE);
+      String query = INSERT_AUDIT_MESSAGE_PAYLOAD_QUERY.formatted(convertToPsqlStandard(tenantId), AUDIT_MESSAGE_PAYLOAD_TABLE);
       pgClientFactory.getInstance(tenantId).execute(query, Tuple.of(UUID.fromString(auditMessagePayload.getEventId()), JsonObject.mapFrom(auditMessagePayload)),
         promise);
     } catch (Exception e) {
@@ -101,7 +100,7 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
   public Future<Optional<AuditMessagePayload>> getAuditMessagePayloadByEventId(String eventId, String tenantId) {
     Promise<RowSet<Row>> promise = Promise.promise();
     try {
-      String query = format(GET_BY_EVENT_ID_QUERY, convertToPsqlStandard(tenantId), AUDIT_MESSAGE_PAYLOAD_TABLE);
+      String query = GET_BY_EVENT_ID_QUERY.formatted(convertToPsqlStandard(tenantId), AUDIT_MESSAGE_PAYLOAD_TABLE);
       pgClientFactory.getInstance(tenantId).selectRead(query, Tuple.of(UUID.fromString(eventId)), promise);
     } catch (Exception e) {
       LOGGER.error("Error while searching for audit message payload by event id {}", eventId, e);

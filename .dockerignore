@@ -2,3 +2,4 @@
 !Dockerfile
 !docker*
 !mod-pubsub-server/target/*.jar
+!target/*.jar

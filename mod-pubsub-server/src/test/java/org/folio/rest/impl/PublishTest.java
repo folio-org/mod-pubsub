@@ -193,17 +193,19 @@ public class PublishTest extends AbstractRestTest {
     wireMockRule.stubFor(any(urlEqualTo(CALLBACK_ADDRESS)));
     wireMockRule.stubFor(post(urlEqualTo(GET_PUBSUB_USER_URL))
       .willReturn(aResponse()
-        .withBody("{\n" +
-          "    \"users\": [\n" +
-          "        {\n" +
-          "            \"username\": \"test-pubsub-username\",\n" +
-          "            \"id\": \"5a05e962-0502-5f78-a1fb-c47ba902298b\",\n" +
-          "            \"active\": true,\n" +
-          "            \"patronGroup\": \"3684a786-6671-4268-8ed0-9db82ebca60b\"\n" +
-          "        }\n" +
-          "    ],\n" +
-          "    \"totalRecords\": 1\n" +
-          "}")));
+        .withBody("""
+          {
+              "users": [
+                  {
+                      "username": "test-pubsub-username",
+                      "id": "5a05e962-0502-5f78-a1fb-c47ba902298b",
+                      "active": true,
+                      "patronGroup": "3684a786-6671-4268-8ed0-9db82ebca60b"
+                  }
+              ],
+              "totalRecords": 1
+          }
+          """)));
     stubFor(post(LOGIN_URL)
       .willReturn(created()
         .withHeader("Set-Cookie", ACCESS_TOKEN_COOKIE)

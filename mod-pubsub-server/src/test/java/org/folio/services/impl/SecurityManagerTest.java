@@ -152,8 +152,8 @@ public class SecurityManagerTest {
       context.assertEquals(ACCESS_TOKEN, ar.result());
       List<LoggedRequest> requests = findAll(RequestPatternBuilder.allRequests());
       context.assertEquals(1, requests.size());
-      context.assertEquals(LOGIN_URL, requests.get(0).getUrl());
-      context.assertEquals("POST", requests.get(0).getMethod().getName());
+      context.assertEquals(LOGIN_URL, requests.getFirst().getUrl());
+      context.assertEquals("POST", requests.getFirst().getMethod().getName());
       String actualToken = cache.getAccessToken(params.getTenantId());
       context.assertEquals(ACCESS_TOKEN, actualToken);
       async.complete();
@@ -186,8 +186,8 @@ public class SecurityManagerTest {
       List<LoggedRequest> requests = findAll(RequestPatternBuilder.allRequests());
       assertEquals(3, requests.size());
 
-      assertEquals(USERS_URL_WITH_QUERY, requests.get(0).getUrl());
-      assertEquals("GET", requests.get(0).getMethod().getName());
+      assertEquals(USERS_URL_WITH_QUERY, requests.getFirst().getUrl());
+      assertEquals("GET", requests.getFirst().getMethod().getName());
 
       assertEquals(PERMISSIONS_URL + "/" + userId + "?indexField=userId", requests.get(1).getUrl());
       assertEquals("GET", requests.get(1).getMethod().getName());
@@ -249,8 +249,8 @@ public class SecurityManagerTest {
       List<LoggedRequest> requests = findAll(RequestPatternBuilder.allRequests());
       assertEquals(2, requests.size());
 
-      assertEquals(USERS_URL_WITH_QUERY, requests.get(0).getUrl());
-      assertEquals("GET", requests.get(0).getMethod().getName());
+      assertEquals(USERS_URL_WITH_QUERY, requests.getFirst().getUrl());
+      assertEquals("GET", requests.getFirst().getMethod().getName());
 
       assertEquals(PERMISSIONS_URL + "/" + userId + "?indexField=userId", requests.get(1).getUrl());
       assertEquals("GET", requests.get(1).getMethod().getName());
@@ -286,8 +286,8 @@ public class SecurityManagerTest {
       List<LoggedRequest> requests = findAll(RequestPatternBuilder.allRequests());
       assertEquals(5, requests.size());
 
-      assertEquals(USERS_URL_WITH_QUERY, requests.get(0).getUrl());
-      assertEquals("GET", requests.get(0).getMethod().getName());
+      assertEquals(USERS_URL_WITH_QUERY, requests.getFirst().getUrl());
+      assertEquals("GET", requests.getFirst().getMethod().getName());
 
       assertEquals(USERS_URL, requests.get(1).getUrl());
       assertEquals("POST", requests.get(1).getMethod().getName());
@@ -383,8 +383,8 @@ public class SecurityManagerTest {
       final List<LoggedRequest> requests = findAll(RequestPatternBuilder.allRequests());
       assertEquals(4, requests.size());
 
-      assertEquals(USERS_URL_WITH_QUERY, requests.get(0).getUrl());
-      assertEquals("GET", requests.get(0).getMethod().getName());
+      assertEquals(USERS_URL_WITH_QUERY, requests.getFirst().getUrl());
+      assertEquals("GET", requests.getFirst().getMethod().getName());
 
       assertEquals(USERS_URL + "/" + userId, requests.get(1).getUrl());
       assertEquals("PUT", requests.get(1).getMethod().getName());

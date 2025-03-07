@@ -17,7 +17,6 @@ import org.springframework.stereotype.Component;
 import javax.ws.rs.BadRequestException;
 import java.util.ArrayList;
 
-import static java.lang.String.format;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.apache.logging.log4j.util.Strings.isNotEmpty;
 import static org.folio.rest.RestVerticle.MODULE_SPECIFIC_ARGS;
@@ -73,12 +72,12 @@ public class KafkaPublisherServiceImpl implements PublisherService {
           .withEventType(event.getEventType()))))
       .compose(publishers -> {
         if (isEmpty(publishers)) {
-          String errorMessage = format("%s is not registered as PUBLISHER for event type %s", event.getEventMetadata().getPublishedBy(), event.getEventType());
+          String errorMessage = "%s is not registered as PUBLISHER for event type %s".formatted(event.getEventMetadata().getPublishedBy(), event.getEventType());
           LOGGER.error(errorMessage);
           auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.REJECTED, errorMessage));
           return Future.failedFuture(new BadRequestException(errorMessage));
-        } else if (Boolean.FALSE.equals(publishers.get(0).getActivated())) {
-          String error = format("Event type %s is not activated for tenant %s", event.getEventType(), tenantId);
+        } else if (Boolean.FALSE.equals(publishers.getFirst().getActivated())) {
+          String error = "Event type %s is not activated for tenant %s".formatted(event.getEventType(), tenantId);
           LOGGER.error(error);
           auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.REJECTED, error));
           return Future.failedFuture(new BadRequestException(error));

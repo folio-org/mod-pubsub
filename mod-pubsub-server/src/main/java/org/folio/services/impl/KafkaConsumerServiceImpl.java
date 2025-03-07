@@ -37,7 +37,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static java.lang.String.format;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.folio.rest.RestVerticle.MODULE_SPECIFIC_ARGS;
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
@@ -91,10 +90,10 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
           .subscribe(topic)
           .onSuccess(result -> {
             cache.addSubscription(topic);
-            LOGGER.info(format("Subscribed to topic {%s}", topic));
+            LOGGER.info("Subscribed to topic {%s}".formatted(topic));
           })
           .onFailure(e ->
-            LOGGER.error(format("Could not subscribe to some of the topic {%s}", topic), e));
+            LOGGER.error("Could not subscribe to some of the topic {%s}".formatted(topic), e));
       })
       .toList();
     return GenericCompositeFuture.all(futures).mapEmpty();
@@ -145,7 +144,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
           .withEventType(event.getEventType())))
       .compose(subscribers -> {
         if (isEmpty(subscribers)) {
-          String errorMessage = format("There is no SUBSCRIBERS registered for event type %s. Event %s will not be delivered", event.getEventType(), event.getId());
+          String errorMessage = "There is no SUBSCRIBERS registered for event type %s. Event %s will not be delivered".formatted(event.getEventType(), event.getId());
           LOGGER.error(errorMessage);
           auditService.saveAuditMessage(constructJsonAuditMessage(event, params.getTenantId(), AuditMessage.State.REJECTED, errorMessage));
         } else {
@@ -168,7 +167,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
     return ar -> {
       LOGGER.info("Delivering for event with ID {} was complete. Checking for response...", event.getId());
       if (ar.failed()) {
-        String errorMessage = format("%s event with id '%s' was not delivered to %s", event.getEventType(), event.getId(), subscriber.getSubscriberCallback());
+        String errorMessage = "%s event with id '%s' was not delivered to %s".formatted(event.getEventType(), event.getId(), subscriber.getSubscriberCallback());
         LOGGER.error(errorMessage, ar.cause());
         auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.REJECTED, errorMessage));
         retryDelivery(event, subscriber, params, retry);
@@ -178,7 +177,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
           && statusCode != HttpStatus.HTTP_CREATED.toInt()
           && statusCode != HttpStatus.HTTP_NO_CONTENT.toInt()) {
 
-          String error = format("Error delivering %s event with id '%s' to %s, response status code is %s, %s",
+          String error = "Error delivering %s event with id '%s' to %s, response status code is %s, %s".formatted(
             event.getEventType(), event.getId(), subscriber.getSubscriberCallback(), statusCode, ar.result().getResponse().statusMessage());
           LOGGER.error(error);
           auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.REJECTED, error));
