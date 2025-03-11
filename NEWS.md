@@ -1,3 +1,10 @@
+## 2025-03-11 v2.16.0
+* [MODPUBSUB-295](https://folio-org.atlassian.net/browse/MODPUBSUB-295) Review and cleanup Module Descriptor
+* [MODPUBSUB-302](https://folio-org.atlassian.net/browse/MODPUBSUB-302) Change permissions to support Eureka
+* [MODPUBSUB-307](https://folio-org.atlassian.net/browse/MODPUBSUB-307) Add permissions for circulation event handlers
+* [MODPUBSUB-309](https://folio-org.atlassian.net/browse/MODPUBSUB-309) Upgrade to kafka-clients 3.9.0, folio-di-support 2.2.0, vertx 4.5.11
+* [MODPUBSUB-318](https://folio-org.atlassian.net/browse/MODPUBSUB-318) Upgrade to Java 21
+
 ## 2024-11-19 v2.15.1
 * [MODPUBSUB-302](https://folio-org.atlassian.net/browse/MODPUBSUB-302) Add permissions in pubsub module for MD file changes in Eureka
 
