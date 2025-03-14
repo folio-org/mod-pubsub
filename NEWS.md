@@ -1,3 +1,6 @@
+## 2025-03-14 v2.15.5
+* [MDPUBSUB-315](https://github.com/folio-org/mod-pubsub/pull/293) Add missing permissions
+
 ## 2025-01-16 v2.15.4
 * [MODPUBSUB-309](https://github.com/folio-org/mod-pubsub/pull/289) Upgrade to kafka-clients 3.9.0, folio-di-support 2.2.0, vertx 4.5.11
 
