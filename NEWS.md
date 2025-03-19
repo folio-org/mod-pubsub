@@ -1,3 +1,6 @@
+## 2025-04-23 v2.16.1
+* [MODPUBSUB-315](https://folio-org.atlassian.net/browse/MODPUBSUB-315) Add missing permissions
+
 ## 2025-03-11 v2.16.0
 * [MODPUBSUB-295](https://folio-org.atlassian.net/browse/MODPUBSUB-295) Review and cleanup Module Descriptor
 * [MODPUBSUB-302](https://folio-org.atlassian.net/browse/MODPUBSUB-302) Change permissions to support Eureka
