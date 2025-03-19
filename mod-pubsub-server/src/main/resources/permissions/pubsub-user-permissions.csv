@@ -1,3 +1,13 @@
 pubsub.events.post
 audit.pub-sub-handlers.log-record-event.post
 remote-storage.pub-sub-handlers.log-record-event.post
+circulation.handlers.loan-related-fee-fine-closed.post
+circulation.handlers.fee-fine-balance-changed.post
+patron-blocks.handlers.fee-fine-balance-changed.post
+patron-blocks.handlers.item-checked-out.post
+patron-blocks.handlers.item-checked-in.post
+patron-blocks.handlers.item-declared-lost.post
+patron-blocks.handlers.item-aged-to-lost.post
+patron-blocks.handlers.item-claimed-returned.post
+patron-blocks.handlers.loan-due-date-changed.post
+patron-blocks.handlers.loan-closed.post
