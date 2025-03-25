@@ -1,3 +1,6 @@
+## 2025-03-25 v2.15.6
+* [MODPUBSUB-315](https://folio-org.atlassian.net/browse/MODPUBSUB-315) Declare permissions for mod-patron-blocks event handlers
+
 ## 2025-03-14 v2.15.5
 * [MODPUBSUB-315](https://folio-org.atlassian.net/browse/MODPUBSUB-315) Add missing permissions for patron blocks event handlers
 
