@@ -70,8 +70,9 @@ public abstract class AbstractRestTest {
   static RequestSpecification spec;
   private static String useExternalDatabase;
   protected static Vertx vertx;
-  private static final KafkaContainer kafkaContainer = new KafkaContainer(
-    DockerImageName.parse("apache/kafka-native:3.8.0"));
+  private static final KafkaContainer kafkaContainer =
+      new KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0"))
+      .withStartupAttempts(3);
 
   @BeforeClass
   public static void setUpClass(final TestContext context) throws Exception {
