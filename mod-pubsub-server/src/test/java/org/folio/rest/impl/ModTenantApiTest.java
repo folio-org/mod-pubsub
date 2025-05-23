@@ -34,7 +34,8 @@ public class ModTenantApiTest extends AbstractRestTest {
   private static final String MODULE_TO_VERSION = "mod-pubsub-1.0.0";
   private static final String TENANT_URL = "/_/tenant";
   private static final String USERS_URL = "/users";
-  private static final String GET_PUBSUB_USER_URL = USERS_URL + "?query=username==\"" + SYSTEM_USER_NAME + "\"";
+  private static final String GET_PUBSUB_USER_URL =
+      USERS_URL + "?query=username%3D%3D%22" + SYSTEM_USER_NAME + "%22";
 
   @ClassRule
   public static WireMockRule wireMockRule = new WireMockRule(
