@@ -47,7 +47,7 @@ public class PublishTest extends AbstractRestTest {
   private static final String CALLBACK_ADDRESS = "/call-me-maybe";
   private static final String LOGIN_URL = "/authn/login-with-expiry";
   private static final String USERS_URL = "/users";
-  private static final String GET_PUBSUB_USER_URL = USERS_URL + "?query=username=" + SYSTEM_USER_NAME;
+  private static final String GET_PUBSUB_USER_URL = USERS_URL + "?query=username==\"" + SYSTEM_USER_NAME + "\"";
   long TOKEN_MAX_AGE = 600;
   long TOKEN_MAX_AGE_LONG = 604800;
   String ACCESS_TOKEN = UUID.randomUUID().toString();
