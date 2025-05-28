@@ -1,11 +1,17 @@
 package org.folio.services.publish;
 
+import static org.folio.rest.RestVerticle.MODULE_SPECIFIC_ARGS;
+import static org.folio.services.util.AuditUtil.constructJsonAuditMessage;
+
+import java.util.Objects;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.WorkerExecutor;
 import io.vertx.core.json.Json;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.impl.KafkaProducerRecordImpl;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.kafka.PubSubKafkaConfig;
@@ -15,9 +21,6 @@ import org.folio.rest.jaxrs.model.Event;
 import org.folio.services.audit.AuditService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import static org.folio.rest.RestVerticle.MODULE_SPECIFIC_ARGS;
-import static org.folio.services.util.AuditUtil.constructJsonAuditMessage;
 
 @Component
 public class PublishingServiceImpl implements PublishingService {
@@ -54,19 +57,26 @@ public class PublishingServiceImpl implements PublishingService {
               auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.PUBLISHED));
               promise.complete();
             } else {
-              String errorMessage = "Event was not sent";
-              LOGGER.error(errorMessage, done.cause());
-              auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.REJECTED, errorMessage));
+              logRejected("Event was not sent", done.cause(), config, event, tenantId);
               promise.fail(done.cause());
             }
             sharedProducer.close();
           });
         } catch (Exception e) {
-          String errorMessage = "Error publishing event";
-          LOGGER.error(errorMessage, e);
-          auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.REJECTED, errorMessage));
+          logRejected("Error publishing event", e, config, event, tenantId);
           promise.fail(e);
         }
       });
+  }
+
+  private void logRejected(String errorDescription, Throwable e, PubSubConfig config, Event event, String tenantId) {
+    var payload = event.getEventPayload();
+    var errorMessage = errorDescription + ". "
+        + event.getEventType() + " event to topic " + config.getTopicName() + " was not sent."
+        + " Payload size is " + (payload == null ? 0 : payload.length()) + ". "
+        + e.getMessage();
+    LOGGER.error("{}", errorMessage, e);
+    auditService.saveAuditMessage(
+        constructJsonAuditMessage(event, tenantId, AuditMessage.State.REJECTED, errorMessage));
   }
 }
