@@ -74,7 +74,8 @@ public class SecurityManagerTest {
 
   private static final String LOGIN_URL = "/authn/login-with-expiry";
   private static final String USERS_URL = "/users";
-  private static final String USERS_URL_WITH_QUERY = "/users?query=username=" + SYSTEM_USER_NAME;
+  private static final String USERS_URL_WITH_QUERY =
+      "/users?query=username%3D%3D%22" + SYSTEM_USER_NAME + "%22";
   private static final String CREDENTIALS_URL = "/authn/credentials";
   private static final String PERMISSIONS_URL = "/perms/users";
   private static final String TENANT = "diku";

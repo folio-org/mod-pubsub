@@ -78,7 +78,7 @@ public class PubSubIT {
   public static void beforeClass() {
     okapi.start();
     Testcontainers.exposeHostPorts(okapi.port());
-    okapi.stubFor(get("/users?query=username=pub-sub").willReturn(okJson("{\"users\":[]}")));
+    okapi.stubFor(get("/users?query=username%3D%3D%22pub-sub%22").willReturn(okJson("{\"users\":[]}")));
     okapi.stubFor(post("/users").willReturn(created()));
     okapi.stubFor(post("/authn/credentials").willReturn(created()));
     okapi.stubFor(get(urlPathMatching("/perms/users/.*")).willReturn(notFound()));
