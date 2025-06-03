@@ -22,7 +22,7 @@ import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import io.restassured.builder.RequestSpecBuilder;
@@ -70,8 +70,9 @@ public abstract class AbstractRestTest {
   static RequestSpecification spec;
   private static String useExternalDatabase;
   protected static Vertx vertx;
-  private static final KafkaContainer kafkaContainer = new KafkaContainer(
-    DockerImageName.parse("confluentinc/cp-kafka:7.3.1"));
+  private static final KafkaContainer kafkaContainer =
+      new KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0"))
+      .withStartupAttempts(3);
 
   @BeforeClass
   public static void setUpClass(final TestContext context) throws Exception {

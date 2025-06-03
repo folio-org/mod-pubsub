@@ -28,6 +28,8 @@ import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.rest.util.RestUtil;
 import org.folio.services.SecurityManager;
 import org.folio.services.cache.Cache;
+import org.folio.util.PercentCodec;
+import org.folio.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -196,8 +198,9 @@ public class SecurityManagerImpl implements SecurityManager {
   }
 
   private Future<User> existsPubSubUser(OkapiConnectionParams params) {
-    String query = "?query=username=" + systemUserConfig.getName();
-    return doRequest(params, USERS_URL + query, HttpMethod.GET, null)
+    var cql = "username==" + StringUtil.cqlEncode(systemUserConfig.getName());
+    var url = USERS_URL + "?query=" + PercentCodec.encode(cql);
+    return doRequest(params, url, HttpMethod.GET, null)
       .compose(response -> {
         Promise<User> promise = Promise.promise();
         if (response.getCode() == HttpStatus.HTTP_OK.toInt()) {
