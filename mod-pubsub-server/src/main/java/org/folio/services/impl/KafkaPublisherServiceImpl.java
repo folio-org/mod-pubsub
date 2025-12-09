@@ -19,7 +19,6 @@ import java.util.ArrayList;
 
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.apache.logging.log4j.util.Strings.isNotEmpty;
-import static org.folio.rest.RestVerticle.MODULE_SPECIFIC_ARGS;
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.PUBLISHER;
 import static org.folio.services.util.AuditUtil.constructJsonAuditMessage;
 import static org.folio.services.util.AuditUtil.constructJsonAuditMessagePayload;
@@ -31,7 +30,8 @@ public class KafkaPublisherServiceImpl implements PublisherService {
   private static final Logger LOGGER = LogManager.getLogger();
 
   private static final boolean EVENT_PAYLOAD_AUDIT_ENABLED =
-    Boolean.parseBoolean(MODULE_SPECIFIC_ARGS.getOrDefault("event.payload.audit.enabled", "false"));
+    Boolean.parseBoolean(System.getenv().getOrDefault("event.payload.audit.enabled", "false"));
+    //Boolean.parseBoolean(MODULE_SPECIFIC_ARGS.getOrDefault("event.payload.audit.enabled", "false"));
 
   private Cache cache;
   private AuditService auditService;

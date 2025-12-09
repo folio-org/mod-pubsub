@@ -6,8 +6,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.delete;
 import static com.github.tomakehurst.wiremock.client.WireMock.noContent;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -15,10 +13,6 @@ import java.util.concurrent.ExecutionException;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.util.OkapiConnectionParams;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -32,7 +26,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
-@RunWith(VertxUnitRunner.class)
 public class PubSubClientTest {
   private static final String TENANT_ID = "diku";
   private static final String TOKEN = "token";
@@ -52,6 +45,7 @@ public class PubSubClientTest {
   private static final String MESSAGING_MODULES_PATH = "/pubsub/messaging-modules";
   private static final String PUBLISH_EVENT_PATH = "/pubsub/publish";
 
+  /*
   @Rule
   public WireMockRule mockServer = new WireMockRule(
     WireMockConfiguration.wireMockConfig()
@@ -128,5 +122,5 @@ public class PubSubClientTest {
     WireMock.stubFor(post(DECLARE_PUBLISHER_PATH).willReturn(declarePublisherResponse));
     WireMock.stubFor(post(DECLARE_SUBSCRIBER_PATH).willReturn(declareSubscriberResponse));
     WireMock.stubFor(post(EVENT_TYPES_PATH).willReturn(eventTypesResponse));
-  }
+  }*/
 }

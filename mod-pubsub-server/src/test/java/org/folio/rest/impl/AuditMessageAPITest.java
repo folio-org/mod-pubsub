@@ -1,13 +1,13 @@
 package org.folio.rest.impl;
 
-import io.restassured.RestAssured;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.core.Every.everyItem;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.http.HttpStatus;
@@ -16,33 +16,38 @@ import org.folio.dao.PostgresClientFactory;
 import org.folio.dao.impl.AuditMessageDaoImpl;
 import org.folio.rest.jaxrs.model.AuditMessage;
 import org.folio.rest.jaxrs.model.AuditMessagePayload;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import io.restassured.RestAssured;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
+import io.vertx.junit5.VertxTestContext;
 
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.core.Every.everyItem;
-
-@RunWith(VertxUnitRunner.class)
 public class AuditMessageAPITest extends AbstractRestTest {
 
-  @Spy
-  PostgresClientFactory postgresClientFactory = new PostgresClientFactory(Vertx.vertx());
+//  @Spy
+//  PostgresClientFactory postgresClientFactory = new PostgresClientFactory(Vertx.vertx());
 
   @InjectMocks
   AuditMessageDao auditMessageDao = new AuditMessageDaoImpl();
 
-  @Before
+  AutoCloseable openMocks;
+
+  @BeforeEach
   public void setUp() {
-    MockitoAnnotations.initMocks(this);
+    openMocks = MockitoAnnotations.openMocks(this);
+  }
+
+  @AfterEach
+  void tearDown() throws Exception {
+    openMocks.close();
   }
 
   private final String eventId_1 = UUID.randomUUID().toString();
@@ -116,8 +121,8 @@ public class AuditMessageAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnAuditMessagePayloadOnGet(TestContext context) {
-    Async async = context.async();
+  public void shouldReturnAuditMessagePayloadOnGet() {
+    VertxTestContext context = new VertxTestContext();
     addTestData().onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
@@ -126,13 +131,13 @@ public class AuditMessageAPITest extends AbstractRestTest {
         .then()
         .statusCode(HttpStatus.SC_OK)
         .body("eventId", is(eventId_1));
-      async.complete();
+      context.completeNow();
     });
   }
 
   @Test
-  public void shouldReturnAuditMessagesOnGetFilteredByDates(TestContext context) {
-    Async async = context.async();
+  public void shouldReturnAuditMessagesOnGetFilteredByDates() {
+    VertxTestContext context = new VertxTestContext();
     addTestData().onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
@@ -142,13 +147,13 @@ public class AuditMessageAPITest extends AbstractRestTest {
         .statusCode(HttpStatus.SC_OK)
         .body("totalRecords", is(2))
         .body("auditMessages.size()", is(2));
-      async.complete();
+      context.completeNow();
     });
   }
 
   @Test
-  public void shouldReturnAuditMessagesOnGetFilteredByEventId(TestContext context) {
-    Async async = context.async();
+  public void shouldReturnAuditMessagesOnGetFilteredByEventId() {
+    VertxTestContext context = new VertxTestContext();
     addTestData().onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
@@ -159,13 +164,13 @@ public class AuditMessageAPITest extends AbstractRestTest {
         .body("totalRecords", is(2))
         .body("auditMessages.size()", is(2))
         .body("auditMessages*.eventId", everyItem(is(eventId_1)));
-      async.complete();
+      context.completeNow();
     });
   }
 
   @Test
-  public void shouldReturnAuditMessagesOnGetFilteredByEventType(TestContext context) {
-    Async async = context.async();
+  public void shouldReturnAuditMessagesOnGetFilteredByEventType() {
+    VertxTestContext context = new VertxTestContext();
     addTestData().onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
@@ -176,13 +181,13 @@ public class AuditMessageAPITest extends AbstractRestTest {
         .body("totalRecords", is(3))
         .body("auditMessages.size()", is(3))
         .body("auditMessages*.eventType", everyItem(is(eventType)));
-      async.complete();
+      context.completeNow();
     });
   }
 
   @Test
-  public void shouldReturnAuditMessagesOnGetFilteredByCorrelationId(TestContext context) {
-    Async async = context.async();
+  public void shouldReturnAuditMessagesOnGetFilteredByCorrelationId() {
+    VertxTestContext context = new VertxTestContext();
     addTestData().onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
@@ -193,13 +198,13 @@ public class AuditMessageAPITest extends AbstractRestTest {
         .body("totalRecords", is(2))
         .body("auditMessages.size()", is(2))
         .body("auditMessages*.correlationId", everyItem(is(correlationId_2)));
-      async.complete();
+      context.completeNow();
     });
   }
 
   @Test
-  public void shouldReturnAuditMessagesOnGetFilteredOnlyByOneDayWithoutTime(TestContext context) {
-    Async async = context.async();
+  public void shouldReturnAuditMessagesOnGetFilteredOnlyByOneDayWithoutTime() {
+    VertxTestContext context = new VertxTestContext();
     addTestData().onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
@@ -209,13 +214,13 @@ public class AuditMessageAPITest extends AbstractRestTest {
         .statusCode(HttpStatus.SC_OK)
         .body("totalRecords", is(2))
         .body("auditMessages.size()", is(2));
-      async.complete();
+      context.completeNow();
     });
   }
 
   @Test
-  public void shouldReturnAuditMessagesOnGetFilteredByManyDaysWithoutTime(TestContext context) {
-    Async async = context.async();
+  public void shouldReturnAuditMessagesOnGetFilteredByManyDaysWithoutTime() {
+    VertxTestContext context = new VertxTestContext();
     addTestData().onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
@@ -225,13 +230,13 @@ public class AuditMessageAPITest extends AbstractRestTest {
         .statusCode(HttpStatus.SC_OK)
         .body("totalRecords", is(3))
         .body("auditMessages.size()", is(3));
-      async.complete();
+      context.completeNow();
     });
   }
 
   @Test
-  public void shouldReturnAuditMessagesOnGetFilteredByManyDaysWithEndTime(TestContext context) {
-    Async async = context.async();
+  public void shouldReturnAuditMessagesOnGetFilteredByManyDaysWithEndTime() {
+    VertxTestContext context = new VertxTestContext();
     addTestData().onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
@@ -241,12 +246,12 @@ public class AuditMessageAPITest extends AbstractRestTest {
         .statusCode(HttpStatus.SC_OK)
         .body("totalRecords", is(2))
         .body("auditMessages.size()", is(2));
-      async.complete();
+      context.completeNow();
     });
   }
 
   private CompositeFuture saveAuditMessages() {
-    List<Future> futures = new ArrayList<>();
+    List<Future<?>> futures = new ArrayList<>();
     String[] dateFormats = {DateFormatUtils.ISO_DATETIME_FORMAT.getPattern()};
     try {
       AuditMessage auditMessage_1 = new AuditMessage()
@@ -335,7 +340,7 @@ public class AuditMessageAPITest extends AbstractRestTest {
     } catch (Exception e) {
       futures.add(Future.failedFuture(e));
     }
-    return CompositeFuture.all(futures);
+    return Future.all(futures);
   }
 
   private Future<AuditMessagePayload> saveAuditMessagePayloads() {
@@ -349,7 +354,7 @@ public class AuditMessageAPITest extends AbstractRestTest {
       .compose(ar -> auditMessageDao.saveAuditMessagePayload(auditMessagePayload_2, TENANT_ID));
   }
 
-  private Future addTestData() {
+  private Future<?> addTestData() {
     return Future.succeededFuture()
       .compose(ar -> saveAuditMessagePayloads())
       .compose(ar -> saveAuditMessages());

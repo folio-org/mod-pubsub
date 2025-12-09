@@ -15,7 +15,6 @@ import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
 import org.folio.kafka.PubSubKafkaConfig;
 import org.folio.kafka.PubSubConfig;
-import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.rest.jaxrs.model.AuditMessage;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.MessagingModule;
@@ -37,8 +36,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static java.lang.Boolean.FALSE;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
-import static org.folio.rest.RestVerticle.MODULE_SPECIFIC_ARGS;
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
 import static org.folio.rest.util.OkapiConnectionParams.USER_ID;
 import static org.folio.rest.util.RestUtil.doRequest;
@@ -55,7 +54,9 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
   private Cache cache;
   private AuditService auditService;
   private SecurityManager securityManager;
-  private static final int RETRY_NUMBER = Integer.parseInt(MODULE_SPECIFIC_ARGS.getOrDefault("pubsub.delivery.retry.number", "5"));
+  private static final int RETRY_NUMBER =
+    Integer.parseInt(System.getenv().getOrDefault("pubsub.delivery.retry.number", "5"));
+    //Integer.parseInt(MODULE_SPECIFIC_ARGS.getOrDefault("pubsub.delivery.retry.number", "5"));
 
   public KafkaConsumerServiceImpl(@Autowired Vertx vertx,
                                   @Autowired PubSubKafkaConfig kafkaConfig,
@@ -96,7 +97,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
             LOGGER.error("Could not subscribe to some of the topic {%s}".formatted(topic), e));
       })
       .toList();
-    return GenericCompositeFuture.all(futures).mapEmpty();
+    return Future.all(futures).mapEmpty();
   }
 
   protected KafkaConsumer<String, String> createKafkaConsumer(Vertx vertx,
@@ -156,7 +157,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
                 .onComplete(getEventDeliveredHandler(event, params.getTenantId(), subscriber, params, retry)));
             });
         }
-        GenericCompositeFuture.all(futureList)
+        Future.all(futureList)
           .onComplete(ar -> result.complete());
         return result.future();
       });

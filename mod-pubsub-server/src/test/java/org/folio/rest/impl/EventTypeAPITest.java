@@ -3,12 +3,10 @@ package org.folio.rest.impl;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.apache.http.HttpStatus;
 import org.folio.rest.jaxrs.model.EventDescriptor;
 import org.folio.rest.jaxrs.model.PublisherDescriptor;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.Collections;
 
@@ -16,7 +14,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 
-@RunWith(VertxUnitRunner.class)
 public class EventTypeAPITest extends AbstractRestTest {
 
   private EventDescriptor eventDescriptor = new EventDescriptor()

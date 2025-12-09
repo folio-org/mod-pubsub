@@ -97,9 +97,10 @@ public final class RestUtil {
       }
       LOGGER.info("Sending {} for {}", method.name(), requestUrl);
       if (method == HttpMethod.PUT || method == HttpMethod.POST) {
-        request.sendBuffer(Buffer.buffer(payload instanceof String s ? s : new ObjectMapper().writeValueAsString(payload)), handleResponse(promise));
+        request.sendBuffer(Buffer.buffer(payload instanceof String s ? s : new ObjectMapper().writeValueAsString(payload)))
+          .map(handleResponse(promise));
       } else {
-        request.send(handleResponse(promise));
+        request.send().map(handleResponse(promise));
       }
       return promise.future();
     } catch (Exception e) {

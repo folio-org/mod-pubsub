@@ -35,9 +35,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 
-@RunWith(VertxUnitRunner.class)
 public class PublishTest extends AbstractRestTest {
   @ClassRule
   public static WireMockRule wireMockRule = new WireMockRule(

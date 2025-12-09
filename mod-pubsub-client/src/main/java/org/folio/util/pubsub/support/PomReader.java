@@ -1,7 +1,5 @@
 package org.folio.util.pubsub.support;
 
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -14,6 +12,9 @@ import java.util.List;
 import java.util.Properties;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
@@ -34,7 +35,7 @@ public enum PomReader {
   private Properties props = null;
   private List<Dependency> dependencies = null;
 
-  private final Logger log = LoggerFactory.getLogger(PomReader.class);
+  private static final Logger LOGGER = LogManager.getLogger();
 
   private PomReader() {
     init("pom.xml");
@@ -52,7 +53,7 @@ public enum PomReader {
       boolean isBuildTime = currentRunningJar.contains("mod-pubsub-client");
       readIt(isBuildTime ? pomFilename : null, "META-INF/maven");
     } catch (Exception e) {
-      log.error(e.getMessage(), e);
+      LOGGER.error(e.getMessage(), e);
       throw new IllegalArgumentException(e);
     }
   }
@@ -66,7 +67,7 @@ public enum PomReader {
   void readIt(String pomFilename, String directoryName) throws IOException, XmlPullParserException {
     Model model;
     if (pomFilename != null) {
-      log.info("Reading from " + pomFilename);
+      LOGGER.info("Reading from " + pomFilename);
       //the runtime is the jar run when deploying during unit tests
       //the interface-extensions is the jar run when running build time tools,
       //like MDGenerator, ClientGenerator, etc..
@@ -75,7 +76,7 @@ public enum PomReader {
       MavenXpp3Reader mavenreader = new MavenXpp3Reader();
       model = mavenreader.read(new FileReader(pomFile));
     } else { //this is runtime, the jar called via java -jar is the module's jar
-      log.info("Reading from jar");
+      LOGGER.info("Reading from jar");
       model = getModelFromJar(directoryName);
     }
     if (model.getParent() != null) {
@@ -93,7 +94,7 @@ public enum PomReader {
     //the version is a placeholder to a value in the props section
     version = replacePlaceHolderWithValue(version);
 
-    log.info("module name: " + moduleName + ", version: " + version);
+    LOGGER.info("module name: " + moduleName + ", version: " + version);
   }
 
   private Model getModelFromJar(String directoryName) throws IOException, XmlPullParserException {

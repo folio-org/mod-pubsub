@@ -5,6 +5,7 @@ import io.vertx.core.Context;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.ThreadingModel;
 import io.vertx.core.Vertx;
 import io.vertx.serviceproxy.ServiceBinder;
 import org.folio.config.ApplicationConfig;
@@ -14,7 +15,9 @@ import org.folio.services.StartupService;
 import org.folio.services.audit.AuditService;
 import org.folio.spring.SpringContextUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+@Component
 public class InitAPIImpl implements InitAPI {
 
   private static final String MODULE_CONFIGURATION_SCHEMA = "pubsub_config";
@@ -30,7 +33,7 @@ public class InitAPIImpl implements InitAPI {
       LiquibaseUtil.initializeSchemaForModule(vertx, MODULE_CONFIGURATION_SCHEMA);
       startupService.initSubscribers();
       initAuditService(vertx);
-      DeploymentOptions options = new DeploymentOptions().setWorker(true);
+      DeploymentOptions options = new DeploymentOptions().setThreadingModel(ThreadingModel.WORKER);
       vertx.deployVerticle(new PublisherWorkerVerticle(), options)
         .onSuccess(v -> handler.handle(Future.succeededFuture(true)))
         .onFailure(e -> handler.handle(Future.failedFuture(e)));

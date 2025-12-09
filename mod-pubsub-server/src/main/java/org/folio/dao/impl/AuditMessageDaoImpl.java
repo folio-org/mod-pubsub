@@ -26,6 +26,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.vertx.core.Future.failedFuture;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
 
@@ -50,7 +51,14 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
     try {
       String query = SELECT_QUERY.formatted(convertToPsqlStandard(tenantId), AUDIT_MESSAGE_TABLE)
         .concat(constructWhereClauseForGetAuditMessagesQuery(filter));
-      pgClientFactory.getInstance(tenantId).selectRead(query, 0, promise);
+      pgClientFactory.getInstance(tenantId).selectRead(query, 0, result -> {
+        if (result.succeeded()) {
+          promise.complete(result.result());
+        } else {
+          LOGGER.error("Error retrieving audit messages", result.cause());
+          promise.fail(result.cause());
+        }
+      });
     } catch (Exception e) {
       LOGGER.error("Error retrieving audit messages", e);
       promise.fail(e);
@@ -60,7 +68,6 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
 
   @Override
   public Future<AuditMessage> saveAuditMessage(AuditMessage auditMessage) {
-    Promise<RowSet<Row>> promise = Promise.promise();
     try {
       String query = INSERT_AUDIT_MESSAGE_QUERY.formatted(convertToPsqlStandard(auditMessage.getTenantId()), AUDIT_MESSAGE_TABLE);
       Tuple params = Tuple.of(UUID.fromString(auditMessage.getId()),
@@ -73,27 +80,25 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
         auditMessage.getCorrelationId() != null ? auditMessage.getCorrelationId() : EMPTY,
         auditMessage.getCreatedBy() != null ? auditMessage.getCreatedBy() : EMPTY,
         auditMessage.getErrorMessage() != null ? auditMessage.getErrorMessage() : EMPTY);
-      pgClientFactory.getInstance(auditMessage.getTenantId()).execute(query, params, promise);
+      return pgClientFactory.getInstance(auditMessage.getTenantId()).execute(query, params)
+        .map(updateResult -> auditMessage);
     } catch (Exception e) {
       LOGGER.error("Error saving audit message with id {}", auditMessage.getId(), e);
-      promise.fail(e);
+      return failedFuture(e);
     }
-    return promise.future().map(updateResult -> auditMessage);
   }
 
   @Override
   public Future<AuditMessagePayload> saveAuditMessagePayload(AuditMessagePayload auditMessagePayload, String tenantId) {
-    Promise<RowSet<Row>> promise = Promise.promise();
     try {
       String query = INSERT_AUDIT_MESSAGE_PAYLOAD_QUERY.formatted(convertToPsqlStandard(tenantId), AUDIT_MESSAGE_PAYLOAD_TABLE);
-      pgClientFactory.getInstance(tenantId).execute(query, Tuple.of(UUID.fromString(auditMessagePayload.getEventId()), JsonObject.mapFrom(auditMessagePayload)),
-        promise);
+      return pgClientFactory.getInstance(tenantId)
+        .execute(query, Tuple.of(UUID.fromString(auditMessagePayload.getEventId()), JsonObject.mapFrom(auditMessagePayload)))
+        .map(updateResult -> auditMessagePayload);
     } catch (Exception e) {
       LOGGER.error("Error saving audit message payload for event with id {}", auditMessagePayload.getEventId(), e);
-      promise.fail(e);
+      return failedFuture(e);
     }
-    return promise.future().map(updateResult -> auditMessagePayload);
-
   }
 
   @Override
@@ -101,7 +106,15 @@ public class AuditMessageDaoImpl implements AuditMessageDao {
     Promise<RowSet<Row>> promise = Promise.promise();
     try {
       String query = GET_BY_EVENT_ID_QUERY.formatted(convertToPsqlStandard(tenantId), AUDIT_MESSAGE_PAYLOAD_TABLE);
-      pgClientFactory.getInstance(tenantId).selectRead(query, Tuple.of(UUID.fromString(eventId)), promise);
+      pgClientFactory.getInstance(tenantId).selectRead(query, Tuple.of(UUID.fromString(eventId)), result -> {
+        if (result.succeeded()) {
+          promise.complete(result.result());
+        } else {
+          LOGGER.error("Error while executing query to search for audit message payload " +
+            "by event id {}", eventId, result.cause());
+          promise.fail(result.cause());
+        }
+      });
     } catch (Exception e) {
       LOGGER.error("Error while searching for audit message payload by event id {}", eventId, e);
       promise.fail(e);

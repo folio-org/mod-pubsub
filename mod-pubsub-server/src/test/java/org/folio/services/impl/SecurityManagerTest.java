@@ -21,10 +21,11 @@ import static java.lang.String.format;
 import static org.folio.rest.util.OkapiConnectionParams.OKAPI_TENANT_HEADER;
 import static org.folio.rest.util.OkapiConnectionParams.OKAPI_TOKEN_HEADER;
 import static org.folio.rest.util.OkapiConnectionParams.OKAPI_URL_HEADER;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.time.Duration;
@@ -43,17 +44,16 @@ import org.folio.representation.User;
 import org.folio.rest.util.ExpiryAwareToken;
 import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.services.cache.Cache;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
-import com.github.tomakehurst.wiremock.common.Slf4jNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
@@ -62,11 +62,9 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.junit5.VertxTestContext;
 
-@RunWith(VertxUnitRunner.class)
+
 public class SecurityManagerTest {
   protected static final String SYSTEM_USER_NAME = "test-pubsub-username";
   protected static final String SYSTEM_USER_PASSWORD = "test-pubsub-password";
@@ -79,8 +77,6 @@ public class SecurityManagerTest {
   private static final String CREDENTIALS_URL = "/authn/credentials";
   private static final String PERMISSIONS_URL = "/perms/users";
   private static final String TENANT = "diku";
-
-//  private static final ExpiryAwareToken TOKEN = new ExpiryAwareToken("token", 600);
 
   long TOKEN_MAX_AGE_SHORT = 2;
   long TOKEN_MAX_AGE = 600;
@@ -115,27 +111,35 @@ public class SecurityManagerTest {
 
   private final Context vertxContext = vertx.getOrCreateContext();
 
-  @Rule
-  public WireMockRule mockServer = new WireMockRule(
-    WireMockConfiguration.wireMockConfig()
+  @RegisterExtension
+  static WireMockExtension mockServer = WireMockExtension.newInstance()
+    .options(WireMockConfiguration.wireMockConfig()
       .dynamicPort()
-      .notifier(new Slf4jNotifier(true)));
+      .dynamicHttpsPort())
+    .build();
 
-  @Before
+  AutoCloseable openMocks;
+
+  @BeforeEach
   public void setUp() {
-    MockitoAnnotations.initMocks(this);
+    openMocks = MockitoAnnotations.openMocks(this);
     when(vertx.getOrCreateContext()).thenReturn(vertxContext);
 
-    headers.put(OKAPI_URL_HEADER, "http://localhost:" + mockServer.port());
+    headers.put(OKAPI_URL_HEADER, "http://localhost:" + mockServer.getPort());
     headers.put(OKAPI_TENANT_HEADER, TENANT);
     headers.put(OKAPI_TOKEN_HEADER, ACCESS_TOKEN);
   }
 
-  @Test
-  public void shouldLoginPubSubUser(TestContext context) {
-    Async async = context.async();
+  @AfterEach
+  void tearDown() throws Exception {
+    openMocks.close();
+  }
 
-    stubFor(post(LOGIN_URL)
+  @Test
+  public void shouldLoginPubSubUser() {
+    VertxTestContext testContext = new VertxTestContext();
+
+    mockServer.stubFor(post(LOGIN_URL)
       .willReturn(created()
         .withHeader("Set-Cookie", ACCESS_TOKEN_COOKIE)
         .withHeader("Set-Cookie", REFRESH_TOKEN_COOKIE)
@@ -148,27 +152,29 @@ public class SecurityManagerTest {
 
     Future<String> future = securityManager.getAccessToken(params);
 
-    future.onComplete(ar -> {
-      context.assertTrue(ar.succeeded());
-      context.assertEquals(ACCESS_TOKEN, ar.result());
+    future.onComplete(testContext.succeeding(result -> testContext.verify(() -> {
+      assertEquals(ACCESS_TOKEN, result);
       List<LoggedRequest> requests = findAll(RequestPatternBuilder.allRequests());
-      context.assertEquals(1, requests.size());
-      context.assertEquals(LOGIN_URL, requests.getFirst().getUrl());
-      context.assertEquals("POST", requests.getFirst().getMethod().getName());
+      assertEquals(1, requests.size());
+      assertEquals(LOGIN_URL, requests.getFirst().getUrl());
+      assertEquals("POST", requests.getFirst().getMethod().getName());
       String actualToken = cache.getAccessToken(params.getTenantId());
-      context.assertEquals(ACCESS_TOKEN, actualToken);
-      async.complete();
-    });
+      assertEquals(ACCESS_TOKEN, actualToken);
+
+      testContext.completeNow();
+    })));
   }
 
   @Test
-  public void shouldNotCreatePubSubUserIfItExists(TestContext context) {
+  public void shouldNotCreatePubSubUserIfItExists() {
+    VertxTestContext testContext = new VertxTestContext();
+
     String userId = UUID.randomUUID().toString();
     String userCollection = new JsonObject()
       .put("users", new JsonArray().add(existingUpToDateUser(userId)))
       .put("totalRecords", 1).encode();
 
-    stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
+    mockServer.stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
 
     String permId = UUID.randomUUID().toString();
     JsonObject permUser = new JsonObject()
@@ -176,14 +182,14 @@ public class SecurityManagerTest {
       .put("userId", userId)
       .put("permissions", new JsonArray());
 
-    stubFor(get(PERMISSIONS_URL + "/" + userId + "?indexField=userId").willReturn(ok().withBody(permUser.encode())));
-    stubFor(put(PERMISSIONS_URL + "/" + permId).willReturn(ok()));
+    mockServer.stubFor(get(PERMISSIONS_URL + "/" + userId + "?indexField=userId").willReturn(ok().withBody(permUser.encode())));
+    mockServer.stubFor(put(PERMISSIONS_URL + "/" + permId).willReturn(ok()));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
     Future<Void> future = securityManager.createPubSubUser(params);
 
-    future.map(ar -> {
+    future.onComplete(testContext.succeeding(result -> testContext.verify(() -> {
       List<LoggedRequest> requests = findAll(RequestPatternBuilder.allRequests());
       assertEquals(3, requests.size());
 
@@ -199,39 +205,45 @@ public class SecurityManagerTest {
       // Verify user create request has not sent
       verify(0, new RequestPatternBuilder(POST, urlEqualTo(USERS_URL)));
 
-      return null;
-    }).onComplete(context.asyncAssertSuccess());
+      testContext.completeNow();
+    })));
   }
 
   @Test
-  public void shouldNotCreatePubSubUserIfDisabled(TestContext context) {
+  public void shouldNotCreatePubSubUserIfDisabled() {
+    VertxTestContext testContext = new VertxTestContext();
+
     String userId = UUID.randomUUID().toString();
     String userCollection = new JsonObject()
       .put("users", new JsonArray().add(existingUpToDateUser(userId)))
       .put("totalRecords", 1).encode();
 
-    stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
+    mockServer.stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
     securityManagerNoSystemUser.createPubSubUser(params)
-    .onSuccess(ar -> {
-      List<LoggedRequest> requests = findAll(RequestPatternBuilder.allRequests());
-      assertEquals(0, requests.size());
+      .onComplete(testContext.succeeding(result -> testContext.verify(() -> {
+        List<LoggedRequest> requests = findAll(RequestPatternBuilder.allRequests());
+        assertEquals(0, requests.size());
 
-      // Verify that user create request has not been sent
-      verify(0, new RequestPatternBuilder(POST, urlEqualTo(USERS_URL)));
-    }).onComplete(context.asyncAssertSuccess());
+        // Verify that user create request has not been sent
+        verify(0, new RequestPatternBuilder(POST, urlEqualTo(USERS_URL)));
+
+        testContext.completeNow();
+      })));
   }
 
   @Test
-  public void shouldNotCreatePermUserAndSamePermissions(TestContext context) {
+  public void shouldNotCreatePermUserAndSamePermissions() {
+    VertxTestContext testContext = new VertxTestContext();
+
     String userId = UUID.randomUUID().toString();
     String userCollection = new JsonObject()
       .put("users", new JsonArray().add(existingUpToDateUser(userId)))
       .put("totalRecords", 1).encode();
 
-    stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
+    mockServer.stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
 
     String permId = UUID.randomUUID().toString();
     JsonObject permUser = new JsonObject()
@@ -239,51 +251,51 @@ public class SecurityManagerTest {
       .put("userId", userId)
       .put("permissions", new JsonArray().add("inventory.all"));
 
-    stubFor(get(PERMISSIONS_URL + "/" + userId + "?indexField=userId").willReturn(ok().withBody(permUser.encode())));
-    stubFor(put(PERMISSIONS_URL + "/" + permId).willReturn(ok()));
+    mockServer.stubFor(get(PERMISSIONS_URL + "/" + userId + "?indexField=userId").willReturn(ok().withBody(permUser.encode())));
+    mockServer.stubFor(put(PERMISSIONS_URL + "/" + permId).willReturn(ok()));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
-    Future<Void> future = securityManager.createPubSubUser(params);
+    securityManager.createPubSubUser(params)
+      .onComplete(testContext.succeeding(result -> testContext.verify(() -> {
+        List<LoggedRequest> requests = findAll(RequestPatternBuilder.allRequests());
+        assertEquals(2, requests.size());
 
-    future.map(ar -> {
-      List<LoggedRequest> requests = findAll(RequestPatternBuilder.allRequests());
-      assertEquals(2, requests.size());
+        assertEquals(USERS_URL_WITH_QUERY, requests.getFirst().getUrl());
+        assertEquals("GET", requests.getFirst().getMethod().getName());
 
-      assertEquals(USERS_URL_WITH_QUERY, requests.getFirst().getUrl());
-      assertEquals("GET", requests.getFirst().getMethod().getName());
+        assertEquals(PERMISSIONS_URL + "/" + userId + "?indexField=userId", requests.get(1).getUrl());
+        assertEquals("GET", requests.get(1).getMethod().getName());
 
-      assertEquals(PERMISSIONS_URL + "/" + userId + "?indexField=userId", requests.get(1).getUrl());
-      assertEquals("GET", requests.get(1).getMethod().getName());
+        // Verify user create request has not sent
+        verify(0, new RequestPatternBuilder(POST, urlEqualTo(USERS_URL)));
 
-      // Verify user create request has not sent
-      verify(0, new RequestPatternBuilder(POST, urlEqualTo(USERS_URL)));
-
-      return null;
-    }).onComplete(context.asyncAssertSuccess());
+        testContext.completeNow();
+      })));
   }
 
-
   @Test
-  public void shouldCreatePubSubUser(TestContext context) {
+  public void shouldCreatePubSubUser() {
+    VertxTestContext context = new VertxTestContext();
+
     String userId = UUID.randomUUID().toString();
     System.out.println("Userid=" + userId);
     String userCollection = new JsonObject()
       .put("users", new JsonArray().add(existingUser(userId)))
       .put("totalRecords", 1).encode();
 
-    stubFor(get(USERS_URL_WITH_QUERY)
+    mockServer.stubFor(get(USERS_URL_WITH_QUERY)
       .willReturn(ok().withBody(emptyUsersResponse().encode())));
-    stubFor(post(USERS_URL).willReturn(created().withBody(userCollection)));
-    stubFor(post(CREDENTIALS_URL).willReturn(created()));
-    stubFor(post(PERMISSIONS_URL).willReturn(created()));
-    stubFor(get(urlPathMatching(PERMISSIONS_URL + "/.*")).willReturn(notFound()));
+    mockServer.stubFor(post(USERS_URL).willReturn(created().withBody(userCollection)));
+    mockServer.stubFor(post(CREDENTIALS_URL).willReturn(created()));
+    mockServer.stubFor(post(PERMISSIONS_URL).willReturn(created()));
+    mockServer.stubFor(get(urlPathMatching(PERMISSIONS_URL + "/.*")).willReturn(notFound()));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
     Future<Void> future = securityManager.createPubSubUser(params);
 
-    future.map(ar -> {
+    future.onComplete(ar -> {
       List<LoggedRequest> requests = findAll(RequestPatternBuilder.allRequests());
       assertEquals(5, requests.size());
 
@@ -303,15 +315,15 @@ public class SecurityManagerTest {
       assertTrue( requests.get(4).getUrl().startsWith(PERMISSIONS_URL));
       assertEquals("POST", requests.get(4).getMethod().getName());
 
-      return null;
-    }).onComplete(context.asyncAssertSuccess());
+      context.completeNow();
+    });
   }
 
   @Test
-  public void shouldLoginPubSubUserWhenContextHasNoToken(TestContext context) {
-    Async async = context.async();
+  public void shouldLoginPubSubUserWhenContextHasNoToken() {
+    VertxTestContext context = new VertxTestContext();
 
-    stubFor(post(LOGIN_URL)
+    mockServer.stubFor(post(LOGIN_URL)
       .willReturn(created()
         .withHeader("Set-Cookie", ACCESS_TOKEN_COOKIE)
         .withHeader("Set-Cookie", REFRESH_TOKEN_COOKIE)
@@ -322,50 +334,56 @@ public class SecurityManagerTest {
     Future<String> future = securityManager.getAccessToken(params);
 
     future.onComplete(ar -> {
-      context.assertTrue(ar.succeeded());
-      context.assertEquals(ACCESS_TOKEN, ar.result());
+      assertTrue(ar.succeeded());
+      assertEquals(ACCESS_TOKEN, ar.result());
       verify(1, postRequestedFor(urlEqualTo(LOGIN_URL)));
-      async.complete();
+      context.completeNow();
     });
   }
 
   @Test
-  public void shoulReturnFailedFutureWhenTokenCacheIsEmptyAndPubSubUserLoginFailed(TestContext context) {
-    Async async = context.async();
-    stubFor(post(LOGIN_URL).willReturn(serverError()));
+  public void shouldReturnFailedFutureWhenTokenCacheIsEmptyAndPubSubUserLoginFailed() {
+    VertxTestContext context = new VertxTestContext();
+
+    mockServer.stubFor(post(LOGIN_URL).willReturn(serverError()));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
     Future<String> future = securityManager.getAccessToken(params);
 
     future.onComplete(ar -> {
-      context.assertTrue(ar.failed());
+      assertTrue(ar.failed());
       verify(1, postRequestedFor(urlEqualTo(LOGIN_URL)));
-      async.complete();
+      context.completeNow();
     });
   }
 
   @Test
-  public void shouldReturnSuccessFutureWithEmptyTokenIfSystemUserCreationDisabled(TestContext context) {
+  public void shouldReturnSuccessFutureWithEmptyTokenIfSystemUserCreationDisabled() {
+    VertxTestContext context = new VertxTestContext();
+
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
     Future<String> future = securityManagerNoSystemUser.getAccessToken(params);
 
     future.onComplete(ar -> {
-      context.assertTrue(ar.succeeded());
-      context.assertEquals("", ar.result());
+      assertTrue(ar.succeeded());
+      assertEquals("", ar.result());
+      context.completeNow();
     });
   }
 
   @Test
-  public void shouldUpdateExistingUser(TestContext context) {
+  public void shouldUpdateExistingUser() {
+    VertxTestContext context = new VertxTestContext();
+
     final String userId = UUID.randomUUID().toString();
     final String userCollection = new JsonObject()
       .put("users", new JsonArray().add(existingUser(userId)))
       .put("totalRecords", 1).encode();
 
-    stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
-    stubFor(put(USERS_URL + "/" + userId).willReturn(noContent()));
+    mockServer.stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
+    mockServer.stubFor(put(USERS_URL + "/" + userId).willReturn(noContent()));
 
     String permId = UUID.randomUUID().toString();
     JsonObject permUser = new JsonObject()
@@ -373,14 +391,14 @@ public class SecurityManagerTest {
       .put("userId", userId)
       .put("permissions", new JsonArray());
 
-    stubFor(get(PERMISSIONS_URL + "/" + userId + "?indexField=userId").willReturn(ok().withBody(permUser.encode())));
-    stubFor(put(PERMISSIONS_URL + "/" + permId).willReturn(ok()));
+    mockServer.stubFor(get(PERMISSIONS_URL + "/" + userId + "?indexField=userId").willReturn(ok().withBody(permUser.encode())));
+    mockServer.stubFor(put(PERMISSIONS_URL + "/" + permId).willReturn(ok()));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
     Future<Void> future = securityManager.createPubSubUser(params);
 
-    future.map(ar -> {
+    future.onSuccess(ar -> {
       final List<LoggedRequest> requests = findAll(RequestPatternBuilder.allRequests());
       assertEquals(4, requests.size());
 
@@ -397,61 +415,62 @@ public class SecurityManagerTest {
       assertEquals(PERMISSIONS_URL + "/" + permId, requests.get(3).getUrl());
       assertEquals("PUT", requests.get(3).getMethod().getName());
 
-      return null;
-    }).onComplete(context.asyncAssertSuccess());
+      context.completeNow();
+    });
   }
 
   @Test
-  public void permissionsFailGet(TestContext context) {
+  public void permissionsFailGet() {
     String userId = UUID.randomUUID().toString();
     String userCollection = new JsonObject()
       .put("users", new JsonArray().add(existingUser(userId)))
       .put("totalRecords", 1).encode();
 
-    stubFor(get(USERS_URL_WITH_QUERY)
+    mockServer.stubFor(get(USERS_URL_WITH_QUERY)
       .willReturn(ok().withBody(emptyUsersResponse().encode())));
-    stubFor(post(USERS_URL).willReturn(created().withBody(userCollection)));
-    stubFor(post(CREDENTIALS_URL).willReturn(created()));
-    stubFor(get(urlPathMatching(PERMISSIONS_URL + "/.*")).willReturn(forbidden().withBody("x")));
+    mockServer.stubFor(post(USERS_URL).willReturn(created().withBody(userCollection)));
+    mockServer.stubFor(post(CREDENTIALS_URL).willReturn(created()));
+    mockServer.stubFor(get(urlPathMatching(PERMISSIONS_URL + "/.*")).willReturn(forbidden().withBody("x")));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
-    securityManager.createPubSubUser(params).onComplete(context.asyncAssertFailure(res -> {
-       assertEquals("Failed to get permissions for test-pubsub-username user. Received status code 403: x", res.getMessage());
-    }));
+    securityManager.createPubSubUser(params).onFailure(asyncResult ->
+      assertEquals("Failed to get permissions for test-pubsub-username user. " +
+        "Received status code 403: x", asyncResult.getMessage()));
   }
 
   @Test
-  public void permissionsFailPost(TestContext context) {
+  public void permissionsFailPost() {
     String userId = UUID.randomUUID().toString();
     String userCollection = new JsonObject()
       .put("users", new JsonArray().add(existingUser(userId)))
       .put("totalRecords", 1).encode();
 
-    stubFor(get(USERS_URL_WITH_QUERY)
+    mockServer.stubFor(get(USERS_URL_WITH_QUERY)
       .willReturn(ok().withBody(emptyUsersResponse().encode())));
-    stubFor(post(USERS_URL).willReturn(created().withBody(userCollection)));
-    stubFor(post(CREDENTIALS_URL).willReturn(created()));
-    stubFor(get(urlPathMatching(PERMISSIONS_URL + "/.*")).willReturn(notFound()));
-    stubFor(post(PERMISSIONS_URL).willReturn(forbidden().withBody("x")));
+    mockServer.stubFor(post(USERS_URL).willReturn(created().withBody(userCollection)));
+    mockServer.stubFor(post(CREDENTIALS_URL).willReturn(created()));
+    mockServer.stubFor(get(urlPathMatching(PERMISSIONS_URL + "/.*")).willReturn(notFound()));
+    mockServer.stubFor(post(PERMISSIONS_URL).willReturn(forbidden().withBody("x")));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
-    securityManager.createPubSubUser(params).onComplete(context.asyncAssertFailure(res -> {
+    securityManager.createPubSubUser(params).onFailure(asyncResult ->
       assertEquals("Failed to add permissions inventory.all for test-pubsub-username user."
-        + " Received status code 403: x", res.getMessage());
-    }));
+        + " Received status code 403: x", asyncResult.getMessage()));
   }
 
   @Test
-  public void permissionsFailPut(TestContext context) {
+  public void permissionsFailPut() {
+    VertxTestContext context = new VertxTestContext();
+
     final String userId = UUID.randomUUID().toString();
     final String userCollection = new JsonObject()
       .put("users", new JsonArray().add(existingUser(userId)))
       .put("totalRecords", 1).encode();
 
-    stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
-    stubFor(put(USERS_URL + "/" + userId).willReturn(noContent()));
+    mockServer.stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
+    mockServer.stubFor(put(USERS_URL + "/" + userId).willReturn(noContent()));
 
     String permId = UUID.randomUUID().toString();
     JsonObject permUser = new JsonObject()
@@ -459,20 +478,20 @@ public class SecurityManagerTest {
       .put("userId", userId)
       .put("permissions", new JsonArray());
 
-    stubFor(get(PERMISSIONS_URL + "/" + userId + "?indexField=userId").willReturn(ok().withBody(permUser.encode())));
-    stubFor(put(PERMISSIONS_URL + "/" + permId).willReturn(forbidden().withBody("x")));
+    mockServer.stubFor(get(PERMISSIONS_URL + "/" + userId + "?indexField=userId").willReturn(ok().withBody(permUser.encode())));
+    mockServer.stubFor(put(PERMISSIONS_URL + "/" + permId).willReturn(forbidden().withBody("x")));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
-    securityManager.createPubSubUser(params).onComplete(context.asyncAssertFailure(res -> {
-      assertEquals("Failed to update permissions inventory.all for test-pubsub-username user."
-        + " Received status code 403: x", res.getMessage());
-    }));
+    securityManager.createPubSubUser(params).onFailure(asyncResult ->
+      assertEquals("Failed to update permissions inventory.all for test-pubsub-username user." +
+        " Received status code 403: x", asyncResult.getMessage()));
   }
 
-  @Test(expected = NoSuchElementException.class)
+  @Test
   public void shouldFailReadingPermissionsOnEmptyPermissionsFile() {
-    SecurityManagerImpl.readPermissionsFromResource("permissions/emptyFile");
+    assertThrows(NoSuchElementException.class, () ->
+      SecurityManagerImpl.readPermissionsFromResource("permissions/emptyFile"));
   }
 
   @Test
@@ -489,10 +508,10 @@ public class SecurityManagerTest {
   }
 
   @Test
-  public void checkCacheRefreshesAfterHalfOfMaxAge(TestContext context) {
-    Async async = context.async();
+  public void checkCacheRefreshesAfterHalfOfMaxAge() {
+    VertxTestContext context = new VertxTestContext();
 
-    stubFor(post(LOGIN_URL)
+    mockServer.stubFor(post(LOGIN_URL)
       .willReturn(created()
         .withHeader("Set-Cookie", ACCESS_TOKEN_COOKIE_SHORT)
         .withHeader("Set-Cookie", REFRESH_TOKEN_COOKIE_SHORT)
@@ -506,13 +525,13 @@ public class SecurityManagerTest {
     Future<String> future = securityManager.getAccessToken(params);
 
     future.onComplete(ar -> {
-      context.assertEquals(TOKEN_MAX_AGE_SHORT, cache.getAccessExpiryAwareToken(TENANT).getMaxAge());
+      assertEquals(TOKEN_MAX_AGE_SHORT, cache.getAccessExpiryAwareToken(TENANT).getMaxAge());
       var accessToken = cache.getAccessExpiryAwareToken(TENANT);
       // Comparing links to make sure it expires
       Awaitility.await()
         .atMost(Duration.ofSeconds(3))
         .until(() -> cache.getAccessExpiryAwareToken(TENANT) != accessToken);
-      async.complete();
+      context.completeNow();
     });
   }
 

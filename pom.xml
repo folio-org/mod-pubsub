@@ -22,12 +22,12 @@
     <java.version>21</java.version>
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
-    <raml-module-builder.version>35.3.0</raml-module-builder.version>
-    <vertx.version>4.5.13</vertx.version>
+    <raml-module-builder.version>36.0.0-SNAPSHOT</raml-module-builder.version>
+    <vertx.version>5.0.5</vertx.version>
     <lombok.version>1.18.36</lombok.version>
-    <wiremock.version>2.27.2</wiremock.version>
-    <junit.version>4.13.2</junit.version>
-    <rest-assured.version>5.5.0</rest-assured.version>
+    <wiremock.version>3.0.1</wiremock.version>
+    <junit.version>5.13.0</junit.version>
+    <rest-assured.version>5.5.1</rest-assured.version>
     <main.basedir>${project.basedir}</main.basedir>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -58,7 +58,7 @@
       <dependency>
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
-        <version>5.13.0</version>
+        <version>${junit.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>

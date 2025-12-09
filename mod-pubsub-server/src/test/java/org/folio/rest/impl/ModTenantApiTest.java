@@ -27,9 +27,7 @@ import io.restassured.RestAssured;
 import io.restassured.response.ValidatableResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 
-@RunWith(VertxUnitRunner.class)
 public class ModTenantApiTest extends AbstractRestTest {
   private static final String MODULE_TO_VERSION = "mod-pubsub-1.0.0";
   private static final String TENANT_URL = "/_/tenant";

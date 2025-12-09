@@ -33,7 +33,8 @@ public final class ExceptionHelper {
         .build();
     }
     Promise<Response> validationPromise = Promise.promise();
-    ValidationHelper.handleError(throwable, validationPromise);
+    ValidationHelper.handleError(throwable, result -> validationPromise.complete());
+
     if (validationPromise.future().isComplete()) {
       Response response = validationPromise.future().result();
       if (response.getStatus() == Status.INTERNAL_SERVER_ERROR.getStatusCode()) {

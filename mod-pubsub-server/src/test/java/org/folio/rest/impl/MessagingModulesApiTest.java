@@ -3,14 +3,12 @@ package org.folio.rest.impl;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.apache.http.HttpStatus;
 import org.folio.rest.jaxrs.model.EventDescriptor;
 import org.folio.rest.jaxrs.model.PublisherDescriptor;
 import org.folio.rest.jaxrs.model.SubscriberDescriptor;
 import org.folio.rest.jaxrs.model.SubscriptionDefinition;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.PUBLISHER;
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
@@ -19,7 +17,6 @@ import static org.hamcrest.Matchers.is;
 
 import java.util.List;
 
-@RunWith(VertxUnitRunner.class)
 public class MessagingModulesApiTest extends AbstractRestTest {
 
   public static final String MESSAGING_MODULES_PATH = "/pubsub/messaging-modules";

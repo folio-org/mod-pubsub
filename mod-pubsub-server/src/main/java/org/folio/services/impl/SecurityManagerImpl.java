@@ -216,6 +216,8 @@ public class SecurityManagerImpl implements SecurityManager {
           promise.complete();
         }
         return promise.future();
+      }).onFailure(throwable -> {
+        Future.failedFuture(throwable);
       });
   }
 
