@@ -32,8 +32,8 @@ import io.vertx.junit5.VertxTestContext;
 
 public class AuditMessageAPITest extends AbstractRestTest {
 
-//  @Spy
-//  PostgresClientFactory postgresClientFactory = new PostgresClientFactory(Vertx.vertx());
+  @Spy
+  PostgresClientFactory postgresClientFactory = new PostgresClientFactory(Vertx.vertx());
 
   @InjectMocks
   AuditMessageDao auditMessageDao = new AuditMessageDaoImpl();
@@ -122,7 +122,7 @@ public class AuditMessageAPITest extends AbstractRestTest {
 
   @Test
   public void shouldReturnAuditMessagePayloadOnGet() {
-    VertxTestContext context = new VertxTestContext();
+    //VertxTestContext context = new VertxTestContext();
     addTestData().onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
@@ -131,7 +131,7 @@ public class AuditMessageAPITest extends AbstractRestTest {
         .then()
         .statusCode(HttpStatus.SC_OK)
         .body("eventId", is(eventId_1));
-      context.completeNow();
+      //context.completeNow();
     });
   }
 
@@ -230,7 +230,7 @@ public class AuditMessageAPITest extends AbstractRestTest {
         .statusCode(HttpStatus.SC_OK)
         .body("totalRecords", is(3))
         .body("auditMessages.size()", is(3));
-      context.completeNow();
+      //context.completeNow();
     });
   }
 

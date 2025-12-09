@@ -139,7 +139,13 @@ public abstract class AbstractRestTest {
             if (res2.statusCode() == 204) {
               return;
             } if (res2.statusCode() == 201) {
-              JsonObject o = res2.bodyAsJsonObject();
+
+              try {
+                Thread.sleep(1000);
+              } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+              }
+
               tenantClient.getTenantByOperationId(res2.bodyAsJson(TenantJob.class).getId(), 60000, asyncResult3 -> {
                 var res3 = asyncResult3.result();
                 assertTrue(res3.bodyAsJson(TenantJob.class).getComplete());
@@ -156,9 +162,12 @@ public abstract class AbstractRestTest {
               assertEquals("Failed to create %s user. Received status code 404"
                 .formatted(SYSTEM_USER_NAME), res2.bodyAsString());
             }
+
+            context.completeNow();
           });
         } catch (Exception e) {
           e.printStackTrace();
+          context.failNow(e);
         }
       });
   }

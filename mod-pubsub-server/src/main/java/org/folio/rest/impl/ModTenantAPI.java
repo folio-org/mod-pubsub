@@ -26,10 +26,14 @@ public class ModTenantAPI extends TenantAPI {
                            Map<String, String> headers, Context context) {
     return super.loadData(attributes, tenantId, headers, context)
       .compose(num -> {
+//        return Future.succeededFuture(num);
+
         Vertx vertx = context.owner();
         LiquibaseUtil.initializeSchemaForTenant(vertx, tenantId);
         OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
-        return securityManager.createPubSubUser(params).map(num);
+        return securityManager
+          .createPubSubUser(params)
+          .map(num);
       });
   }
 }
