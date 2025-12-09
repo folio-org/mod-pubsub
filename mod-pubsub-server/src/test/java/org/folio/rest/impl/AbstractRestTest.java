@@ -130,7 +130,7 @@ public abstract class AbstractRestTest {
     vertx.deployVerticle(RestVerticle.class.getName(), options)
       .onSuccess(asyncResult1 -> {
         try {
-          TenantClient tenantClient = new TenantClient(OKAPI_URL, TENANT_ID, TOKEN);
+          TenantClient tenantClient = new TenantClient(OKAPI_URL, TENANT_ID, TOKEN, vertx.createHttpClient());
           TenantAttributes tenantAttributes = new TenantAttributes();
           tenantAttributes.setModuleTo(ModuleName.getModuleName() + "-" + ModuleName.getModuleVersion());
 
