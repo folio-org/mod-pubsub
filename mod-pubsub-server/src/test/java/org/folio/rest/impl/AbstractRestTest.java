@@ -174,13 +174,20 @@ public abstract class AbstractRestTest {
 
   @AfterAll
   public static void tearDownClass() {
+    System.out.println("Tearing down class...");
     vertx.close().onSuccess(res -> {
       if (useExternalDatabase.equals("embedded")) {
-        PostgresClient.stopPostgresTester();
+        //PostgresClient.stopPostgresTester();
       }
       System.clearProperty(KAFKA_HOST);
       System.clearProperty(KAFKA_PORT);
       kafkaContainer.stop();
+
+      try {
+        Thread.sleep(3000);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
     });
   }
 

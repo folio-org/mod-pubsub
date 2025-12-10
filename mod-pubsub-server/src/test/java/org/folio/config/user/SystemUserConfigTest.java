@@ -5,7 +5,7 @@ import static org.hamcrest.core.Is.is;
 
 import java.util.Arrays;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class SystemUserConfigTest {
   private static final String SYSTEM_USER_NAME_VAR = "SYSTEM_USER_NAME";

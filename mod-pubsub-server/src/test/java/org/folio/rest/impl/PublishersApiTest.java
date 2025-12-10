@@ -8,7 +8,7 @@ import io.vertx.core.json.JsonObject;
 import org.apache.http.HttpStatus;
 import org.folio.rest.jaxrs.model.EventDescriptor;
 import org.folio.rest.jaxrs.model.PublisherDescriptor;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 
 import java.util.Arrays;

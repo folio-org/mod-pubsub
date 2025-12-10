@@ -140,14 +140,14 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
   public Future<Void> delete(String eventType) {
     String query = DELETE_BY_ID_SQL.formatted(MODULE_SCHEMA, TABLE_NAME);
     return pgClientFactory.getInstance().execute(query, Tuple.of(eventType))
-      .flatMap(result -> {
+      .compose(result -> {
         if (result.rowCount() == 1) {
           return Future.succeededFuture();
         }
         String message = "Error deleting EventDescriptor with event type '%s'".formatted(eventType);
         NotFoundException notFoundException = new NotFoundException(message);
         LOGGER.error(message, notFoundException);
-        return failedFuture(notFoundException);
+        return failedFuture(new NotFoundException(message));
       });
   }
 

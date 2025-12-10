@@ -5,7 +5,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static org.folio.rest.util.OkapiConnectionParams.OKAPI_URL_HEADER;
 import static org.junit.Assert.assertEquals;
@@ -15,13 +14,12 @@ import java.util.UUID;
 
 import org.folio.representation.User;
 import org.folio.rest.jaxrs.model.TenantAttributes;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 
 import io.restassured.RestAssured;
 import io.restassured.response.ValidatableResponse;
@@ -35,14 +33,17 @@ public class ModTenantApiTest extends AbstractRestTest {
   private static final String GET_PUBSUB_USER_URL =
       USERS_URL + "?query=username%3D%3D%22" + SYSTEM_USER_NAME + "%22";
 
-  @ClassRule
-  public static WireMockRule wireMockRule = new WireMockRule(
-    new WireMockConfiguration().dynamicPort());
+  @RegisterExtension
+  static WireMockExtension wireMock = WireMockExtension.newInstance()
+    .options(WireMockConfiguration.wireMockConfig()
+      .dynamicPort()
+      .dynamicHttpsPort())
+    .build();
 
-  @BeforeClass
+  @BeforeAll
   public static void setUpProxying() {
     // forward to okapi by default
-    wireMockRule.stubFor(any(anyUrl()).willReturn(aResponse().proxiedFrom(OKAPI_URL))
+    wireMock.stubFor(any(anyUrl()).willReturn(aResponse().proxiedFrom(OKAPI_URL))
       .atPriority(Integer.MAX_VALUE));
   }
 
@@ -53,9 +54,9 @@ public class ModTenantApiTest extends AbstractRestTest {
     final User user = existingUser();
     final JsonObject userCollection = buildUserCollection(user);
 
-    wireMockRule.stubFor(get(GET_PUBSUB_USER_URL)
+    wireMock.stubFor(get(GET_PUBSUB_USER_URL)
       .willReturn(okJson(userCollection.toString())));
-    wireMockRule.stubFor(put(userByIdUrl(user.getId()))
+    wireMock.stubFor(put(userByIdUrl(user.getId()))
       .willReturn(aResponse().withStatus(400).withBody(expectedErrorMessage)));
 
     String body = getTenant().extract().body().asString();
@@ -102,6 +103,6 @@ public class ModTenantApiTest extends AbstractRestTest {
   }
 
   private String mockOkapiUrl() {
-    return "http://localhost:" + wireMockRule.port();
+    return "http://localhost:" + wireMock.getPort();
   }
 }

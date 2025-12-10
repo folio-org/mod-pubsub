@@ -4,9 +4,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.created;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static java.lang.String.format;
 import static org.awaitility.Awaitility.await;
 import static org.folio.rest.util.OkapiConnectionParams.OKAPI_URL_HEADER;
@@ -23,23 +21,26 @@ import org.folio.rest.jaxrs.model.EventDescriptor;
 import org.folio.rest.jaxrs.model.PublisherDescriptor;
 import org.folio.rest.jaxrs.model.SubscriberDescriptor;
 import org.folio.rest.jaxrs.model.SubscriptionDefinition;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.vertx.core.json.JsonObject;
 
 public class PublishTest extends AbstractRestTest {
-  @ClassRule
-  public static WireMockRule wireMockRule = new WireMockRule(
-    new WireMockConfiguration().dynamicPort());
+  @RegisterExtension
+  static WireMockExtension wireMock = WireMockExtension.newInstance()
+    .options(WireMockConfiguration.wireMockConfig()
+      .dynamicPort()
+      .dynamicHttpsPort())
+    .build();
+
   private static final String PUBLISH_PATH = "/pubsub/publish";
   private static final String CALLBACK_ADDRESS = "/call-me-maybe";
   private static final String LOGIN_URL = "/authn/login-with-expiry";
@@ -129,7 +130,8 @@ public class PublishTest extends AbstractRestTest {
       .pollInterval(3, TimeUnit.SECONDS)
       .untilAsserted(() -> {
         System.out.println("Asserting subscriber notification...");
-        verify(postRequestedFor(urlEqualTo(CALLBACK_ADDRESS)));});
+        wireMock.verify(postRequestedFor(urlEqualTo(CALLBACK_ADDRESS)));
+      });
   }
 
   @Test
@@ -183,17 +185,17 @@ public class PublishTest extends AbstractRestTest {
       .statusCode(HttpStatus.SC_CREATED);
   }
 
-  @Before
+  @BeforeEach
   public void setUp(){
-    wireMockRule.stubFor(any(urlEqualTo(CALLBACK_ADDRESS)));
-    stubFor(post(LOGIN_URL)
+    wireMock.stubFor(any(urlEqualTo(CALLBACK_ADDRESS)));
+    wireMock.stubFor(post(LOGIN_URL)
       .willReturn(created()
         .withHeader("Set-Cookie", ACCESS_TOKEN_COOKIE)
         .withHeader("Set-Cookie", REFRESH_TOKEN_COOKIE)
       ));
   }
 
-  @After
+  @AfterEach
   public void cleanUp() {
     RestAssured.given()
       .spec(spec)
@@ -212,6 +214,6 @@ public class PublishTest extends AbstractRestTest {
   }
 
   private String mockOkapiUrl() {
-    return "http://localhost:"+ wireMockRule.port();
+    return "http://localhost:"+ wireMock.getPort();
   }
 }

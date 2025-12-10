@@ -11,7 +11,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
@@ -112,7 +111,7 @@ public class SecurityManagerTest {
   private final Context vertxContext = vertx.getOrCreateContext();
 
   @RegisterExtension
-  static WireMockExtension mockServer = WireMockExtension.newInstance()
+  static WireMockExtension wireMock = WireMockExtension.newInstance()
     .options(WireMockConfiguration.wireMockConfig()
       .dynamicPort()
       .dynamicHttpsPort())
@@ -125,7 +124,7 @@ public class SecurityManagerTest {
     openMocks = MockitoAnnotations.openMocks(this);
     when(vertx.getOrCreateContext()).thenReturn(vertxContext);
 
-    headers.put(OKAPI_URL_HEADER, "http://localhost:" + mockServer.getPort());
+    headers.put(OKAPI_URL_HEADER, "http://localhost:" + wireMock.getPort());
     headers.put(OKAPI_TENANT_HEADER, TENANT);
     headers.put(OKAPI_TOKEN_HEADER, ACCESS_TOKEN);
   }
@@ -139,7 +138,7 @@ public class SecurityManagerTest {
   public void shouldLoginPubSubUser() {
     VertxTestContext testContext = new VertxTestContext();
 
-    mockServer.stubFor(post(LOGIN_URL)
+    wireMock.stubFor(post(LOGIN_URL)
       .willReturn(created()
         .withHeader("Set-Cookie", ACCESS_TOKEN_COOKIE)
         .withHeader("Set-Cookie", REFRESH_TOKEN_COOKIE)
@@ -174,7 +173,7 @@ public class SecurityManagerTest {
       .put("users", new JsonArray().add(existingUpToDateUser(userId)))
       .put("totalRecords", 1).encode();
 
-    mockServer.stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
+    wireMock.stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
 
     String permId = UUID.randomUUID().toString();
     JsonObject permUser = new JsonObject()
@@ -182,8 +181,8 @@ public class SecurityManagerTest {
       .put("userId", userId)
       .put("permissions", new JsonArray());
 
-    mockServer.stubFor(get(PERMISSIONS_URL + "/" + userId + "?indexField=userId").willReturn(ok().withBody(permUser.encode())));
-    mockServer.stubFor(put(PERMISSIONS_URL + "/" + permId).willReturn(ok()));
+    wireMock.stubFor(get(PERMISSIONS_URL + "/" + userId + "?indexField=userId").willReturn(ok().withBody(permUser.encode())));
+    wireMock.stubFor(put(PERMISSIONS_URL + "/" + permId).willReturn(ok()));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
@@ -218,7 +217,7 @@ public class SecurityManagerTest {
       .put("users", new JsonArray().add(existingUpToDateUser(userId)))
       .put("totalRecords", 1).encode();
 
-    mockServer.stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
+    wireMock.stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
@@ -243,7 +242,7 @@ public class SecurityManagerTest {
       .put("users", new JsonArray().add(existingUpToDateUser(userId)))
       .put("totalRecords", 1).encode();
 
-    mockServer.stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
+    wireMock.stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
 
     String permId = UUID.randomUUID().toString();
     JsonObject permUser = new JsonObject()
@@ -251,8 +250,8 @@ public class SecurityManagerTest {
       .put("userId", userId)
       .put("permissions", new JsonArray().add("inventory.all"));
 
-    mockServer.stubFor(get(PERMISSIONS_URL + "/" + userId + "?indexField=userId").willReturn(ok().withBody(permUser.encode())));
-    mockServer.stubFor(put(PERMISSIONS_URL + "/" + permId).willReturn(ok()));
+    wireMock.stubFor(get(PERMISSIONS_URL + "/" + userId + "?indexField=userId").willReturn(ok().withBody(permUser.encode())));
+    wireMock.stubFor(put(PERMISSIONS_URL + "/" + permId).willReturn(ok()));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
@@ -284,12 +283,12 @@ public class SecurityManagerTest {
       .put("users", new JsonArray().add(existingUser(userId)))
       .put("totalRecords", 1).encode();
 
-    mockServer.stubFor(get(USERS_URL_WITH_QUERY)
+    wireMock.stubFor(get(USERS_URL_WITH_QUERY)
       .willReturn(ok().withBody(emptyUsersResponse().encode())));
-    mockServer.stubFor(post(USERS_URL).willReturn(created().withBody(userCollection)));
-    mockServer.stubFor(post(CREDENTIALS_URL).willReturn(created()));
-    mockServer.stubFor(post(PERMISSIONS_URL).willReturn(created()));
-    mockServer.stubFor(get(urlPathMatching(PERMISSIONS_URL + "/.*")).willReturn(notFound()));
+    wireMock.stubFor(post(USERS_URL).willReturn(created().withBody(userCollection)));
+    wireMock.stubFor(post(CREDENTIALS_URL).willReturn(created()));
+    wireMock.stubFor(post(PERMISSIONS_URL).willReturn(created()));
+    wireMock.stubFor(get(urlPathMatching(PERMISSIONS_URL + "/.*")).willReturn(notFound()));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
@@ -323,7 +322,7 @@ public class SecurityManagerTest {
   public void shouldLoginPubSubUserWhenContextHasNoToken() {
     VertxTestContext context = new VertxTestContext();
 
-    mockServer.stubFor(post(LOGIN_URL)
+    wireMock.stubFor(post(LOGIN_URL)
       .willReturn(created()
         .withHeader("Set-Cookie", ACCESS_TOKEN_COOKIE)
         .withHeader("Set-Cookie", REFRESH_TOKEN_COOKIE)
@@ -345,7 +344,7 @@ public class SecurityManagerTest {
   public void shouldReturnFailedFutureWhenTokenCacheIsEmptyAndPubSubUserLoginFailed() {
     VertxTestContext context = new VertxTestContext();
 
-    mockServer.stubFor(post(LOGIN_URL).willReturn(serverError()));
+    wireMock.stubFor(post(LOGIN_URL).willReturn(serverError()));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
@@ -382,8 +381,8 @@ public class SecurityManagerTest {
       .put("users", new JsonArray().add(existingUser(userId)))
       .put("totalRecords", 1).encode();
 
-    mockServer.stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
-    mockServer.stubFor(put(USERS_URL + "/" + userId).willReturn(noContent()));
+    wireMock.stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
+    wireMock.stubFor(put(USERS_URL + "/" + userId).willReturn(noContent()));
 
     String permId = UUID.randomUUID().toString();
     JsonObject permUser = new JsonObject()
@@ -391,8 +390,8 @@ public class SecurityManagerTest {
       .put("userId", userId)
       .put("permissions", new JsonArray());
 
-    mockServer.stubFor(get(PERMISSIONS_URL + "/" + userId + "?indexField=userId").willReturn(ok().withBody(permUser.encode())));
-    mockServer.stubFor(put(PERMISSIONS_URL + "/" + permId).willReturn(ok()));
+    wireMock.stubFor(get(PERMISSIONS_URL + "/" + userId + "?indexField=userId").willReturn(ok().withBody(permUser.encode())));
+    wireMock.stubFor(put(PERMISSIONS_URL + "/" + permId).willReturn(ok()));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
@@ -426,11 +425,11 @@ public class SecurityManagerTest {
       .put("users", new JsonArray().add(existingUser(userId)))
       .put("totalRecords", 1).encode();
 
-    mockServer.stubFor(get(USERS_URL_WITH_QUERY)
+    wireMock.stubFor(get(USERS_URL_WITH_QUERY)
       .willReturn(ok().withBody(emptyUsersResponse().encode())));
-    mockServer.stubFor(post(USERS_URL).willReturn(created().withBody(userCollection)));
-    mockServer.stubFor(post(CREDENTIALS_URL).willReturn(created()));
-    mockServer.stubFor(get(urlPathMatching(PERMISSIONS_URL + "/.*")).willReturn(forbidden().withBody("x")));
+    wireMock.stubFor(post(USERS_URL).willReturn(created().withBody(userCollection)));
+    wireMock.stubFor(post(CREDENTIALS_URL).willReturn(created()));
+    wireMock.stubFor(get(urlPathMatching(PERMISSIONS_URL + "/.*")).willReturn(forbidden().withBody("x")));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
@@ -446,12 +445,12 @@ public class SecurityManagerTest {
       .put("users", new JsonArray().add(existingUser(userId)))
       .put("totalRecords", 1).encode();
 
-    mockServer.stubFor(get(USERS_URL_WITH_QUERY)
+    wireMock.stubFor(get(USERS_URL_WITH_QUERY)
       .willReturn(ok().withBody(emptyUsersResponse().encode())));
-    mockServer.stubFor(post(USERS_URL).willReturn(created().withBody(userCollection)));
-    mockServer.stubFor(post(CREDENTIALS_URL).willReturn(created()));
-    mockServer.stubFor(get(urlPathMatching(PERMISSIONS_URL + "/.*")).willReturn(notFound()));
-    mockServer.stubFor(post(PERMISSIONS_URL).willReturn(forbidden().withBody("x")));
+    wireMock.stubFor(post(USERS_URL).willReturn(created().withBody(userCollection)));
+    wireMock.stubFor(post(CREDENTIALS_URL).willReturn(created()));
+    wireMock.stubFor(get(urlPathMatching(PERMISSIONS_URL + "/.*")).willReturn(notFound()));
+    wireMock.stubFor(post(PERMISSIONS_URL).willReturn(forbidden().withBody("x")));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
@@ -469,8 +468,8 @@ public class SecurityManagerTest {
       .put("users", new JsonArray().add(existingUser(userId)))
       .put("totalRecords", 1).encode();
 
-    mockServer.stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
-    mockServer.stubFor(put(USERS_URL + "/" + userId).willReturn(noContent()));
+    wireMock.stubFor(get(USERS_URL_WITH_QUERY).willReturn(ok().withBody(userCollection)));
+    wireMock.stubFor(put(USERS_URL + "/" + userId).willReturn(noContent()));
 
     String permId = UUID.randomUUID().toString();
     JsonObject permUser = new JsonObject()
@@ -478,8 +477,8 @@ public class SecurityManagerTest {
       .put("userId", userId)
       .put("permissions", new JsonArray());
 
-    mockServer.stubFor(get(PERMISSIONS_URL + "/" + userId + "?indexField=userId").willReturn(ok().withBody(permUser.encode())));
-    mockServer.stubFor(put(PERMISSIONS_URL + "/" + permId).willReturn(forbidden().withBody("x")));
+    wireMock.stubFor(get(PERMISSIONS_URL + "/" + userId + "?indexField=userId").willReturn(ok().withBody(permUser.encode())));
+    wireMock.stubFor(put(PERMISSIONS_URL + "/" + permId).willReturn(forbidden().withBody("x")));
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
 
@@ -511,7 +510,7 @@ public class SecurityManagerTest {
   public void checkCacheRefreshesAfterHalfOfMaxAge() {
     VertxTestContext context = new VertxTestContext();
 
-    mockServer.stubFor(post(LOGIN_URL)
+    wireMock.stubFor(post(LOGIN_URL)
       .willReturn(created()
         .withHeader("Set-Cookie", ACCESS_TOKEN_COOKIE_SHORT)
         .withHeader("Set-Cookie", REFRESH_TOKEN_COOKIE_SHORT)

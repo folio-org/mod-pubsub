@@ -179,9 +179,8 @@ public class SecurityManagerImpl implements SecurityManager {
     if (!systemUserConfig.isCreateUser()) {
       return succeededFuture();
     }
-//    return succeededFuture();
+
     return existsPubSubUser(params)
-//      .compose(f -> succeededFuture());
       .compose(user -> {
         if (user != null) {
           return updateUser(user, params)
@@ -189,15 +188,8 @@ public class SecurityManagerImpl implements SecurityManager {
         } else {
           return createUser(params)
             .compose(userId -> saveCredentials(userId, params))
-            .compose(userId -> establishPermissionsUser(userId, params))
-//            .compose(r -> succeededFuture())
-//            .onFailure(t -> {
-//              LOGGER.error("gfd fd Failed to create pub/sub user: {}", t.getMessage(), t);
-//            })
-//            .recover(d -> succeededFuture())
-            ;
-        }
-      });
+            .compose(userId -> establishPermissionsUser(userId, params));
+        }});
   }
 
   @Override

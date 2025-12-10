@@ -1,12 +1,13 @@
 package org.folio.kafka;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.function.Supplier;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 public class PubSubConfigTest {
   private static final String ENV = "env";
@@ -32,12 +33,15 @@ public class PubSubConfigTest {
     assertEquals(EVENT_TYPE, pubSubConfig.getEventType());
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void checkQualifierMatchesRegex() {
-    PubSubConfig.setTenantCollectionTopicsQualifier("bad_value");
+    assertThrows(IllegalArgumentException.class,
+      () -> PubSubConfig.setTenantCollectionTopicsQualifier("bad_value"),
+      "Expected setTenantCollectionTopicsQualifier() to throw IllegalArgumentException"
+    );
   }
 
-  @After
+  @AfterEach
   public void after() {
     PubSubConfig.setTenantCollectionTopicsQualifier(null);
   }

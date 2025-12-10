@@ -14,9 +14,9 @@ import static org.hamcrest.Matchers.nullValue;
 import java.nio.file.Path;
 import java.util.Objects;
 
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.Testcontainers;
@@ -27,7 +27,9 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.utility.DockerImageName;
 
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
@@ -46,38 +48,43 @@ public class PubSubIT {
   private static final DockerImageName POSTGRES_IMAGE_NAME = DockerImageName.parse(
     Objects.toString(System.getenv("TESTCONTAINERS_POSTGRES_IMAGE"), "postgres:16-alpine"));
 
-  @ClassRule
-  public static final WireMockClassRule okapi = new WireMockClassRule();
+//  @ClassRule
+//  public static final WireMockClassRule okapi = new WireMockClassRule();
 
-  @ClassRule
-  public static final GenericContainer<?> module =
-    new GenericContainer<>(
-      new ImageFromDockerfile("mod-pubsub").withDockerfile(Path.of("../Dockerfile")))
-      .withNetwork(network)
-      .withExposedPorts(8081)
-      .withAccessToHost(true)
-      .withEnv("DB_HOST", "postgres")
-      .withEnv("DB_PORT", "5432")
-      .withEnv("DB_USERNAME", "username")
-      .withEnv("DB_PASSWORD", "password")
-      .withEnv("DB_DATABASE", "postgres")
-      .withEnv("SYSTEM_USER_NAME", "test_user")
-      .withEnv("SYSTEM_USER_PASSWORD", "test_password");
+  @RegisterExtension
+  static WireMockExtension okapi = WireMockExtension.newInstance()
+    .options(WireMockConfiguration.wireMockConfig()
+      .dynamicPort()
+      .dynamicHttpsPort())
+    .build();
 
-  @ClassRule
-  public static final PostgreSQLContainer<?> postgres =
-    new PostgreSQLContainer<>(POSTGRES_IMAGE_NAME)
-      .withNetwork(network)
-      .withNetworkAliases("postgres")
-      .withExposedPorts(5432)
-      .withUsername("username")
-      .withPassword("password")
-      .withDatabaseName("postgres");
+//  public static final GenericContainer<?> module =
+//    new GenericContainer<>(
+//      new ImageFromDockerfile("mod-pubsub").withDockerfile(Path.of("../Dockerfile")))
+//      .withNetwork(network)
+//      .withExposedPorts(8081)
+//      .withAccessToHost(true)
+//      .withEnv("DB_HOST", "postgres")
+//      .withEnv("DB_PORT", "5432")
+//      .withEnv("DB_USERNAME", "username")
+//      .withEnv("DB_PASSWORD", "password")
+//      .withEnv("DB_DATABASE", "postgres")
+//      .withEnv("SYSTEM_USER_NAME", "test_user")
+//      .withEnv("SYSTEM_USER_PASSWORD", "test_password");
 
-  @BeforeClass
+//  public static final PostgreSQLContainer<?> postgres =
+//    new PostgreSQLContainer<>(POSTGRES_IMAGE_NAME)
+//      .withNetwork(network)
+//      .withNetworkAliases("postgres")
+//      .withExposedPorts(5432)
+//      .withUsername("username")
+//      .withPassword("password")
+//      .withDatabaseName("postgres");
+
+  @BeforeAll
   public static void beforeClass() {
-    okapi.start();
-    Testcontainers.exposeHostPorts(okapi.port());
+//    okapi.start();
+    Testcontainers.exposeHostPorts(okapi.getPort());
     okapi.stubFor(get("/users?query=username%3D%3D%22pub-sub%22").willReturn(okJson("{\"users\":[]}")));
     okapi.stubFor(post("/users").willReturn(created()));
     okapi.stubFor(post("/authn/credentials").willReturn(created()));
@@ -89,7 +96,7 @@ public class PubSubIT {
     RestAssured.baseURI = "http://" + module.getHost() + ":" + module.getFirstMappedPort();
     RestAssured.requestSpecification = new RequestSpecBuilder()
         .addHeader("X-Okapi-Tenant", "testtenant")
-        .addHeader("X-Okapi-Url", "http://host.testcontainers.internal:" + okapi.port())
+        .addHeader("X-Okapi-Url", "http://host.testcontainers.internal:" + okapi.getPort())
         .setContentType(ContentType.JSON)
         .build();
 

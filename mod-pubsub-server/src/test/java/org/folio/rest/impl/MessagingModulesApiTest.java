@@ -8,7 +8,7 @@ import org.folio.rest.jaxrs.model.EventDescriptor;
 import org.folio.rest.jaxrs.model.PublisherDescriptor;
 import org.folio.rest.jaxrs.model.SubscriberDescriptor;
 import org.folio.rest.jaxrs.model.SubscriptionDefinition;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.PUBLISHER;
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;

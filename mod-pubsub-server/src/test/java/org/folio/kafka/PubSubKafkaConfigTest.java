@@ -1,10 +1,11 @@
 package org.folio.kafka;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import java.util.Map;
 
-import org.junit.Assert;
-import org.junit.Test;
-
+import org.junit.jupiter.api.Test;
 
 public class PubSubKafkaConfigTest {
 
@@ -12,21 +13,22 @@ public class PubSubKafkaConfigTest {
   public void shouldReturnProducerProperties() {
     Map<String, String> producerProps = new PubSubKafkaConfig().getProducerProps();
 
-    Assert.assertEquals("PLAINTEXT", producerProps.get("security.protocol"));
-    Assert.assertEquals("TLSv1.2", producerProps.get("ssl.protocol"));
-    Assert.assertEquals("JKS", producerProps.get("ssl.truststore.type"));
-    Assert.assertEquals("JKS", producerProps.get("ssl.keystore.type"));
-    Assert.assertNull(producerProps.get("ssl.keystore.password"));
+    assertEquals("PLAINTEXT", producerProps.get("security.protocol"));
+    assertEquals("TLSv1.2", producerProps.get("ssl.protocol"));
+    assertEquals("JKS", producerProps.get("ssl.truststore.type"));
+    assertEquals("JKS", producerProps.get("ssl.keystore.type"));
+    assertNull(producerProps.get("ssl.keystore.password"));
   }
 
   @Test
   public void shouldReturnConsumerProperties() {
     Map<String, String> consumerProps = new PubSubKafkaConfig().getConsumerProps();
 
-    Assert.assertEquals("PLAINTEXT", consumerProps.get("security.protocol"));
-    Assert.assertEquals("TLSv1.2", consumerProps.get("ssl.protocol"));
-    Assert.assertEquals("JKS", consumerProps.get("ssl.truststore.type"));
-    Assert.assertEquals("JKS", consumerProps.get("ssl.keystore.type"));
-    Assert.assertNull(consumerProps.get("ssl.keystore.password"));
+    assertEquals("PLAINTEXT", consumerProps.get("security.protocol"));
+    assertEquals("TLSv1.2", consumerProps.get("ssl.protocol"));
+    assertEquals("JKS", consumerProps.get("ssl.truststore.type"));
+    assertEquals("JKS", consumerProps.get("ssl.keystore.type"));
+    assertNull(consumerProps.get("ssl.keystore.password"));
   }
+
 }

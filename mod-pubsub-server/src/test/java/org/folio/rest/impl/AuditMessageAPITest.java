@@ -28,7 +28,6 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.junit5.VertxTestContext;
 
 public class AuditMessageAPITest extends AbstractRestTest {
 
