@@ -122,7 +122,6 @@ public class AuditMessageAPITest extends AbstractRestTest {
 
   @Test
   public void shouldReturnAuditMessagePayloadOnGet() {
-    //VertxTestContext context = new VertxTestContext();
     addTestData().onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
@@ -131,13 +130,11 @@ public class AuditMessageAPITest extends AbstractRestTest {
         .then()
         .statusCode(HttpStatus.SC_OK)
         .body("eventId", is(eventId_1));
-      //context.completeNow();
     });
   }
 
   @Test
   public void shouldReturnAuditMessagesOnGetFilteredByDates() {
-    VertxTestContext context = new VertxTestContext();
     addTestData().onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
@@ -147,13 +144,11 @@ public class AuditMessageAPITest extends AbstractRestTest {
         .statusCode(HttpStatus.SC_OK)
         .body("totalRecords", is(2))
         .body("auditMessages.size()", is(2));
-      context.completeNow();
     });
   }
 
   @Test
   public void shouldReturnAuditMessagesOnGetFilteredByEventId() {
-    VertxTestContext context = new VertxTestContext();
     addTestData().onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
@@ -164,13 +159,11 @@ public class AuditMessageAPITest extends AbstractRestTest {
         .body("totalRecords", is(2))
         .body("auditMessages.size()", is(2))
         .body("auditMessages*.eventId", everyItem(is(eventId_1)));
-      context.completeNow();
     });
   }
 
   @Test
   public void shouldReturnAuditMessagesOnGetFilteredByEventType() {
-    VertxTestContext context = new VertxTestContext();
     addTestData().onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
@@ -181,13 +174,11 @@ public class AuditMessageAPITest extends AbstractRestTest {
         .body("totalRecords", is(3))
         .body("auditMessages.size()", is(3))
         .body("auditMessages*.eventType", everyItem(is(eventType)));
-      context.completeNow();
     });
   }
 
   @Test
   public void shouldReturnAuditMessagesOnGetFilteredByCorrelationId() {
-    VertxTestContext context = new VertxTestContext();
     addTestData().onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
@@ -198,13 +189,11 @@ public class AuditMessageAPITest extends AbstractRestTest {
         .body("totalRecords", is(2))
         .body("auditMessages.size()", is(2))
         .body("auditMessages*.correlationId", everyItem(is(correlationId_2)));
-      context.completeNow();
     });
   }
 
   @Test
   public void shouldReturnAuditMessagesOnGetFilteredOnlyByOneDayWithoutTime() {
-    VertxTestContext context = new VertxTestContext();
     addTestData().onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
@@ -214,13 +203,11 @@ public class AuditMessageAPITest extends AbstractRestTest {
         .statusCode(HttpStatus.SC_OK)
         .body("totalRecords", is(2))
         .body("auditMessages.size()", is(2));
-      context.completeNow();
     });
   }
 
   @Test
   public void shouldReturnAuditMessagesOnGetFilteredByManyDaysWithoutTime() {
-    VertxTestContext context = new VertxTestContext();
     addTestData().onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
@@ -230,13 +217,11 @@ public class AuditMessageAPITest extends AbstractRestTest {
         .statusCode(HttpStatus.SC_OK)
         .body("totalRecords", is(3))
         .body("auditMessages.size()", is(3));
-      //context.completeNow();
     });
   }
 
   @Test
   public void shouldReturnAuditMessagesOnGetFilteredByManyDaysWithEndTime() {
-    VertxTestContext context = new VertxTestContext();
     addTestData().onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
@@ -246,7 +231,6 @@ public class AuditMessageAPITest extends AbstractRestTest {
         .statusCode(HttpStatus.SC_OK)
         .body("totalRecords", is(2))
         .body("auditMessages.size()", is(2));
-      context.completeNow();
     });
   }
 

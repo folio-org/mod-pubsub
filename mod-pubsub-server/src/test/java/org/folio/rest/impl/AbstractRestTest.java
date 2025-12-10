@@ -21,7 +21,7 @@ import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.utils.ModuleName;
 import org.folio.rest.tools.utils.NetworkUtils;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -172,8 +172,8 @@ public abstract class AbstractRestTest {
       });
   }
 
-  @AfterEach
-  public void tearDownClass(final VertxTestContext context) {
+  @AfterAll
+  public static void tearDownClass() {
     vertx.close().onSuccess(res -> {
       if (useExternalDatabase.equals("embedded")) {
         PostgresClient.stopPostgresTester();
@@ -181,7 +181,6 @@ public abstract class AbstractRestTest {
       System.clearProperty(KAFKA_HOST);
       System.clearProperty(KAFKA_PORT);
       kafkaContainer.stop();
-      context.completeNow();
     });
   }
 
