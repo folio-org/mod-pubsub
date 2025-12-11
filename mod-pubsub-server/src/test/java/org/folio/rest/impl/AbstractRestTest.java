@@ -112,7 +112,9 @@ public abstract class AbstractRestTest {
         PostgresClient.setConfigFilePath(postgresConfigPath);
         break;
       case "embedded":
-        PostgresClient.setPostgresTester(new PostgresTesterContainer());
+        var postgresContainer = new PostgresTesterContainer();
+        postgresContainer.start("database", "username", "password");
+        PostgresClient.setPostgresTester(postgresContainer);
         break;
       default:
         String message = "No understood database choice made." +
@@ -177,7 +179,7 @@ public abstract class AbstractRestTest {
     System.out.println("Tearing down class...");
     vertx.close().onSuccess(res -> {
       if (useExternalDatabase.equals("embedded")) {
-        //PostgresClient.stopPostgresTester();
+        PostgresClient.stopPostgresTester();
       }
       System.clearProperty(KAFKA_HOST);
       System.clearProperty(KAFKA_PORT);
@@ -260,12 +262,13 @@ public abstract class AbstractRestTest {
       .pollInterval(3, TimeUnit.SECONDS)
       .alias("Is Kafka Up?")
       .until(() -> {
-        System.out.println("listing topics to see if kafka is up");
+        System.out.println("waitForKafka:: creating client...");
         KafkaAdminClient adminClient = buildAdminClient.get();
+        System.out.println("waitForKafka:: listing topics to see if kafka is up...");
         adminClient.listTopics()
           .onComplete(ar -> {
             if (ar.succeeded()) {
-              System.out.println("Kafka is up");
+              System.out.println("waitForKafka:: Kafka is up");
               isReady.set(true);
             }
             adminClient.close(1000);
