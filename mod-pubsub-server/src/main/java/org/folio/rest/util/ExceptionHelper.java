@@ -33,7 +33,7 @@ public final class ExceptionHelper {
         .build();
     }
     Promise<Response> validationPromise = Promise.promise();
-    ValidationHelper.handleError(throwable, result -> validationPromise.complete());
+    ValidationHelper.handleError(throwable, ar -> validationPromise.complete(ar.result()));
 
     if (validationPromise.future().isComplete()) {
       Response response = validationPromise.future().result();

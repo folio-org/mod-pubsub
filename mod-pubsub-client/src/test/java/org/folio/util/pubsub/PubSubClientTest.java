@@ -6,6 +6,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.delete;
 import static com.github.tomakehurst.wiremock.client.WireMock.noContent;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.serverError;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -13,18 +16,18 @@ import java.util.concurrent.ExecutionException;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.folio.rest.util.OkapiConnectionParams;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.github.tomakehurst.wiremock.matching.RegexPattern;
 import com.github.tomakehurst.wiremock.matching.UrlPathPattern;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 public class PubSubClientTest {
   private static final String TENANT_ID = "diku";
@@ -45,14 +48,12 @@ public class PubSubClientTest {
   private static final String MESSAGING_MODULES_PATH = "/pubsub/messaging-modules";
   private static final String PUBLISH_EVENT_PATH = "/pubsub/publish";
 
-  /*
-  @Rule
-  public WireMockRule mockServer = new WireMockRule(
-    WireMockConfiguration.wireMockConfig()
-      .port(PORT)
-      .notifier(new ConsoleNotifier(true)));
+  @RegisterExtension
+  static WireMockExtension wireMock = WireMockExtension.newInstance()
+    .options(WireMockConfiguration.wireMockConfig().port(PORT))
+    .build();
 
-  @Before
+  @BeforeEach
   public void prepareParams() {
     params.setOkapiUrl("http://localhost:" + PORT);
     params.setTenantId(TENANT_ID);
@@ -92,7 +93,7 @@ public class PubSubClientTest {
 
   @Test
   public void shouldPublishEvent() {
-    WireMock.stubFor(post(PUBLISH_EVENT_PATH).willReturn(noContent()));
+    wireMock.stubFor(post(PUBLISH_EVENT_PATH).willReturn(noContent()));
     try {
       Event event = EVENT.mapTo(Event.class);
       assertTrue(PubSubClientUtils.sendEventMessage(event, params).get());
@@ -103,24 +104,24 @@ public class PubSubClientTest {
 
   @Test
   public void shouldUnregisterModuleSuccessfully() throws Exception {
-    WireMock.stubFor(delete(new UrlPathPattern(new RegexPattern(MESSAGING_MODULES_PATH + "?.*"), true))
+    wireMock.stubFor(delete(new UrlPathPattern(new RegexPattern(MESSAGING_MODULES_PATH + "?.*"), true))
       .willReturn(noContent()));
     assertTrue(PubSubClientUtils.unregisterModule(params).get());
   }
 
-  @Test(expected = ExecutionException.class)
+  @Test
   public void shouldReturnFailedFutureWhenPubsubReturnsServerError() throws Exception {
-    WireMock.stubFor(delete(new UrlPathPattern(new RegexPattern(MESSAGING_MODULES_PATH + "?.*"), true))
+    wireMock.stubFor(delete(new UrlPathPattern(new RegexPattern(MESSAGING_MODULES_PATH + "?.*"), true))
       .willReturn(serverError()));
-    PubSubClientUtils.unregisterModule(params).get();
+    assertThrows(ExecutionException.class, PubSubClientUtils.unregisterModule(params)::get);
   }
 
   private void stubPubSubServer(ResponseDefinitionBuilder declarePublisherResponse,
     ResponseDefinitionBuilder declareSubscriberResponse,
     ResponseDefinitionBuilder eventTypesResponse) {
 
-    WireMock.stubFor(post(DECLARE_PUBLISHER_PATH).willReturn(declarePublisherResponse));
-    WireMock.stubFor(post(DECLARE_SUBSCRIBER_PATH).willReturn(declareSubscriberResponse));
-    WireMock.stubFor(post(EVENT_TYPES_PATH).willReturn(eventTypesResponse));
-  }*/
+    wireMock.stubFor(post(DECLARE_PUBLISHER_PATH).willReturn(declarePublisherResponse));
+    wireMock.stubFor(post(DECLARE_SUBSCRIBER_PATH).willReturn(declareSubscriberResponse));
+    wireMock.stubFor(post(EVENT_TYPES_PATH).willReturn(eventTypesResponse));
+  }
 }

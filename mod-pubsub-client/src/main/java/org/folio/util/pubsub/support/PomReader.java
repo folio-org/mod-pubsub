@@ -24,8 +24,6 @@ import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
  * @author shale
  *
  */
-
-
 public enum PomReader {
 
   INSTANCE;
@@ -35,9 +33,11 @@ public enum PomReader {
   private Properties props = null;
   private List<Dependency> dependencies = null;
 
-  private static final Logger LOGGER = LogManager.getLogger();
+  private static class Constants {
+    public static final Logger log = LogManager.getLogger();
+  }
 
-  private PomReader() {
+  PomReader() {
     init("pom.xml");
   }
 
@@ -53,7 +53,7 @@ public enum PomReader {
       boolean isBuildTime = currentRunningJar.contains("mod-pubsub-client");
       readIt(isBuildTime ? pomFilename : null, "META-INF/maven");
     } catch (Exception e) {
-      LOGGER.error(e.getMessage(), e);
+      Constants.log.error(e.getMessage(), e);
       throw new IllegalArgumentException(e);
     }
   }
@@ -67,7 +67,7 @@ public enum PomReader {
   void readIt(String pomFilename, String directoryName) throws IOException, XmlPullParserException {
     Model model;
     if (pomFilename != null) {
-      LOGGER.info("Reading from " + pomFilename);
+      Constants.log.info("Reading from " + pomFilename);
       //the runtime is the jar run when deploying during unit tests
       //the interface-extensions is the jar run when running build time tools,
       //like MDGenerator, ClientGenerator, etc..
@@ -76,7 +76,7 @@ public enum PomReader {
       MavenXpp3Reader mavenreader = new MavenXpp3Reader();
       model = mavenreader.read(new FileReader(pomFile));
     } else { //this is runtime, the jar called via java -jar is the module's jar
-      LOGGER.info("Reading from jar");
+      Constants.log.info("Reading from jar");
       model = getModelFromJar(directoryName);
     }
     if (model.getParent() != null) {
@@ -94,7 +94,7 @@ public enum PomReader {
     //the version is a placeholder to a value in the props section
     version = replacePlaceHolderWithValue(version);
 
-    LOGGER.info("module name: " + moduleName + ", version: " + version);
+    Constants.log.info("module name: " + moduleName + ", version: " + version);
   }
 
   private Model getModelFromJar(String directoryName) throws IOException, XmlPullParserException {

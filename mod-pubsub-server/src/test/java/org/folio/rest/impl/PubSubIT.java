@@ -5,6 +5,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.notFound;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
@@ -28,7 +29,6 @@ import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.utility.DockerImageName;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 
 import io.restassured.RestAssured;
@@ -48,55 +48,47 @@ public class PubSubIT {
   private static final DockerImageName POSTGRES_IMAGE_NAME = DockerImageName.parse(
     Objects.toString(System.getenv("TESTCONTAINERS_POSTGRES_IMAGE"), "postgres:16-alpine"));
 
-//  @ClassRule
-//  public static final WireMockClassRule okapi = new WireMockClassRule();
-
   @RegisterExtension
-  static WireMockExtension okapi = WireMockExtension.newInstance()
-    .options(WireMockConfiguration.wireMockConfig()
-      .dynamicPort()
-      .dynamicHttpsPort())
+  static WireMockExtension wireMock = WireMockExtension.newInstance()
+    .options(WireMockConfiguration.wireMockConfig().dynamicPort())
     .build();
 
-//  public static final GenericContainer<?> module =
-//    new GenericContainer<>(
-//      new ImageFromDockerfile("mod-pubsub").withDockerfile(Path.of("../Dockerfile")))
-//      .withNetwork(network)
-//      .withExposedPorts(8081)
-//      .withAccessToHost(true)
-//      .withEnv("DB_HOST", "postgres")
-//      .withEnv("DB_PORT", "5432")
-//      .withEnv("DB_USERNAME", "username")
-//      .withEnv("DB_PASSWORD", "password")
-//      .withEnv("DB_DATABASE", "postgres")
-//      .withEnv("SYSTEM_USER_NAME", "test_user")
-//      .withEnv("SYSTEM_USER_PASSWORD", "test_password");
+  public static final PostgreSQLContainer<?> postgres =
+    new PostgreSQLContainer<>(POSTGRES_IMAGE_NAME)
+      .withNetwork(network)
+      .withNetworkAliases("postgres")
+      .withExposedPorts(5432)
+      .withUsername("username")
+      .withPassword("password")
+      .withDatabaseName("postgres");
 
-//  public static final PostgreSQLContainer<?> postgres =
-//    new PostgreSQLContainer<>(POSTGRES_IMAGE_NAME)
-//      .withNetwork(network)
-//      .withNetworkAliases("postgres")
-//      .withExposedPorts(5432)
-//      .withUsername("username")
-//      .withPassword("password")
-//      .withDatabaseName("postgres");
+  public static final GenericContainer<?> module =
+    new GenericContainer<>(
+      new ImageFromDockerfile("mod-pubsub").withDockerfile(Path.of("../Dockerfile")))
+      .withNetwork(network)
+      .withExposedPorts(8081)
+      .withAccessToHost(true)
+      .withEnv("DB_HOST", "postgres")
+      .withEnv("DB_PORT", "5432")
+      .withEnv("DB_USERNAME", "username")
+      .withEnv("DB_PASSWORD", "password")
+      .withEnv("DB_DATABASE", "postgres")
+      .withEnv("SYSTEM_USER_NAME", "test_user")
+      .withEnv("SYSTEM_USER_PASSWORD", "test_password");
 
   @BeforeAll
   public static void beforeClass() {
-//    okapi.start();
-    Testcontainers.exposeHostPorts(okapi.getPort());
-    okapi.stubFor(get("/users?query=username%3D%3D%22pub-sub%22").willReturn(okJson("{\"users\":[]}")));
-    okapi.stubFor(post("/users").willReturn(created()));
-    okapi.stubFor(post("/authn/credentials").willReturn(created()));
-    okapi.stubFor(get(urlPathMatching("/perms/users/.*")).willReturn(notFound()));
-    okapi.stubFor(post("/perms/users").willReturn(created()));
+    postgres.start();
+    module.start();
+
+    Testcontainers.exposeHostPorts(wireMock.getPort());
 
     RestAssured.reset();
     RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     RestAssured.baseURI = "http://" + module.getHost() + ":" + module.getFirstMappedPort();
     RestAssured.requestSpecification = new RequestSpecBuilder()
         .addHeader("X-Okapi-Tenant", "testtenant")
-        .addHeader("X-Okapi-Url", "http://host.testcontainers.internal:" + okapi.getPort())
+        .addHeader("X-Okapi-Url", "http://host.testcontainers.internal:" + wireMock.getPort())
         .setContentType(ContentType.JSON)
         .build();
 
@@ -120,6 +112,7 @@ public class PubSubIT {
           post("/_/tenant").
         then().
           statusCode(201).
+          //body(is(not(printLogs()))).
         extract().
           header("Location");
 
@@ -133,9 +126,15 @@ public class PubSubIT {
 
   @Test
   public void installAndUpgrade() {
-    postTenant(new JsonObject().put("module_to", "999999.0.0"));
+    wireMock.stubFor(get("/users?query=username%3D%3D%22pub-sub%22").willReturn(okJson("{\"users\":[]}")));
+    wireMock.stubFor(post("/users").willReturn(created()));
+    wireMock.stubFor(post(urlPathEqualTo("/authn/credentials")).willReturn(created()));
+    wireMock.stubFor(get(urlPathMatching("/perms/users/.*")).willReturn(notFound()));
+    wireMock.stubFor(post("/perms/users").willReturn(created()));
+
+    postTenant(new JsonObject().put("module_to", "mod_pubsub-999999.0.0"));
     // migrate from 0.0.0 to test that migration is idempotent
-    postTenant(new JsonObject().put("module_to", "999999.0.0").put("module_from", "0.0.0"));
+    postTenant(new JsonObject().put("module_to", "mod_pubsub-999999.0.0").put("module_from", "mod_pubsub-0.0.0"));
 
     // smoke test
     given().
