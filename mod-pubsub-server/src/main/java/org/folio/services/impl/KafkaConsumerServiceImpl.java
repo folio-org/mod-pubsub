@@ -56,7 +56,6 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
   private SecurityManager securityManager;
   private static final int RETRY_NUMBER =
     Integer.parseInt(System.getenv().getOrDefault("pubsub.delivery.retry.number", "5"));
-    //Integer.parseInt(MODULE_SPECIFIC_ARGS.getOrDefault("pubsub.delivery.retry.number", "5"));
 
   public KafkaConsumerServiceImpl(@Autowired Vertx vertx,
                                   @Autowired PubSubKafkaConfig kafkaConfig,

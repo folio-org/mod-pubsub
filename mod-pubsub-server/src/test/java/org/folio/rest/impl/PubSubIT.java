@@ -112,7 +112,6 @@ public class PubSubIT {
           post("/_/tenant").
         then().
           statusCode(201).
-          //body(is(not(printLogs()))).
         extract().
           header("Location");
 
