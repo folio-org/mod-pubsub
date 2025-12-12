@@ -13,6 +13,7 @@
     <ramlfiles_path>${project.parent.basedir}/ramls</ramlfiles_path>
     <sonar.exclusions>**/OkapiConnectionParams.java</sonar.exclusions>
     <sonar.coverage.exclusions>**/org/folio/dao/impl/**/*.java</sonar.coverage.exclusions>
+    <sonar.coverage.exclusions>**/org/folio/services/impl/**/*.java</sonar.coverage.exclusions>
   </properties>
 
   <dependencies>

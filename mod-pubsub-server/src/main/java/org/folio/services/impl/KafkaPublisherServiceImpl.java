@@ -31,7 +31,6 @@ public class KafkaPublisherServiceImpl implements PublisherService {
 
   private static final boolean EVENT_PAYLOAD_AUDIT_ENABLED =
     Boolean.parseBoolean(System.getenv().getOrDefault("event.payload.audit.enabled", "false"));
-    //Boolean.parseBoolean(MODULE_SPECIFIC_ARGS.getOrDefault("event.payload.audit.enabled", "false"));
 
   private Cache cache;
   private AuditService auditService;

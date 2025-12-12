@@ -147,7 +147,7 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
         String message = "Error deleting EventDescriptor with event type '%s'".formatted(eventType);
         NotFoundException notFoundException = new NotFoundException(message);
         LOGGER.error(message, notFoundException);
-        return failedFuture(new NotFoundException(message));
+        return failedFuture(notFoundException);
       });
   }
 
