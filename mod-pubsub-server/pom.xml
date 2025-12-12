@@ -12,10 +12,7 @@
     <basedir>${project.parent.basedir}</basedir>
     <ramlfiles_path>${project.parent.basedir}/ramls</ramlfiles_path>
     <sonar.exclusions>**/OkapiConnectionParams.java</sonar.exclusions>
-    <sonar.coverage.exclusions>**/org/folio/services/impl/**/*.java</sonar.coverage.exclusions>
-    <sonar.coverage.exclusions>**/org/folio/dao/impl/**/*.java</sonar.coverage.exclusions>
-    <sonar.coverage.exclusions>**/org/folio/rest/util/**/*.java</sonar.coverage.exclusions>
-    <sonar.coverage.exclusions>**/DbUtil.java</sonar.coverage.exclusions>
+    <sonar.coverage.exclusions>**/org/folio/services/impl/**/*.java,**/org/folio/dao/impl/**/*.java,**/org/folio/rest/util/**/*.java,**/DbUtil.java</sonar.coverage.exclusions>
   </properties>
 
   <dependencies>
