@@ -31,11 +31,14 @@ import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.admin.KafkaAdminClient;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
 import lombok.SneakyThrows;
 
@@ -93,7 +96,8 @@ public abstract class AbstractRestTest {
     waitForPostgres();
     waitForKafka();
 
-    deployVerticle(context);
+    deployVerticle()
+      .onComplete(context.succeedingThenComplete());
   }
 
   private static void runDatabase() throws Exception {
@@ -125,7 +129,7 @@ public abstract class AbstractRestTest {
   }
 
   @SneakyThrows
-  private static void deployVerticle(final VertxTestContext context) {
+  private static Future<Void> deployVerticle() {
     final DeploymentOptions options = new DeploymentOptions()
       .setConfig(new JsonObject()
         .put(HTTP_PORT, PORT)
@@ -135,69 +139,54 @@ public abstract class AbstractRestTest {
     TenantAttributes tenantAttributes = new TenantAttributes()
       .withModuleTo(ModuleName.getModuleName() + "-" + ModuleName.getModuleVersion());
 
-    vertx.deployVerticle(RestVerticle.class.getName(), options)
+    return vertx.deployVerticle(RestVerticle.class.getName(), options)
       .compose(ignored -> tenantClient.postTenant(tenantAttributes))
       .compose(response -> tenantClient.getTenantByOperationId(response.bodyAsJson(TenantJob.class).getId(), 60000))
       .onSuccess(response -> assertTrue(response.bodyAsJson(TenantJob.class).getComplete()))
-      .onFailure(context::failNow)
-      .onSuccess(ignored -> context.completeNow());
-
-    context.awaitCompletion(30, SECONDS);
+      .mapEmpty();
   }
 
   @AfterAll
   @SneakyThrows
   public static void tearDownClass(VertxTestContext context) {
     System.out.println("Tearing down class...");
-    vertx.close().onSuccess(res -> {
-      if (useExternalDatabase.equals("embedded")) {
-        PostgresClient.stopPostgresTester();
-      }
-      System.clearProperty(KAFKA_HOST);
-      System.clearProperty(KAFKA_PORT);
-      kafkaContainer.stop();
-      context.completeNow();
-    });
-    context.awaitCompletion(5, SECONDS);
+    vertx.close()
+      .onSuccess(res -> {
+        if (useExternalDatabase.equals("embedded")) {
+          PostgresClient.stopPostgresTester();
+        }
+        System.clearProperty(KAFKA_HOST);
+        System.clearProperty(KAFKA_PORT);
+        kafkaContainer.stop();
+      })
+      .onComplete(context.succeedingThenComplete());
   }
 
   @BeforeEach
+  @SneakyThrows
   public void setUp(VertxTestContext context) {
-    clearModuleSchemaTables(context);
-    clearTenantTables(context);
     spec = new RequestSpecBuilder()
       .setContentType(ContentType.JSON)
       .addHeader(OKAPI_HEADER_TENANT, TENANT_ID)
       .setBaseUri(OKAPI_URL)
       .addHeader("Accept", "text/plain, application/json")
       .build();
+
+    clearModuleSchemaTables()
+      .compose(ignored -> clearTenantTables())
+      .onComplete(context.succeedingThenComplete());
   }
 
-  @SneakyThrows
-  private void clearModuleSchemaTables(VertxTestContext context) {
+  private Future<RowSet<Row>> clearModuleSchemaTables() {
     PostgresClient pgClient = PostgresClient.getInstance(vertx);
-    pgClient.execute(DELETE_ALL_SQL.formatted(MESSAGING_MODULE_TABLE), Tuple.tuple(), event ->
-      pgClient.execute(DELETE_ALL_SQL.formatted(EVENT_DESCRIPTOR_TABLE), Tuple.tuple(), event1 -> {
-        if (event.failed()) {
-          context.failNow(event.cause());
-        }
-        context.completeNow();
-      }));
-    context.awaitCompletion(5, SECONDS);
+    return pgClient.execute(DELETE_ALL_SQL.formatted(MESSAGING_MODULE_TABLE), Tuple.tuple())
+      .compose(event -> pgClient.execute(DELETE_ALL_SQL.formatted(EVENT_DESCRIPTOR_TABLE), Tuple.tuple()));
   }
 
-  @SneakyThrows
-  private void clearTenantTables(VertxTestContext context) {
+  private Future<RowSet<Row>> clearTenantTables() {
     PostgresClient pgClient = PostgresClient.getInstance(vertx, TENANT_ID);
-    pgClient.delete(AUDIT_MESSAGE_TABLE, new Criterion(), event -> {
-      pgClient.delete(AUDIT_MESSAGE_PAYLOAD_TABLE, new Criterion(), event1 -> {
-        if (event1.failed()) {
-          context.failNow(event1.cause());
-        }
-        context.completeNow();
-      });
-    });
-    context.awaitCompletion(5, SECONDS);
+    return pgClient.delete(AUDIT_MESSAGE_TABLE, new Criterion())
+      .compose(event -> pgClient.delete(AUDIT_MESSAGE_PAYLOAD_TABLE, new Criterion()));
   }
 
   private static void waitForPostgres() {
