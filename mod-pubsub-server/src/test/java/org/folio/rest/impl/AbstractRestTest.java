@@ -139,6 +139,7 @@ public abstract class AbstractRestTest {
       .compose(ignored -> tenantClient.postTenant(tenantAttributes))
       .compose(response -> tenantClient.getTenantByOperationId(response.bodyAsJson(TenantJob.class).getId(), 60000))
       .onSuccess(response -> assertTrue(response.bodyAsJson(TenantJob.class).getComplete()))
+      .onFailure(context::failNow)
       .onSuccess(ignored -> context.completeNow());
 
     context.awaitCompletion(30, SECONDS);
