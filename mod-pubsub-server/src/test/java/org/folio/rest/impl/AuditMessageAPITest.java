@@ -42,10 +42,11 @@ public class AuditMessageAPITest extends AbstractRestTest {
   AutoCloseable openMocks;
 
   @BeforeEach
-  public void setUp(VertxTestContext testContext) {
+  public void setUp() {
+    VertxTestContext context = new VertxTestContext();
     postgresClientFactory.getInstance().execute("DELETE FROM %s.%s"
       .formatted(convertToPsqlStandard(TENANT_ID), "audit_message_payload"))
-      .onSuccess(r -> testContext.completeNow());
+      .onSuccess(r -> context.completeNow());
     openMocks = MockitoAnnotations.openMocks(this);
   }
 
