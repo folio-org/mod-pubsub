@@ -1,8 +1,8 @@
 package org.folio.services.impl;
 
 import static io.vertx.core.Future.succeededFuture;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeast;
@@ -31,25 +31,24 @@ import org.folio.rest.util.RestUtil;
 import org.folio.services.SecurityManager;
 import org.folio.services.cache.Cache;
 import org.jetbrains.annotations.NotNull;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.common.Slf4jNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
@@ -77,13 +76,12 @@ class ConsumerServiceUnitTest {
   private KafkaConsumerServiceImpl consumerService;
   private Map<String, String> headers = new HashMap<>();
 
-  @Rule
-  public WireMockRule mockServer = new WireMockRule(
-    WireMockConfiguration.wireMockConfig()
-      .dynamicPort()
-      .notifier(new Slf4jNotifier(true)));
+  @RegisterExtension
+  static WireMockExtension wireMock = WireMockExtension.newInstance()
+    .options(WireMockConfiguration.wireMockConfig().dynamicPort())
+    .build();
 
-  @Before
+  @BeforeEach
   public void setUp() {
     MockitoAnnotations.openMocks(this);
     securityManager = spy(new SecurityManagerImpl(cache, systemUserConfig));
@@ -93,32 +91,36 @@ class ConsumerServiceUnitTest {
 
     doReturn(succeededFuture(TOKEN)).when(securityManager).getAccessToken(any(OkapiConnectionParams.class));
 
-    headers.put(OKAPI_URL_HEADER, "http://localhost:" + mockServer.port());
+    headers.put(OKAPI_URL_HEADER, "http://localhost:" + wireMock.getPort());
     headers.put(OKAPI_TENANT_HEADER, TENANT);
     headers.put(OKAPI_TOKEN_HEADER, TOKEN);
   }
 
-  /*
   @Test
-  void shouldSendRequestWithoutPayloadToSubscriber(TestContext context) {
-    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS)
+  void shouldSendRequestWithoutPayloadToSubscriber() {
+    VertxTestContext context = new VertxTestContext();
+
+    wireMock.stubFor(WireMock.post(CALLBACK_ADDRESS)
       .willReturn(WireMock.ok()));
 
     var event = buildEvent();
     var params = new OkapiConnectionParams(headers, vertx);
 
     RestUtil.doRequest(params, CALLBACK_ADDRESS, HttpMethod.POST, event.getEventPayload())
-    .onComplete(context.asyncAssertSuccess(x -> {
-      List<LoggedRequest> requests = WireMock.findAll(RequestPatternBuilder.allRequests());
-      assertEquals(1, requests.size());
-      assertEquals(CALLBACK_ADDRESS, requests.getFirst().getUrl());
-      assertEquals("POST", requests.getFirst().getMethod().getName());
-    }));
+      .onComplete(r -> {
+        List<LoggedRequest> requests = WireMock.findAll(RequestPatternBuilder.allRequests());
+        assertEquals(1, requests.size());
+        assertEquals(CALLBACK_ADDRESS, requests.getFirst().getUrl());
+        assertEquals("POST", requests.getFirst().getMethod().getName());
+      })
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
-  void shouldSendRequestWithPayloadToSubscriber(TestContext context) {
-    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS)
+  void shouldSendRequestWithPayloadToSubscriber() {
+    VertxTestContext context = new VertxTestContext();
+
+    wireMock.stubFor(WireMock.post(CALLBACK_ADDRESS)
       .willReturn(WireMock.created()));
 
     var event = new Event()
@@ -132,31 +134,37 @@ class ConsumerServiceUnitTest {
     var params = new OkapiConnectionParams(headers, vertx);
 
     RestUtil.doRequest(params, CALLBACK_ADDRESS, HttpMethod.POST, event.getEventPayload())
-    .onComplete(context.asyncAssertSuccess(x -> {
-      List<LoggedRequest> requests = WireMock.findAll(RequestPatternBuilder.allRequests());
-      assertEquals(1, requests.size());
-      assertEquals(CALLBACK_ADDRESS, requests.getFirst().getUrl());
-      assertEquals("POST", requests.getFirst().getMethod().getName());
-      assertEquals(event.getEventPayload(), requests.getFirst().getBodyAsString());
-    }));
+      .onComplete(x -> {
+        List<LoggedRequest> requests = WireMock.findAll(RequestPatternBuilder.allRequests());
+        assertEquals(1, requests.size());
+        assertEquals(CALLBACK_ADDRESS, requests.getFirst().getUrl());
+        assertEquals("POST", requests.getFirst().getMethod().getName());
+        assertEquals(event.getEventPayload(), requests.getFirst().getBodyAsString());
+      })
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
-  void shouldNotSendRequestIfNoSubscribersFound(TestContext context) {
+  void shouldNotSendRequestIfNoSubscribersFound() {
+    VertxTestContext context = new VertxTestContext();
+
     var event = buildEvent();
     var params = new OkapiConnectionParams(headers, vertx);
     when(cache.getMessagingModules()).thenReturn(succeededFuture(new HashSet<>()));
 
     consumerService.deliverEvent(event, params)
-    .onComplete(context.asyncAssertSuccess(x -> {
-      List<LoggedRequest> requests = WireMock.findAll(RequestPatternBuilder.allRequests());
-      assertEquals(0, requests.size());
-    }));
+      .onComplete(x -> {
+        List<LoggedRequest> requests = wireMock.findAll(RequestPatternBuilder.allRequests());
+        assertEquals(0, requests.size());
+      })
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
-  void shouldSendRequestToFoundSubscribers(TestContext context) {
-    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS)
+  void shouldSendRequestToFoundSubscribers() {
+    VertxTestContext context = new VertxTestContext();
+    
+    wireMock.stubFor(WireMock.post(CALLBACK_ADDRESS)
       .willReturn(WireMock.noContent()));
 
     var event = buildEvent();
@@ -181,15 +189,19 @@ class ConsumerServiceUnitTest {
     when(cache.getMessagingModules()).thenReturn(succeededFuture(messagingModuleList));
 
     consumerService.deliverEvent(event, params)
-    .onComplete(context.asyncAssertSuccess(x -> {
-      verify(consumerService, times(messagingModuleList.size())).getEventDeliveredHandler(any(Event.class), anyString(), any(MessagingModule.class), any(OkapiConnectionParams.class), any(Map.class));
-      verify(securityManager, times(0)).invalidateToken(TENANT);
-    }));
+      .onComplete(x -> {
+        verify(consumerService, times(messagingModuleList.size())).getEventDeliveredHandler(any(Event.class), anyString(), any(MessagingModule.class), any(OkapiConnectionParams.class), any(Map.class));
+        verify(securityManager, times(0)).invalidateToken(TENANT);
+      })
+      .onComplete(context.succeedingThenComplete());
   }
 
+
   @Test
-  void shouldSendRequestAndRetry(TestContext context) {
-    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS)
+  void shouldSendRequestAndRetry() {
+    VertxTestContext context = new VertxTestContext();
+
+    wireMock.stubFor(WireMock.post(CALLBACK_ADDRESS)
       .willReturn(WireMock.forbidden()));
 
     var event = buildEvent();
@@ -214,51 +226,52 @@ class ConsumerServiceUnitTest {
     when(cache.getMessagingModules()).thenReturn(succeededFuture(messagingModuleList));
 
     consumerService.deliverEvent(event, params)
-    .onComplete(context.asyncAssertSuccess(x -> {
-      verify(securityManager, atLeast(messagingModuleList.size())).invalidateToken(TENANT);
-    }));
+      .onComplete(x -> {
+        verify(securityManager, atLeast(messagingModuleList.size())).invalidateToken(TENANT);
+      })
+      .onComplete(context.succeedingThenComplete());
   }
 
   @Test
-  void shouldInvalidateCacheBeforeRetryIfBadRequest(TestContext context) {
-    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.badRequest()));
-    checkThatInvalidateTokenWasInvoked(context);
+  void shouldInvalidateCacheBeforeRetryIfBadRequest() {
+    wireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.badRequest()));
+    checkThatInvalidateTokenWasInvoked();
   }
 
   @Test
-  void shouldInvalidateCacheBeforeRetryIfForbidden(TestContext context) {
-    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.forbidden()));
-    checkThatInvalidateTokenWasInvoked(context);
+  void shouldInvalidateCacheBeforeRetryIfForbidden() {
+    wireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.forbidden()));
+    checkThatInvalidateTokenWasInvoked();
   }
 
   @Test
-  void shouldInvalidateCacheBeforeRetryIfBadRequestEntity(TestContext context) {
-    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.badRequestEntity()));
-    checkThatInvalidateTokenWasInvoked(context);
+  void shouldInvalidateCacheBeforeRetryIfBadRequestEntity() {
+    wireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.badRequestEntity()));
+    checkThatInvalidateTokenWasInvoked();
   }
 
   @Test
-  void shouldNotInvalidateCacheIfNoContent(TestContext context) {
-    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.noContent()));
-    checkThatInvalidateTokenWasNotInvoked(context);
+  void shouldNotInvalidateCacheIfNoContent() {
+    wireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.noContent()));
+    checkThatInvalidateTokenWasNotInvoked();
   }
 
   @Test
-  void shouldNotInvalidateCacheIfOk(TestContext context) {
-    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.ok()));
-    checkThatInvalidateTokenWasNotInvoked(context);
+  void shouldNotInvalidateCacheIfOk() {
+    wireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.ok()));
+    checkThatInvalidateTokenWasNotInvoked();
   }
 
   @Test
-  void shouldNotInvalidateCacheIfCreated(TestContext context) {
-    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.created()));
-    checkThatInvalidateTokenWasNotInvoked(context);
+  void shouldNotInvalidateCacheIfCreated() {
+    wireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.created()));
+    checkThatInvalidateTokenWasNotInvoked();
   }
 
   @Test
-  void shouldNotInvalidateCacheBeforeRetryIfServerError(TestContext context) {
-    WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.serverError()));
-    checkThatInvalidateTokenWasNotInvoked(context);
+  void shouldNotInvalidateCacheBeforeRetryIfServerError() {
+    wireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.serverError()));
+    checkThatInvalidateTokenWasNotInvoked();
   }
 
   @Test
@@ -293,31 +306,37 @@ class ConsumerServiceUnitTest {
     verify(consumerService, times(1)).deliverEvent(any(), any());
   }
 
-  private void checkThatInvalidateTokenWasInvoked(TestContext context) {
+  private void checkThatInvalidateTokenWasInvoked() {
+    VertxTestContext context = new VertxTestContext();
+
     var event = buildEvent();
     headers.put(USER_ID, UUID.randomUUID().toString());
     var params = buildOkapiConnectionParams();
     when(cache.getMessagingModules()).thenReturn(succeededFuture(buildMessagingModules()));
 
     consumerService.deliverEvent(event, params)
-    .onComplete(context.asyncAssertSuccess(x -> {
+    .onComplete(x -> {
       verify(securityManager, atLeast(1)).invalidateToken(TENANT);
       verify(cache, atLeast(1)).invalidateAccessToken(TENANT);
       assertNull(headers.get(USER_ID));
-    }));
+    })
+      .onComplete(context.succeedingThenComplete());
   }
 
-  private void checkThatInvalidateTokenWasNotInvoked(TestContext context) {
+  private void checkThatInvalidateTokenWasNotInvoked() {
+    VertxTestContext context = new VertxTestContext();
+
     var event = buildEvent();
     var params = buildOkapiConnectionParams();
     when(cache.getMessagingModules()).thenReturn(succeededFuture(buildMessagingModules()));
 
     consumerService.deliverEvent(event, params)
-    .onComplete(context.asyncAssertSuccess(x -> {
-      verify(securityManager, never()).invalidateToken(TENANT);
-      verify(cache, never()).invalidateAccessToken(TENANT);
-    }));
-  }*/
+      .onComplete(x -> {
+        verify(securityManager, never()).invalidateToken(TENANT);
+        verify(cache, never()).invalidateAccessToken(TENANT);
+      })
+      .onComplete(context.succeedingThenComplete());
+  }
 
   private Set<MessagingModule> buildMessagingModules() {
     Set<MessagingModule> messagingModules = new HashSet<>();

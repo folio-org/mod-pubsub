@@ -112,9 +112,7 @@ class SecurityManagerTest {
 
   @RegisterExtension
   static WireMockExtension wireMock = WireMockExtension.newInstance()
-    .options(WireMockConfiguration.wireMockConfig()
-      .dynamicPort()
-      .dynamicHttpsPort())
+    .options(WireMockConfiguration.wireMockConfig().dynamicPort())
     .build();
 
   AutoCloseable openMocks;

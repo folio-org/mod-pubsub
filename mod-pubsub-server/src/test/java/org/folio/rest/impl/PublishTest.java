@@ -36,9 +36,7 @@ import io.vertx.core.json.JsonObject;
 class PublishTest extends AbstractRestTest {
   @RegisterExtension
   static WireMockExtension wireMock = WireMockExtension.newInstance()
-    .options(WireMockConfiguration.wireMockConfig()
-      .dynamicPort()
-      .dynamicHttpsPort())
+    .options(WireMockConfiguration.wireMockConfig().dynamicPort())
     .build();
 
   private static final String PUBLISH_PATH = "/pubsub/publish";
