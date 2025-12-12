@@ -29,7 +29,7 @@ import com.github.tomakehurst.wiremock.matching.UrlPathPattern;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 
-public class PubSubClientTest {
+class PubSubClientTest {
   private static final String TENANT_ID = "diku";
   private static final String TOKEN = "token";
   private static final int PORT = NetworkUtils.nextFreePort();
@@ -61,14 +61,14 @@ public class PubSubClientTest {
   }
 
   @Test
-  public void registerModuleSuccessfully() throws Exception {
+  void registerModuleSuccessfully() throws Exception {
     stubPubSubServer(created(), created(), created());
 
     assertTrue(PubSubClientUtils.registerModule(params).get());
   }
 
   @Test
-  public void shouldNotRegisterPublishers() {
+  void shouldNotRegisterPublishers() {
     stubPubSubServer(badRequest(), created(), created());
 
     try {
@@ -80,7 +80,7 @@ public class PubSubClientTest {
   }
 
   @Test
-  public void shouldNotRegisterSubscribers() {
+  void shouldNotRegisterSubscribers() {
     stubPubSubServer(created(), badRequest(), created());
 
     try {
@@ -92,7 +92,7 @@ public class PubSubClientTest {
   }
 
   @Test
-  public void shouldPublishEvent() {
+  void shouldPublishEvent() {
     wireMock.stubFor(post(PUBLISH_EVENT_PATH).willReturn(noContent()));
     try {
       Event event = EVENT.mapTo(Event.class);
@@ -103,14 +103,14 @@ public class PubSubClientTest {
   }
 
   @Test
-  public void shouldUnregisterModuleSuccessfully() throws Exception {
+  void shouldUnregisterModuleSuccessfully() throws Exception {
     wireMock.stubFor(delete(new UrlPathPattern(new RegexPattern(MESSAGING_MODULES_PATH + "?.*"), true))
       .willReturn(noContent()));
     assertTrue(PubSubClientUtils.unregisterModule(params).get());
   }
 
   @Test
-  public void shouldReturnFailedFutureWhenPubsubReturnsServerError() throws Exception {
+  void shouldReturnFailedFutureWhenPubsubReturnsServerError() throws Exception {
     wireMock.stubFor(delete(new UrlPathPattern(new RegexPattern(MESSAGING_MODULES_PATH + "?.*"), true))
       .willReturn(serverError()));
     assertThrows(ExecutionException.class, PubSubClientUtils.unregisterModule(params)::get);

@@ -23,7 +23,7 @@ import io.vertx.core.Future;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.sqlclient.Tuple;
 
-public class EventDescriptorDaoImplTest {
+class EventDescriptorDaoImplTest {
 
   @Mock
   private PostgresClientFactory postgresClientFactory;
@@ -62,7 +62,7 @@ public class EventDescriptorDaoImplTest {
   }
 
   @Test
-  public void shouldFailOnDeleteMoreThanOneRow() {
+  void shouldFailOnDeleteMoreThanOneRow() {
     VertxTestContext context = new VertxTestContext();
     var future = shouldSucceedOnDelete(context, 2);
     assertTrue(future.failed());
@@ -70,13 +70,13 @@ public class EventDescriptorDaoImplTest {
   }
 
   @Test
-  public void shouldSucceedOnDeleteExisting() {
+  void shouldSucceedOnDeleteExisting() {
     VertxTestContext context = new VertxTestContext();
     shouldSucceedOnDelete(context, 1);
   }
 
   @Test
-  public void shouldFailOnDeleteNotFound() {
+  void shouldFailOnDeleteNotFound() {
     VertxTestContext context = new VertxTestContext();
     var future = shouldSucceedOnDelete(context, 0);
     assertTrue(future.failed());

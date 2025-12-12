@@ -12,10 +12,10 @@ import javax.ws.rs.core.Response;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 
-public class ExceptionHelperTest {
+class ExceptionHelperTest {
 
   @Test
-  public void shouldReturnBadRequestResponse() {
+  void shouldReturnBadRequestResponse() {
     Response response = ExceptionHelper.mapExceptionToResponse(new BadRequestException("Bad request message"));
     assertNotNull(response);
     assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatus());
@@ -24,7 +24,7 @@ public class ExceptionHelperTest {
   }
 
   @Test
-  public void shouldReturnInternalServerErrorResponse() {
+  void shouldReturnInternalServerErrorResponse() {
     Response response = ExceptionHelper.mapExceptionToResponse(new InternalServerErrorException("Internal server error message"));
     assertNotNull(response);
     assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatus());

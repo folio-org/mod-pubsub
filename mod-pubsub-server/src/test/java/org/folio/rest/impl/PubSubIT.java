@@ -39,7 +39,7 @@ import io.vertx.core.json.JsonObject;
 /**
  * Test that the shaded fat uber jar works and that the Dockerfile works.
  */
-public class PubSubIT {
+class PubSubIT {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PubSubIT.class);
 
@@ -96,7 +96,7 @@ public class PubSubIT {
   }
 
   @Test
-  public void health() {
+  void health() {
     when().
       get("/admin/health").
     then().
@@ -124,7 +124,7 @@ public class PubSubIT {
   }
 
   @Test
-  public void installAndUpgrade() {
+  void installAndUpgrade() {
     wireMock.stubFor(get("/users?query=username%3D%3D%22pub-sub%22").willReturn(okJson("{\"users\":[]}")));
     wireMock.stubFor(post("/users").willReturn(created()));
     wireMock.stubFor(post(urlPathEqualTo("/authn/credentials")).willReturn(created()));

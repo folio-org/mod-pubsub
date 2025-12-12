@@ -30,7 +30,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import lombok.SneakyThrows;
 
-public class AuditMessageAPITest extends AbstractRestTest {
+class AuditMessageAPITest extends AbstractRestTest {
 
   @Spy
   PostgresClientFactory postgresClientFactory = new PostgresClientFactory(Vertx.vertx());
@@ -57,7 +57,7 @@ public class AuditMessageAPITest extends AbstractRestTest {
   private final String eventType = "RECORD_CREATED";
 
   @Test
-  public void shouldReturnBadRequestOnGetHistoryIfFromAndToDatesAreNotSet() {
+  void shouldReturnBadRequestOnGetHistoryIfFromAndToDatesAreNotSet() {
     RestAssured.given()
       .spec(spec)
       .when()
@@ -67,7 +67,7 @@ public class AuditMessageAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnBadRequestOnGetHistoryIfFromDateIsNotSet() {
+  void shouldReturnBadRequestOnGetHistoryIfFromDateIsNotSet() {
     RestAssured.given()
       .spec(spec)
       .when()
@@ -77,7 +77,7 @@ public class AuditMessageAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnBadRequestOnGetHistoryIfTillDateIsNotSet() {
+  void shouldReturnBadRequestOnGetHistoryIfTillDateIsNotSet() {
     RestAssured.given()
       .spec(spec)
       .when()
@@ -87,7 +87,7 @@ public class AuditMessageAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldAcceptDateFormat() {
+  void shouldAcceptDateFormat() {
     RestAssured.given()
       .spec(spec)
       .when()
@@ -99,7 +99,7 @@ public class AuditMessageAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldAcceptDateTimeFormat() {
+  void shouldAcceptDateTimeFormat() {
     RestAssured.given()
       .spec(spec)
       .when()
@@ -111,7 +111,7 @@ public class AuditMessageAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnNotFoundOnGetAuditMessagePayload() {
+  void shouldReturnNotFoundOnGetAuditMessagePayload() {
     RestAssured.given()
       .spec(spec)
       .when()
@@ -121,7 +121,7 @@ public class AuditMessageAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnAuditMessagePayloadOnGet() {
+  void shouldReturnAuditMessagePayloadOnGet() {
     addTestData();
 
     RestAssured.given()
@@ -134,7 +134,7 @@ public class AuditMessageAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnAuditMessagesOnGetFilteredByDates() {
+  void shouldReturnAuditMessagesOnGetFilteredByDates() {
     addTestData();
 
     RestAssured.given()
@@ -148,7 +148,7 @@ public class AuditMessageAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnAuditMessagesOnGetFilteredByEventId() {
+  void shouldReturnAuditMessagesOnGetFilteredByEventId() {
     addTestData();
 
     RestAssured.given()
@@ -163,7 +163,7 @@ public class AuditMessageAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnAuditMessagesOnGetFilteredByEventType() {
+  void shouldReturnAuditMessagesOnGetFilteredByEventType() {
     addTestData();
 
     RestAssured.given()
@@ -178,7 +178,7 @@ public class AuditMessageAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnAuditMessagesOnGetFilteredByCorrelationId() {
+  void shouldReturnAuditMessagesOnGetFilteredByCorrelationId() {
     addTestData();
 
     RestAssured.given()
@@ -193,7 +193,7 @@ public class AuditMessageAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnAuditMessagesOnGetFilteredOnlyByOneDayWithoutTime() {
+  void shouldReturnAuditMessagesOnGetFilteredOnlyByOneDayWithoutTime() {
     addTestData();
 
     RestAssured.given()
@@ -207,7 +207,7 @@ public class AuditMessageAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnAuditMessagesOnGetFilteredByManyDaysWithoutTime() {
+  void shouldReturnAuditMessagesOnGetFilteredByManyDaysWithoutTime() {
     addTestData();
 
     RestAssured.given()
@@ -221,7 +221,7 @@ public class AuditMessageAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnAuditMessagesOnGetFilteredByManyDaysWithEndTime() {
+  void shouldReturnAuditMessagesOnGetFilteredByManyDaysWithEndTime() {
     addTestData();
 
     RestAssured.given()

@@ -18,7 +18,7 @@ import org.mockito.MockitoAnnotations;
 import io.vertx.core.Future;
 import io.vertx.junit5.VertxTestContext;
 
-public class MessagingModuleDaoImplUnitTest {
+class MessagingModuleDaoImplUnitTest {
 
   @Mock
   private PostgresClientFactory postgresClientFactory;
@@ -58,13 +58,13 @@ public class MessagingModuleDaoImplUnitTest {
   }
 
   @Test
-  public void shouldSucceedOnDeleteExisting() {
+  void shouldSucceedOnDeleteExisting() {
     VertxTestContext context = new VertxTestContext();
     shouldSucceedOnDelete(context, 1);
   }
 
   @Test
-  public void shouldSucceedOnDeleteNotFound() {
+  void shouldSucceedOnDeleteNotFound() {
     VertxTestContext context = new VertxTestContext();
     shouldSucceedOnDelete(context, 0);
   }

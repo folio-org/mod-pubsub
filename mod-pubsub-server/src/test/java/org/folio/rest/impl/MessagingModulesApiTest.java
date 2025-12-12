@@ -17,7 +17,7 @@ import static org.hamcrest.Matchers.is;
 
 import java.util.List;
 
-public class MessagingModulesApiTest extends AbstractRestTest {
+class MessagingModulesApiTest extends AbstractRestTest {
 
   public static final String MESSAGING_MODULES_PATH = "/pubsub/messaging-modules";
 
@@ -28,7 +28,7 @@ public class MessagingModulesApiTest extends AbstractRestTest {
     .withSigned(false);
 
   @Test
-  public void shouldDeletePublisherOnDeleteWhenPublisherRoleIsSpecified() {
+  void shouldDeletePublisherOnDeleteWhenPublisherRoleIsSpecified() {
     EventDescriptor createdEventDescriptor = postEventDescriptor(eventDescriptor);
 
     String moduleId = "test-module-1.0.0";
@@ -63,7 +63,7 @@ public class MessagingModulesApiTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldDeleteSubscriberOnDeleteWhenSubscriberRoleIsSpecified() {
+  void shouldDeleteSubscriberOnDeleteWhenSubscriberRoleIsSpecified() {
     String moduleId = "test-module-1.0.0";
     SubscriptionDefinition subscriptionDefinition = new SubscriptionDefinition()
       .withEventType(eventDescriptor.getEventType())
@@ -100,7 +100,7 @@ public class MessagingModulesApiTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnBadRequestOnDeleteWhenModuleIdIsNotSet() {
+  void shouldReturnBadRequestOnDeleteWhenModuleIdIsNotSet() {
     RestAssured.given()
       .spec(spec)
       .queryParam("moduleRole", PUBLISHER.value())
@@ -111,7 +111,7 @@ public class MessagingModulesApiTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnBadRequestOnDeleteWhenModuleRoleIsNotSet() {
+  void shouldReturnBadRequestOnDeleteWhenModuleRoleIsNotSet() {
     RestAssured.given()
       .spec(spec)
       .queryParam("moduleId", "test-module-1.0.0")
@@ -122,7 +122,7 @@ public class MessagingModulesApiTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnBadRequestOnDeleteWhenInvalidModuleRoleIsSpecified() {
+  void shouldReturnBadRequestOnDeleteWhenInvalidModuleRoleIsSpecified() {
     RestAssured.given()
       .spec(spec)
       .queryParam("moduleId", "test-module-1.0.0")

@@ -17,7 +17,7 @@ import java.util.Collections;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-public class SubscribersApiTest extends AbstractRestTest {
+class SubscribersApiTest extends AbstractRestTest {
 
   private final EventDescriptor eventDescriptor = new EventDescriptor()
     .withEventType("CREATED_SRS_MARC_BIB_RECORD_WITH_ORDER_DATA")
@@ -34,7 +34,7 @@ public class SubscribersApiTest extends AbstractRestTest {
     .withTmp(false);
 
   @Test
-  public void shouldReturnEmptyListOnGet() {
+  void shouldReturnEmptyListOnGet() {
     RestAssured.given()
       .spec(spec)
       .when()
@@ -45,7 +45,7 @@ public class SubscribersApiTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnSubscribersOnGetByEventType() {
+  void shouldReturnSubscribersOnGetByEventType() {
     VertxTestContext context = new VertxTestContext();
     EventDescriptor createdEventDescriptor1 = postEventDescriptor(eventDescriptor);
     EventDescriptor createdEventDescriptor2 = postEventDescriptor(eventDescriptor2);
@@ -85,7 +85,7 @@ public class SubscribersApiTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldCreateSubscriberOnPost() {
+  void shouldCreateSubscriberOnPost() {
     VertxTestContext context = new VertxTestContext();
     EventDescriptor createdEventDescriptor1 = postEventDescriptor(eventDescriptor);
     context.completeNow();
@@ -113,7 +113,7 @@ public class SubscribersApiTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldClearPreviousSubscriberInfoOnPostWithSameModuleNameAndTenantId() {
+  void shouldClearPreviousSubscriberInfoOnPostWithSameModuleNameAndTenantId() {
     VertxTestContext context = new VertxTestContext();
     EventDescriptor createdEventDescriptor1 = postEventDescriptor(eventDescriptor);
     EventDescriptor createdEventDescriptor2 = postEventDescriptor(eventDescriptor2);
@@ -165,7 +165,7 @@ public class SubscribersApiTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldRegisterSubscriberIfEventTypesAreNotCreated() {
+  void shouldRegisterSubscriberIfEventTypesAreNotCreated() {
     VertxTestContext context = new VertxTestContext();
     SubscriptionDefinition subscriptionDefinition = new SubscriptionDefinition()
       .withEventType(eventDescriptor.getEventType())
@@ -189,7 +189,7 @@ public class SubscribersApiTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldDeleteSubscriberOnDelete() {
+  void shouldDeleteSubscriberOnDelete() {
     VertxTestContext context = new VertxTestContext();
     EventDescriptor createdEventDescriptor = postEventDescriptor(eventDescriptor);
 
@@ -225,7 +225,7 @@ public class SubscribersApiTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldNotFailWhenRegisteringEmptySubscribersList() {
+  void shouldNotFailWhenRegisteringEmptySubscribersList() {
     VertxTestContext context = new VertxTestContext();
     SubscriberDescriptor subscriberDescriptor = new SubscriberDescriptor()
       .withSubscriptionDefinitions(Collections.emptyList())

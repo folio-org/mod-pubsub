@@ -9,14 +9,14 @@ import java.util.function.Supplier;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-public class PubSubConfigTest {
+class PubSubConfigTest {
   private static final String ENV = "env";
   private static final String EVENT_TYPE = "eventType";
   private static final String TENANT = "tenant";
   private Supplier<PubSubConfig> pubSubConfigSupplier = () -> new PubSubConfig(ENV, TENANT, EVENT_TYPE);
 
   @Test
-  public void checkTopicNameWhenTenantCollectionEnabled() {
+  void checkTopicNameWhenTenantCollectionEnabled() {
     PubSubConfig pubSubConfig = pubSubConfigSupplier.get();
     assertTrue(pubSubConfig.getTopicName().contains("env.pub-sub.tenant.eventType"));
     assertTrue(pubSubConfig.getTopicName().contains(ENV + ".pub-sub." + TENANT + "." + EVENT_TYPE));
@@ -34,7 +34,7 @@ public class PubSubConfigTest {
   }
 
   @Test
-  public void checkQualifierMatchesRegex() {
+  void checkQualifierMatchesRegex() {
     assertThrows(IllegalArgumentException.class,
       () -> PubSubConfig.setTenantCollectionTopicsQualifier("bad_value"),
       "Expected setTenantCollectionTopicsQualifier() to throw IllegalArgumentException"

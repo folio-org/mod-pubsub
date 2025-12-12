@@ -26,7 +26,7 @@ import io.restassured.response.ValidatableResponse;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-public class ModTenantApiTest extends AbstractRestTest {
+class ModTenantApiTest extends AbstractRestTest {
   private static final String MODULE_TO_VERSION = "mod-pubsub-1.0.0";
   private static final String TENANT_URL = "/_/tenant";
   private static final String USERS_URL = "/users";
@@ -48,7 +48,7 @@ public class ModTenantApiTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldForwardUserUpdateError() {
+  void shouldForwardUserUpdateError() {
     final String expectedErrorMessage = "User is broken";
 
     final User user = existingUser();

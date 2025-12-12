@@ -33,7 +33,7 @@ import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.vertx.core.json.JsonObject;
 
-public class PublishTest extends AbstractRestTest {
+class PublishTest extends AbstractRestTest {
   @RegisterExtension
   static WireMockExtension wireMock = WireMockExtension.newInstance()
     .options(WireMockConfiguration.wireMockConfig()
@@ -67,7 +67,7 @@ public class PublishTest extends AbstractRestTest {
       .put("publishedBy", "mod-very-important-1.0.0"));
 
   @Test
-  public void shouldReturnBadRequestIfPublisherIsNotRegistered() {
+  void shouldReturnBadRequestIfPublisherIsNotRegistered() {
     RestAssured.given()
       .spec(spec)
       .body(EVENT.encode())
@@ -78,7 +78,7 @@ public class PublishTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldPublishEventIfNoSubscribersRegistered() {
+  void shouldPublishEventIfNoSubscribersRegistered() {
     EventDescriptor eventDescriptor = postEventDescriptor(EVENT_DESCRIPTOR);
     registerPublisher(eventDescriptor);
 
@@ -92,7 +92,7 @@ public class PublishTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldPublishEvent() {
+  void shouldPublishEvent() {
     EventDescriptor eventDescriptor = postEventDescriptor(EVENT_DESCRIPTOR);
     registerPublisher(eventDescriptor);
     registerSubscriber(eventDescriptor);
@@ -107,7 +107,7 @@ public class PublishTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldPublishEventWithPayload() throws InterruptedException {
+  void shouldPublishEventWithPayload() throws InterruptedException {
     EventDescriptor eventDescriptor = postEventDescriptor(EVENT_DESCRIPTOR);
     registerPublisher(eventDescriptor);
     registerSubscriber(eventDescriptor);
@@ -135,7 +135,7 @@ public class PublishTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldPublishEventWithPayloadAndTenantCollectionTopicsEnabled() throws InterruptedException {
+  void shouldPublishEventWithPayloadAndTenantCollectionTopicsEnabled() throws InterruptedException {
     try {
       PubSubConfig.setTenantCollectionTopicsQualifier("ALL");
       shouldPublishEventWithPayload();

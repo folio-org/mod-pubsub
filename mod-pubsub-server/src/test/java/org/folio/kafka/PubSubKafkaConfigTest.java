@@ -7,10 +7,10 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-public class PubSubKafkaConfigTest {
+class PubSubKafkaConfigTest {
 
   @Test
-  public void shouldReturnProducerProperties() {
+  void shouldReturnProducerProperties() {
     Map<String, String> producerProps = new PubSubKafkaConfig().getProducerProps();
 
     assertEquals("PLAINTEXT", producerProps.get("security.protocol"));
@@ -21,7 +21,7 @@ public class PubSubKafkaConfigTest {
   }
 
   @Test
-  public void shouldReturnConsumerProperties() {
+  void shouldReturnConsumerProperties() {
     Map<String, String> consumerProps = new PubSubKafkaConfig().getConsumerProps();
 
     assertEquals("PLAINTEXT", consumerProps.get("security.protocol"));

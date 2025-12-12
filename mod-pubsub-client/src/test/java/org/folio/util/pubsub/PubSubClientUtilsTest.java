@@ -17,7 +17,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-public class PubSubClientUtilsTest {
+class PubSubClientUtilsTest {
 
   private static final String MESSAGE_DESCRIPTOR_PATH_WITH_INVALID_FIELD = "config/with_invalid_field";
   private static final String VALID_MESSAGE_DESCRIPTOR_PATH = "config\\valid_config\\";
@@ -28,7 +28,7 @@ public class PubSubClientUtilsTest {
   }
 
   @Test
-  public void shouldReadMessagingDescriptorByDefaultPathAndReturnFilledDescriptorHolder() throws IOException {
+  void shouldReadMessagingDescriptorByDefaultPathAndReturnFilledDescriptorHolder() throws IOException {
     DescriptorHolder descriptorHolder = PubSubClientUtils.readMessagingDescriptor();
 
     assertNotNull(descriptorHolder.getPublisherDescriptor());
@@ -40,7 +40,7 @@ public class PubSubClientUtilsTest {
   }
 
   @Test
-  public void shouldReadMessagingDescriptorByPathFromSystemProperty() throws IOException {
+  void shouldReadMessagingDescriptorByPathFromSystemProperty() throws IOException {
     System.setProperty(MESSAGING_CONFIG_PATH_PROPERTY, VALID_MESSAGE_DESCRIPTOR_PATH);
 
     DescriptorHolder descriptorHolder = PubSubClientUtils.readMessagingDescriptor();
@@ -54,7 +54,7 @@ public class PubSubClientUtilsTest {
   }
 
   @Test
-  public void shouldReadMessagingDescriptorFromClassPathWhenFileWasNotFoundByPathFromSystemProperty(
+  void shouldReadMessagingDescriptorFromClassPathWhenFileWasNotFoundByPathFromSystemProperty(
     @TempDir File descriptorParentFolder) throws IOException {
 
     System.setProperty(MESSAGING_CONFIG_PATH_PROPERTY, descriptorParentFolder.getAbsolutePath());
@@ -70,13 +70,13 @@ public class PubSubClientUtilsTest {
   }
 
   @Test
-  public void shouldThrowExceptionWhenReadInvalidMessagingDescriptor() {
+  void shouldThrowExceptionWhenReadInvalidMessagingDescriptor() {
     System.setProperty(MESSAGING_CONFIG_PATH_PROPERTY, MESSAGE_DESCRIPTOR_PATH_WITH_INVALID_FIELD);
     assertThrows(IllegalArgumentException.class, PubSubClientUtils::readMessagingDescriptor);
   }
 
   @Test
-  public void shouldBuildCorrectModuleId() {
+  void shouldBuildCorrectModuleId() {
     assertThat(PubSubClientUtils.getModuleId(), matchesPattern("mod-pubsub-[0-9]+\\.[0-9]+\\.[0-9]+"));
   }
 }

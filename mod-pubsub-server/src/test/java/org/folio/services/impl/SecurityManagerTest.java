@@ -64,7 +64,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxTestContext;
 
 
-public class SecurityManagerTest {
+class SecurityManagerTest {
   protected static final String SYSTEM_USER_NAME = "test-pubsub-username";
   protected static final String SYSTEM_USER_PASSWORD = "test-pubsub-password";
   protected static final String SYSTEM_USER_TYPE = "system";
@@ -135,7 +135,7 @@ public class SecurityManagerTest {
   }
 
   @Test
-  public void shouldLoginPubSubUser() {
+  void shouldLoginPubSubUser() {
     VertxTestContext testContext = new VertxTestContext();
 
     wireMock.stubFor(post(LOGIN_URL)
@@ -165,7 +165,7 @@ public class SecurityManagerTest {
   }
 
   @Test
-  public void shouldNotCreatePubSubUserIfItExists() {
+  void shouldNotCreatePubSubUserIfItExists() {
     VertxTestContext testContext = new VertxTestContext();
 
     String userId = UUID.randomUUID().toString();
@@ -209,7 +209,7 @@ public class SecurityManagerTest {
   }
 
   @Test
-  public void shouldNotCreatePubSubUserIfDisabled() {
+  void shouldNotCreatePubSubUserIfDisabled() {
     VertxTestContext testContext = new VertxTestContext();
 
     String userId = UUID.randomUUID().toString();
@@ -234,7 +234,7 @@ public class SecurityManagerTest {
   }
 
   @Test
-  public void shouldNotCreatePermUserAndSamePermissions() {
+  void shouldNotCreatePermUserAndSamePermissions() {
     VertxTestContext testContext = new VertxTestContext();
 
     String userId = UUID.randomUUID().toString();
@@ -274,7 +274,7 @@ public class SecurityManagerTest {
   }
 
   @Test
-  public void shouldCreatePubSubUser() {
+  void shouldCreatePubSubUser() {
     VertxTestContext context = new VertxTestContext();
 
     String userId = UUID.randomUUID().toString();
@@ -319,7 +319,7 @@ public class SecurityManagerTest {
   }
 
   @Test
-  public void shouldLoginPubSubUserWhenContextHasNoToken() {
+  void shouldLoginPubSubUserWhenContextHasNoToken() {
     VertxTestContext context = new VertxTestContext();
 
     wireMock.stubFor(post(LOGIN_URL)
@@ -341,7 +341,7 @@ public class SecurityManagerTest {
   }
 
   @Test
-  public void shouldReturnFailedFutureWhenTokenCacheIsEmptyAndPubSubUserLoginFailed() {
+  void shouldReturnFailedFutureWhenTokenCacheIsEmptyAndPubSubUserLoginFailed() {
     VertxTestContext context = new VertxTestContext();
 
     wireMock.stubFor(post(LOGIN_URL).willReturn(serverError()));
@@ -358,7 +358,7 @@ public class SecurityManagerTest {
   }
 
   @Test
-  public void shouldReturnSuccessFutureWithEmptyTokenIfSystemUserCreationDisabled() {
+  void shouldReturnSuccessFutureWithEmptyTokenIfSystemUserCreationDisabled() {
     VertxTestContext context = new VertxTestContext();
 
     OkapiConnectionParams params = new OkapiConnectionParams(headers, vertx);
@@ -373,7 +373,7 @@ public class SecurityManagerTest {
   }
 
   @Test
-  public void shouldUpdateExistingUser() {
+  void shouldUpdateExistingUser() {
     VertxTestContext context = new VertxTestContext();
 
     final String userId = UUID.randomUUID().toString();
@@ -419,7 +419,7 @@ public class SecurityManagerTest {
   }
 
   @Test
-  public void permissionsFailGet() {
+  void permissionsFailGet() {
     String userId = UUID.randomUUID().toString();
     String userCollection = new JsonObject()
       .put("users", new JsonArray().add(existingUser(userId)))
@@ -439,7 +439,7 @@ public class SecurityManagerTest {
   }
 
   @Test
-  public void permissionsFailPost() {
+  void permissionsFailPost() {
     String userId = UUID.randomUUID().toString();
     String userCollection = new JsonObject()
       .put("users", new JsonArray().add(existingUser(userId)))
@@ -460,7 +460,7 @@ public class SecurityManagerTest {
   }
 
   @Test
-  public void permissionsFailPut() {
+  void permissionsFailPut() {
     VertxTestContext context = new VertxTestContext();
 
     final String userId = UUID.randomUUID().toString();
@@ -488,13 +488,13 @@ public class SecurityManagerTest {
   }
 
   @Test
-  public void shouldFailReadingPermissionsOnEmptyPermissionsFile() {
+  void shouldFailReadingPermissionsOnEmptyPermissionsFile() {
     assertThrows(NoSuchElementException.class, () ->
       SecurityManagerImpl.readPermissionsFromResource("permissions/emptyFile"));
   }
 
   @Test
-  public void checkThatInvalidateTokenRemovesTokenForTenant() {
+  void checkThatInvalidateTokenRemovesTokenForTenant() {
     cache.setAccessToken(TENANT, new ExpiryAwareToken(ACCESS_TOKEN, TOKEN_MAX_AGE, null));
     assertEquals(ACCESS_TOKEN, cache.getAccessToken(TENANT));
     cache.invalidateAccessToken(TENANT);
@@ -507,7 +507,7 @@ public class SecurityManagerTest {
   }
 
   @Test
-  public void checkCacheRefreshesAfterHalfOfMaxAge() {
+  void checkCacheRefreshesAfterHalfOfMaxAge() {
     VertxTestContext context = new VertxTestContext();
 
     wireMock.stubFor(post(LOGIN_URL)

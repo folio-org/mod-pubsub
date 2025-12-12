@@ -54,7 +54,7 @@ import io.vertx.kafka.client.consumer.KafkaConsumer;
 import io.vertx.kafka.client.consumer.KafkaConsumerRecord;
 import io.vertx.kafka.client.consumer.impl.KafkaConsumerRecordImpl;
 
-public class ConsumerServiceUnitTest {
+class ConsumerServiceUnitTest {
 
   private static final String TENANT = "diku";
   private static final String TOKEN = "token";
@@ -100,7 +100,7 @@ public class ConsumerServiceUnitTest {
 
   /*
   @Test
-  public void shouldSendRequestWithoutPayloadToSubscriber(TestContext context) {
+  void shouldSendRequestWithoutPayloadToSubscriber(TestContext context) {
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS)
       .willReturn(WireMock.ok()));
 
@@ -117,7 +117,7 @@ public class ConsumerServiceUnitTest {
   }
 
   @Test
-  public void shouldSendRequestWithPayloadToSubscriber(TestContext context) {
+  void shouldSendRequestWithPayloadToSubscriber(TestContext context) {
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS)
       .willReturn(WireMock.created()));
 
@@ -142,7 +142,7 @@ public class ConsumerServiceUnitTest {
   }
 
   @Test
-  public void shouldNotSendRequestIfNoSubscribersFound(TestContext context) {
+  void shouldNotSendRequestIfNoSubscribersFound(TestContext context) {
     var event = buildEvent();
     var params = new OkapiConnectionParams(headers, vertx);
     when(cache.getMessagingModules()).thenReturn(succeededFuture(new HashSet<>()));
@@ -155,7 +155,7 @@ public class ConsumerServiceUnitTest {
   }
 
   @Test
-  public void shouldSendRequestToFoundSubscribers(TestContext context) {
+  void shouldSendRequestToFoundSubscribers(TestContext context) {
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS)
       .willReturn(WireMock.noContent()));
 
@@ -188,7 +188,7 @@ public class ConsumerServiceUnitTest {
   }
 
   @Test
-  public void shouldSendRequestAndRetry(TestContext context) {
+  void shouldSendRequestAndRetry(TestContext context) {
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS)
       .willReturn(WireMock.forbidden()));
 
@@ -220,49 +220,49 @@ public class ConsumerServiceUnitTest {
   }
 
   @Test
-  public void shouldInvalidateCacheBeforeRetryIfBadRequest(TestContext context) {
+  void shouldInvalidateCacheBeforeRetryIfBadRequest(TestContext context) {
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.badRequest()));
     checkThatInvalidateTokenWasInvoked(context);
   }
 
   @Test
-  public void shouldInvalidateCacheBeforeRetryIfForbidden(TestContext context) {
+  void shouldInvalidateCacheBeforeRetryIfForbidden(TestContext context) {
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.forbidden()));
     checkThatInvalidateTokenWasInvoked(context);
   }
 
   @Test
-  public void shouldInvalidateCacheBeforeRetryIfBadRequestEntity(TestContext context) {
+  void shouldInvalidateCacheBeforeRetryIfBadRequestEntity(TestContext context) {
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.badRequestEntity()));
     checkThatInvalidateTokenWasInvoked(context);
   }
 
   @Test
-  public void shouldNotInvalidateCacheIfNoContent(TestContext context) {
+  void shouldNotInvalidateCacheIfNoContent(TestContext context) {
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.noContent()));
     checkThatInvalidateTokenWasNotInvoked(context);
   }
 
   @Test
-  public void shouldNotInvalidateCacheIfOk(TestContext context) {
+  void shouldNotInvalidateCacheIfOk(TestContext context) {
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.ok()));
     checkThatInvalidateTokenWasNotInvoked(context);
   }
 
   @Test
-  public void shouldNotInvalidateCacheIfCreated(TestContext context) {
+  void shouldNotInvalidateCacheIfCreated(TestContext context) {
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.created()));
     checkThatInvalidateTokenWasNotInvoked(context);
   }
 
   @Test
-  public void shouldNotInvalidateCacheBeforeRetryIfServerError(TestContext context) {
+  void shouldNotInvalidateCacheBeforeRetryIfServerError(TestContext context) {
     WireMock.stubFor(WireMock.post(CALLBACK_ADDRESS).willReturn(WireMock.serverError()));
     checkThatInvalidateTokenWasNotInvoked(context);
   }
 
   @Test
-  public void shouldCheckEventMetadataForTenantId() {
+  void shouldCheckEventMetadataForTenantId() {
     KafkaConsumer<String, String> consumer =
       (KafkaConsumer<String, String>) spy(KafkaConsumer.class);
 
