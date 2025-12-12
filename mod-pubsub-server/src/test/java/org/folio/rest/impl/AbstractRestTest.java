@@ -1,13 +1,12 @@
 package org.folio.rest.impl;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.folio.rest.RestVerticle.OKAPI_HEADER_TENANT;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
@@ -38,6 +37,7 @@ import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.kafka.admin.KafkaAdminClient;
 import io.vertx.sqlclient.Tuple;
+import lombok.SneakyThrows;
 
 @ExtendWith({VertxExtension.class})
 public abstract class AbstractRestTest {
@@ -75,7 +75,7 @@ public abstract class AbstractRestTest {
   private static String useExternalDatabase;
   protected static Vertx vertx;
   private static final KafkaContainer kafkaContainer =
-      new KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0"))
+    new KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0"))
       .withStartupAttempts(3);
 
   @BeforeAll
@@ -124,58 +124,29 @@ public abstract class AbstractRestTest {
     }
   }
 
+  @SneakyThrows
   private static void deployVerticle(final VertxTestContext context) {
     final DeploymentOptions options = new DeploymentOptions()
       .setConfig(new JsonObject()
         .put(HTTP_PORT, PORT)
         .put("spring.configuration", "org.folio.config.TestConfig"));
+
+    TenantClient tenantClient = new TenantClient(OKAPI_URL, TENANT_ID, TOKEN, vertx.createHttpClient());
+    TenantAttributes tenantAttributes = new TenantAttributes()
+      .withModuleTo(ModuleName.getModuleName() + "-" + ModuleName.getModuleVersion());
+
     vertx.deployVerticle(RestVerticle.class.getName(), options)
-      .onSuccess(asyncResult1 -> {
-        try {
-          TenantClient tenantClient = new TenantClient(OKAPI_URL, TENANT_ID, TOKEN, vertx.createHttpClient());
-          TenantAttributes tenantAttributes = new TenantAttributes();
-          tenantAttributes.setModuleTo(ModuleName.getModuleName() + "-" + ModuleName.getModuleVersion());
+      .compose(ignored -> tenantClient.postTenant(tenantAttributes))
+      .compose(response -> tenantClient.getTenantByOperationId(response.bodyAsJson(TenantJob.class).getId(), 60000))
+      .onSuccess(response -> assertTrue(response.bodyAsJson(TenantJob.class).getComplete()))
+      .onSuccess(ignored -> context.completeNow());
 
-          tenantClient.postTenant(tenantAttributes, asyncResult2 -> {
-            var res2 = asyncResult2.result();
-            if (res2.statusCode() == 204) {
-              return;
-            } if (res2.statusCode() == 201) {
-
-              try {
-                Thread.sleep(1000);
-              } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-              }
-
-              tenantClient.getTenantByOperationId(res2.bodyAsJson(TenantJob.class).getId(), 60000, asyncResult3 -> {
-                var res3 = asyncResult3.result();
-                assertTrue(res3.bodyAsJson(TenantJob.class).getComplete());
-                String error = res3.bodyAsJson(TenantJob.class).getError();
-                // it would be better if this would actually succeed.. But we'll accept this error for now
-                if (error != null) {
-                  assertEquals("Failed to create %s user. Received status code 404"
-                    .formatted(SYSTEM_USER_NAME), error);
-                }
-              });
-            } else {
-              // if we get here and error is immediately returned from tenant init
-              // it would be better if this would actually succeed.. But we'll accept this error for now
-              assertEquals("Failed to create %s user. Received status code 404"
-                .formatted(SYSTEM_USER_NAME), res2.bodyAsString());
-            }
-
-            context.completeNow();
-          });
-        } catch (Exception e) {
-          e.printStackTrace();
-          context.failNow(e);
-        }
-      });
+    context.awaitCompletion(30, SECONDS);
   }
 
   @AfterAll
-  public static void tearDownClass() {
+  @SneakyThrows
+  public static void tearDownClass(VertxTestContext context) {
     System.out.println("Tearing down class...");
     vertx.close().onSuccess(res -> {
       if (useExternalDatabase.equals("embedded")) {
@@ -184,13 +155,9 @@ public abstract class AbstractRestTest {
       System.clearProperty(KAFKA_HOST);
       System.clearProperty(KAFKA_PORT);
       kafkaContainer.stop();
-
-      try {
-        Thread.sleep(3000);
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
+      context.completeNow();
     });
+    context.awaitCompletion(5, SECONDS);
   }
 
   @BeforeEach
@@ -205,17 +172,20 @@ public abstract class AbstractRestTest {
       .build();
   }
 
+  @SneakyThrows
   private void clearModuleSchemaTables(VertxTestContext context) {
     PostgresClient pgClient = PostgresClient.getInstance(vertx);
-    pgClient.execute(DELETE_ALL_SQL.formatted(MESSAGING_MODULE_TABLE), Tuple.tuple(),event ->
+    pgClient.execute(DELETE_ALL_SQL.formatted(MESSAGING_MODULE_TABLE), Tuple.tuple(), event ->
       pgClient.execute(DELETE_ALL_SQL.formatted(EVENT_DESCRIPTOR_TABLE), Tuple.tuple(), event1 -> {
         if (event.failed()) {
           context.failNow(event.cause());
         }
         context.completeNow();
       }));
+    context.awaitCompletion(5, SECONDS);
   }
 
+  @SneakyThrows
   private void clearTenantTables(VertxTestContext context) {
     PostgresClient pgClient = PostgresClient.getInstance(vertx, TENANT_ID);
     pgClient.delete(AUDIT_MESSAGE_TABLE, new Criterion(), event -> {
@@ -226,6 +196,7 @@ public abstract class AbstractRestTest {
         context.completeNow();
       });
     });
+    context.awaitCompletion(5, SECONDS);
   }
 
   private static void waitForPostgres() {
@@ -233,8 +204,8 @@ public abstract class AbstractRestTest {
     String query = "Select 1";
     AtomicBoolean isReady = new AtomicBoolean();
     await()
-      .atMost(120, TimeUnit.SECONDS)
-      .pollInterval(3, TimeUnit.SECONDS)
+      .atMost(120, SECONDS)
+      .pollInterval(3, SECONDS)
       .alias("Is Postgres Up?")
       .until(() -> {
         System.out.println("checking to see if postgres is up");
@@ -245,7 +216,8 @@ public abstract class AbstractRestTest {
         return isReady.get();
       });
 
-    if (!isReady.get()) throw new RuntimeException("Could not connect to postgres");
+    if (!isReady.get())
+      throw new RuntimeException("Could not connect to postgres");
   }
 
   private static void waitForKafka() {
@@ -257,9 +229,9 @@ public abstract class AbstractRestTest {
     AtomicBoolean isReady = new AtomicBoolean();
 
     await()
-      .atMost(15, TimeUnit.SECONDS)
-      .pollDelay(3, TimeUnit.SECONDS)
-      .pollInterval(3, TimeUnit.SECONDS)
+      .atMost(15, SECONDS)
+      .pollDelay(3, SECONDS)
+      .pollInterval(3, SECONDS)
       .alias("Is Kafka Up?")
       .until(() -> {
         System.out.println("waitForKafka:: creating client...");

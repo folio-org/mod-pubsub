@@ -7,6 +7,7 @@ import static org.hamcrest.core.Every.everyItem;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.lang.time.DateUtils;
@@ -28,6 +29,8 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.junit5.VertxTestContext;
+import lombok.SneakyThrows;
 
 public class AuditMessageAPITest extends AbstractRestTest {
 
@@ -120,8 +123,8 @@ public class AuditMessageAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnAuditMessagePayloadOnGet() {
-    addTestData().onComplete(ar -> {
+  public void shouldReturnAuditMessagePayloadOnGet(VertxTestContext context) {
+    addTestData(context).onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
         .when()
@@ -133,8 +136,8 @@ public class AuditMessageAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnAuditMessagesOnGetFilteredByDates() {
-    addTestData().onComplete(ar -> {
+  public void shouldReturnAuditMessagesOnGetFilteredByDates(VertxTestContext context) {
+    addTestData(context).onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
         .when()
@@ -147,8 +150,8 @@ public class AuditMessageAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnAuditMessagesOnGetFilteredByEventId() {
-    addTestData().onComplete(ar -> {
+  public void shouldReturnAuditMessagesOnGetFilteredByEventId(VertxTestContext context) {
+    addTestData(context).onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
         .when()
@@ -162,8 +165,8 @@ public class AuditMessageAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnAuditMessagesOnGetFilteredByEventType() {
-    addTestData().onComplete(ar -> {
+  public void shouldReturnAuditMessagesOnGetFilteredByEventType(VertxTestContext context) {
+    addTestData(context).onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
         .when()
@@ -177,8 +180,8 @@ public class AuditMessageAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnAuditMessagesOnGetFilteredByCorrelationId() {
-    addTestData().onComplete(ar -> {
+  public void shouldReturnAuditMessagesOnGetFilteredByCorrelationId(VertxTestContext context) {
+    addTestData(context).onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
         .when()
@@ -192,8 +195,8 @@ public class AuditMessageAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnAuditMessagesOnGetFilteredOnlyByOneDayWithoutTime() {
-    addTestData().onComplete(ar -> {
+  public void shouldReturnAuditMessagesOnGetFilteredOnlyByOneDayWithoutTime(VertxTestContext context) {
+    addTestData(context).onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
         .when()
@@ -206,8 +209,8 @@ public class AuditMessageAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnAuditMessagesOnGetFilteredByManyDaysWithoutTime() {
-    addTestData().onComplete(ar -> {
+  public void shouldReturnAuditMessagesOnGetFilteredByManyDaysWithoutTime(VertxTestContext context) {
+    addTestData(context).onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
         .when()
@@ -220,8 +223,8 @@ public class AuditMessageAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnAuditMessagesOnGetFilteredByManyDaysWithEndTime() {
-    addTestData().onComplete(ar -> {
+  public void shouldReturnAuditMessagesOnGetFilteredByManyDaysWithEndTime(VertxTestContext context) {
+    addTestData(context).onComplete(ar -> {
       RestAssured.given()
         .spec(spec)
         .when()
@@ -337,10 +340,16 @@ public class AuditMessageAPITest extends AbstractRestTest {
       .compose(ar -> auditMessageDao.saveAuditMessagePayload(auditMessagePayload_2, TENANT_ID));
   }
 
-  private Future<?> addTestData() {
-    return Future.succeededFuture()
+  @SneakyThrows
+  private Future<?> addTestData(VertxTestContext context) {
+    context.awaitCompletion(5, TimeUnit.SECONDS);
+    Future<CompositeFuture> future = Future.succeededFuture()
       .compose(ar -> saveAuditMessagePayloads())
-      .compose(ar -> saveAuditMessages());
+      .compose(ar -> saveAuditMessages())
+      .onSuccess(ignored -> context.completeNow());
+
+    context.awaitCompletion(5, TimeUnit.SECONDS);
+    return future;
   }
 
 }
