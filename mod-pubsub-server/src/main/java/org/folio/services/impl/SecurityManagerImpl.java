@@ -203,22 +203,15 @@ public class SecurityManagerImpl implements SecurityManager {
     var url = USERS_URL + "?query=" + PercentCodec.encode(cql);
     return doRequest(params, url, HttpMethod.GET, null)
       .compose(response -> {
-//        Promise<User> promise = Promise.promise();
         if (response.getCode() == HttpStatus.HTTP_OK.toInt()) {
           JsonObject usersCollection = response.getJson();
           JsonArray users = usersCollection.getJsonArray("users");
           if (users.size() > 0) {
             return succeededFuture(users.getJsonObject(0).mapTo(User.class));
-            //promise.complete(users.getJsonObject(0).mapTo(User.class));
-          } else {
-//            return succeededFuture();
-//            promise.complete();
           }
         } else {
           LOGGER.error("Failed request on GET users. Received status code {}", response.getCode());
-//          promise.complete();
         }
-//        return promise.future();
         return succeededFuture();
       });
   }
@@ -227,11 +220,8 @@ public class SecurityManagerImpl implements SecurityManager {
     final User user = createUserObject();
     final String id = user.getId();
 
-    return succeededFuture();
-
-//    return doRequest(params, USERS_URL, HttpMethod.POST, encode(user))
-//      .compose(d -> succeededFuture());
-      /*.compose(response -> {
+    return doRequest(params, USERS_URL, HttpMethod.POST, encode(user))
+      .compose(response -> {
         if (response.getCode() == HttpStatus.HTTP_CREATED.toInt()) {
           LOGGER.info("Created {} user", systemUserConfig.getName());
           return succeededFuture(id);
@@ -241,7 +231,7 @@ public class SecurityManagerImpl implements SecurityManager {
           LOGGER.error(errorMessage);
           return failedFuture(errorMessage);
         }
-      });*/
+      });
   }
 
   private Future<User> updateUser(User existingUser, OkapiConnectionParams params) {
