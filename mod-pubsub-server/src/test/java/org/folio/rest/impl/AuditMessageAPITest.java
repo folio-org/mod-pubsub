@@ -342,7 +342,6 @@ public class AuditMessageAPITest extends AbstractRestTest {
 
   @SneakyThrows
   private Future<?> addTestData(VertxTestContext context) {
-    context.awaitCompletion(5, TimeUnit.SECONDS);
     Future<CompositeFuture> future = Future.succeededFuture()
       .compose(ar -> saveAuditMessagePayloads())
       .compose(ar -> saveAuditMessages())
