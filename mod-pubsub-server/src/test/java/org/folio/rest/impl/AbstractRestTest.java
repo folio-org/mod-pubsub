@@ -142,30 +142,23 @@ public abstract class AbstractRestTest {
               return;
             } if (res2.statusCode() == 201) {
 
-              try {
-                Thread.sleep(1000);
-              } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-              }
-
-              tenantClient.getTenantByOperationId(res2.bodyAsJson(TenantJob.class).getId(), 60000, asyncResult3 -> {
-                var res3 = asyncResult3.result();
-                assertTrue(res3.bodyAsJson(TenantJob.class).getComplete());
-                String error = res3.bodyAsJson(TenantJob.class).getError();
-                // it would be better if this would actually succeed.. But we'll accept this error for now
-                if (error != null) {
-                  assertEquals("Failed to create %s user. Received status code 404"
-                    .formatted(SYSTEM_USER_NAME), error);
-                }
-              });
+              tenantClient.getTenantByOperationId(res2.bodyAsJson(TenantJob.class).getId(), 60000)
+                .onSuccess(res3 -> {
+                  assertTrue(res3.bodyAsJson(TenantJob.class).getComplete());
+                  String error = res3.bodyAsJson(TenantJob.class).getError();
+                  // it would be better if this would actually succeed.. But we'll accept this error for now
+                  if (error != null) {
+                    assertEquals("Failed to create %s user. Received status code 404"
+                      .formatted(SYSTEM_USER_NAME), error);
+                  }
+                })
+                .onComplete(context.succeedingThenComplete());
             } else {
               // if we get here and error is immediately returned from tenant init
               // it would be better if this would actually succeed.. But we'll accept this error for now
               assertEquals("Failed to create %s user. Received status code 404"
                 .formatted(SYSTEM_USER_NAME), res2.bodyAsString());
             }
-
-            context.completeNow();
           });
         } catch (Exception e) {
           e.printStackTrace();
@@ -207,25 +200,28 @@ public abstract class AbstractRestTest {
 
   private void clearModuleSchemaTables(VertxTestContext context) {
     PostgresClient pgClient = PostgresClient.getInstance(vertx);
-    pgClient.execute(DELETE_ALL_SQL.formatted(MESSAGING_MODULE_TABLE), Tuple.tuple(),event ->
-      pgClient.execute(DELETE_ALL_SQL.formatted(EVENT_DESCRIPTOR_TABLE), Tuple.tuple(), event1 -> {
-        if (event.failed()) {
-          context.failNow(event.cause());
-        }
-        context.completeNow();
-      }));
+    pgClient.execute(DELETE_ALL_SQL.formatted(MESSAGING_MODULE_TABLE), Tuple.tuple())
+      .onComplete(event ->
+        pgClient.execute(DELETE_ALL_SQL.formatted(EVENT_DESCRIPTOR_TABLE), Tuple.tuple(), event1 -> {
+          if (event.failed()) {
+            context.failNow(event.cause());
+          }
+        }))
+      .onComplete(context.succeedingThenComplete());
   }
 
   private void clearTenantTables(VertxTestContext context) {
     PostgresClient pgClient = PostgresClient.getInstance(vertx, TENANT_ID);
-    pgClient.delete(AUDIT_MESSAGE_TABLE, new Criterion(), event -> {
-      pgClient.delete(AUDIT_MESSAGE_PAYLOAD_TABLE, new Criterion(), event1 -> {
-        if (event1.failed()) {
-          context.failNow(event1.cause());
-        }
-        context.completeNow();
-      });
-    });
+    pgClient.delete(AUDIT_MESSAGE_TABLE, new Criterion())
+      .onComplete(event -> {
+        pgClient.delete(AUDIT_MESSAGE_PAYLOAD_TABLE, new Criterion(), event1 -> {
+          if (event1.failed()) {
+            context.failNow(event1.cause());
+          }
+          context.completeNow();
+        });
+      })
+      .onComplete(context.succeedingThenComplete());
   }
 
   private static void waitForPostgres() {

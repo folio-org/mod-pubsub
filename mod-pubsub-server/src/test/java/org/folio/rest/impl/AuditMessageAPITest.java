@@ -1,6 +1,5 @@
 package org.folio.rest.impl;
 
-import static org.folio.rest.persist.PostgresClient.convertToPsqlStandard;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.Every.everyItem;
@@ -8,6 +7,7 @@ import static org.hamcrest.core.Every.everyItem;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.commons.lang.time.DateUtils;
@@ -25,11 +25,10 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
 import io.restassured.RestAssured;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.junit5.VertxTestContext;
+import lombok.SneakyThrows;
 
 public class AuditMessageAPITest extends AbstractRestTest {
 
@@ -43,10 +42,6 @@ public class AuditMessageAPITest extends AbstractRestTest {
 
   @BeforeEach
   public void setUp() {
-    VertxTestContext context = new VertxTestContext();
-    postgresClientFactory.getInstance().execute("DELETE FROM %s.%s"
-      .formatted(convertToPsqlStandard(TENANT_ID), "audit_message_payload"))
-      .onSuccess(r -> context.completeNow());
     openMocks = MockitoAnnotations.openMocks(this);
   }
 
@@ -127,135 +122,119 @@ public class AuditMessageAPITest extends AbstractRestTest {
 
   @Test
   public void shouldReturnAuditMessagePayloadOnGet() {
-    VertxTestContext context = new VertxTestContext();
-    addTestData().onComplete(ar -> {
-      RestAssured.given()
-        .spec(spec)
-        .when()
-        .get(AUDIT_MESSAGES_PAYLOAD_PATH.formatted(eventId_1))
-        .then()
-        .statusCode(HttpStatus.SC_OK)
-        .body("eventId", is(eventId_1));
-      context.completeNow();
-    });
+    addTestData();
+
+    RestAssured.given()
+      .spec(spec)
+      .when()
+      .get(AUDIT_MESSAGES_PAYLOAD_PATH.formatted(eventId_1))
+      .then()
+      .statusCode(HttpStatus.SC_OK)
+      .body("eventId", is(eventId_1));
   }
 
   @Test
   public void shouldReturnAuditMessagesOnGetFilteredByDates() {
-    VertxTestContext context = new VertxTestContext();
-    addTestData().onComplete(ar -> {
-      RestAssured.given()
-        .spec(spec)
-        .when()
-        .get(HISTORY_PATH + "?startDate=2019-09-20T12:00:00&endDate=2019-09-24T12:00:00")
-        .then()
-        .statusCode(HttpStatus.SC_OK)
-        .body("totalRecords", is(2))
-        .body("auditMessages.size()", is(2));
-      context.completeNow();
-    });
+    addTestData();
+
+    RestAssured.given()
+      .spec(spec)
+      .when()
+      .get(HISTORY_PATH + "?startDate=2019-09-20T12:00:00&endDate=2019-09-24T12:00:00")
+      .then()
+      .statusCode(HttpStatus.SC_OK)
+      .body("totalRecords", is(2))
+      .body("auditMessages.size()", is(2));
   }
 
   @Test
   public void shouldReturnAuditMessagesOnGetFilteredByEventId() {
-    VertxTestContext context = new VertxTestContext();
-    addTestData().onComplete(ar -> {
-      RestAssured.given()
-        .spec(spec)
-        .when()
-        .get(HISTORY_PATH + "?startDate=2019-09-14T12:00:00&endDate=2019-09-26T12:00:00&eventId=" + eventId_1)
-        .then()
-        .statusCode(HttpStatus.SC_OK)
-        .body("totalRecords", is(2))
-        .body("auditMessages.size()", is(2))
-        .body("auditMessages*.eventId", everyItem(is(eventId_1)));
-      context.completeNow();
-    });
+    addTestData();
+
+    RestAssured.given()
+      .spec(spec)
+      .when()
+      .get(HISTORY_PATH + "?startDate=2019-09-14T12:00:00&endDate=2019-09-26T12:00:00&eventId=" + eventId_1)
+      .then()
+      .statusCode(HttpStatus.SC_OK)
+      .body("totalRecords", is(2))
+      .body("auditMessages.size()", is(2))
+      .body("auditMessages*.eventId", everyItem(is(eventId_1)));
   }
 
   @Test
   public void shouldReturnAuditMessagesOnGetFilteredByEventType() {
-    VertxTestContext context = new VertxTestContext();
-    addTestData().onComplete(ar -> {
-      RestAssured.given()
-        .spec(spec)
-        .when()
-        .get(HISTORY_PATH + "?startDate=2019-09-14T12:00:00&endDate=2019-09-26T12:00:00&eventType=" + eventType)
-        .then()
-        .statusCode(HttpStatus.SC_OK)
-        .body("totalRecords", is(3))
-        .body("auditMessages.size()", is(3))
-        .body("auditMessages*.eventType", everyItem(is(eventType)));
-      context.completeNow();
-    });
+    addTestData();
+
+    RestAssured.given()
+      .spec(spec)
+      .when()
+      .get(HISTORY_PATH + "?startDate=2019-09-14T12:00:00&endDate=2019-09-26T12:00:00&eventType=" + eventType)
+      .then()
+      .statusCode(HttpStatus.SC_OK)
+      .body("totalRecords", is(3))
+      .body("auditMessages.size()", is(3))
+      .body("auditMessages*.eventType", everyItem(is(eventType)));
   }
 
   @Test
   public void shouldReturnAuditMessagesOnGetFilteredByCorrelationId() {
-    VertxTestContext context = new VertxTestContext();
-    addTestData().onComplete(ar -> {
-      RestAssured.given()
-        .spec(spec)
-        .when()
-        .get(HISTORY_PATH + "?startDate=2019-09-14T12:00:00&endDate=2019-09-26T12:00:00&correlationId=" + correlationId_2)
-        .then()
-        .statusCode(HttpStatus.SC_OK)
-        .body("totalRecords", is(2))
-        .body("auditMessages.size()", is(2))
-        .body("auditMessages*.correlationId", everyItem(is(correlationId_2)));
-      context.completeNow();
-    });
+    addTestData();
+
+    RestAssured.given()
+      .spec(spec)
+      .when()
+      .get(HISTORY_PATH + "?startDate=2019-09-14T12:00:00&endDate=2019-09-26T12:00:00&correlationId=" + correlationId_2)
+      .then()
+      .statusCode(HttpStatus.SC_OK)
+      .body("totalRecords", is(2))
+      .body("auditMessages.size()", is(2))
+      .body("auditMessages*.correlationId", everyItem(is(correlationId_2)));
   }
 
   @Test
   public void shouldReturnAuditMessagesOnGetFilteredOnlyByOneDayWithoutTime() {
-    VertxTestContext context = new VertxTestContext();
-    addTestData().onComplete(ar -> {
-      RestAssured.given()
-        .spec(spec)
-        .when()
-        .get(HISTORY_PATH + "?startDate=2019-09-27&endDate=2019-09-27")
-        .then()
-        .statusCode(HttpStatus.SC_OK)
-        .body("totalRecords", is(2))
-        .body("auditMessages.size()", is(2));
-      context.completeNow();
-    });
+    addTestData();
+
+    RestAssured.given()
+      .spec(spec)
+      .when()
+      .get(HISTORY_PATH + "?startDate=2019-09-27&endDate=2019-09-27")
+      .then()
+      .statusCode(HttpStatus.SC_OK)
+      .body("totalRecords", is(2))
+      .body("auditMessages.size()", is(2));
   }
 
   @Test
   public void shouldReturnAuditMessagesOnGetFilteredByManyDaysWithoutTime() {
-    VertxTestContext context = new VertxTestContext();
-    addTestData().onComplete(ar -> {
-      RestAssured.given()
-        .spec(spec)
-        .when()
-        .get(HISTORY_PATH + "?startDate=2019-09-27&endDate=2019-09-28")
-        .then()
-        .statusCode(HttpStatus.SC_OK)
-        .body("totalRecords", is(3))
-        .body("auditMessages.size()", is(3));
-      context.completeNow();
-    });
+    addTestData();
+
+    RestAssured.given()
+      .spec(spec)
+      .when()
+      .get(HISTORY_PATH + "?startDate=2019-09-27&endDate=2019-09-28")
+      .then()
+      .statusCode(HttpStatus.SC_OK)
+      .body("totalRecords", is(3))
+      .body("auditMessages.size()", is(3));
   }
 
   @Test
   public void shouldReturnAuditMessagesOnGetFilteredByManyDaysWithEndTime() {
-    VertxTestContext context = new VertxTestContext();
-    addTestData().onComplete(ar -> {
-      RestAssured.given()
-        .spec(spec)
-        .when()
-        .get(HISTORY_PATH + "?startDate=2019-09-27&endDate=2019-09-28T00:00:00")
-        .then()
-        .statusCode(HttpStatus.SC_OK)
-        .body("totalRecords", is(2))
-        .body("auditMessages.size()", is(2));
-      context.completeNow();
-    });
+    addTestData();
+
+    RestAssured.given()
+      .spec(spec)
+      .when()
+      .get(HISTORY_PATH + "?startDate=2019-09-27&endDate=2019-09-28T00:00:00")
+      .then()
+      .statusCode(HttpStatus.SC_OK)
+      .body("totalRecords", is(2))
+      .body("auditMessages.size()", is(2));
   }
 
-  private CompositeFuture saveAuditMessages() {
+  private Future<?> saveAuditMessages() {
     List<Future<?>> futures = new ArrayList<>();
     String[] dateFormats = {DateFormatUtils.ISO_DATETIME_FORMAT.getPattern()};
     try {
@@ -359,10 +338,14 @@ public class AuditMessageAPITest extends AbstractRestTest {
       .compose(ar -> auditMessageDao.saveAuditMessagePayload(auditMessagePayload_2, TENANT_ID));
   }
 
-  private Future<?> addTestData() {
-    return Future.succeededFuture()
+  @SneakyThrows
+  private void addTestData() {
+    Future.succeededFuture()
       .compose(ar -> saveAuditMessagePayloads())
-      .compose(ar -> saveAuditMessages());
+      .compose(ar -> saveAuditMessages())
+      .toCompletionStage()
+      .toCompletableFuture()
+      .get(10, TimeUnit.SECONDS);
   }
 
 }
