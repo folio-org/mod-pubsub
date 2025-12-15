@@ -40,13 +40,13 @@ class EventDescriptorDaoImplTest {
   AutoCloseable openMocks;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     openMocks = MockitoAnnotations.openMocks(this);
     when(postgresClientFactory.getInstance()).thenReturn(postgresClient);
   }
 
   @AfterEach
-  public void tearDown() throws Exception {
+  void tearDown() throws Exception {
     openMocks.close();
   }
 

@@ -54,7 +54,7 @@ class PubSubClientTest {
     .build();
 
   @BeforeEach
-  public void prepareParams() {
+  void prepareParams() {
     params.setOkapiUrl("http://localhost:" + PORT);
     params.setTenantId(TENANT_ID);
     params.setToken(TOKEN);

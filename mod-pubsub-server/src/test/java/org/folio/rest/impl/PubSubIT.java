@@ -77,7 +77,7 @@ class PubSubIT {
       .withEnv("SYSTEM_USER_PASSWORD", "test_password");
 
   @BeforeAll
-  public static void beforeClass() {
+  static void beforeClass() {
     postgres.start();
     module.start();
 

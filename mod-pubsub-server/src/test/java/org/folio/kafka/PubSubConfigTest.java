@@ -42,7 +42,7 @@ class PubSubConfigTest {
   }
 
   @AfterEach
-  public void after() {
+  void after() {
     PubSubConfig.setTenantCollectionTopicsQualifier(null);
   }
 }

@@ -41,7 +41,7 @@ class AuditMessageAPITest extends AbstractRestTest {
   AutoCloseable openMocks;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     openMocks = MockitoAnnotations.openMocks(this);
   }
 

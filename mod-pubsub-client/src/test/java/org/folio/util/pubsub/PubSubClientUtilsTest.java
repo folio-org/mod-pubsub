@@ -23,7 +23,7 @@ class PubSubClientUtilsTest {
   private static final String VALID_MESSAGE_DESCRIPTOR_PATH = "config\\valid_config\\";
 
   @AfterEach
-  public void tearDown() {
+  void tearDown() {
     System.clearProperty(MESSAGING_CONFIG_PATH_PROPERTY);
   }
 

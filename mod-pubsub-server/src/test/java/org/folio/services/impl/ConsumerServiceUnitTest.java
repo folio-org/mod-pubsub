@@ -82,7 +82,7 @@ class ConsumerServiceUnitTest {
     .build();
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     MockitoAnnotations.openMocks(this);
     securityManager = spy(new SecurityManagerImpl(cache, systemUserConfig));
 

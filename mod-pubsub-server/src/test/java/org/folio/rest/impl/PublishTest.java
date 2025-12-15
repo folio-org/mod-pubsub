@@ -184,7 +184,7 @@ class PublishTest extends AbstractRestTest {
   }
 
   @BeforeEach
-  public void setUp(){
+  void setUp(){
     wireMock.stubFor(any(urlEqualTo(CALLBACK_ADDRESS)));
     wireMock.stubFor(post(LOGIN_URL)
       .willReturn(created()
@@ -194,7 +194,7 @@ class PublishTest extends AbstractRestTest {
   }
 
   @AfterEach
-  public void cleanUp() {
+  void cleanUp() {
     RestAssured.given()
       .spec(spec)
       .queryParam("moduleId", "mod-very-important-1.0.0")

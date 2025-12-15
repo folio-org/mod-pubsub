@@ -113,9 +113,7 @@ public final class RestUtil {
         LOGGER.info("Response received with statusCode {}", response.statusCode());
         return new WrappedResponse(response.statusCode(), response.bodyAsString(), response);
       })
-      .onFailure(throwable -> {
-        LOGGER.error("Error during sending request", throwable);
-      });
+      .onFailure(throwable -> LOGGER.error("Error during sending request", throwable));
   }
 
   private static final Map<Vertx, WebClient> clients = new HashMap<>();

@@ -118,7 +118,7 @@ class SecurityManagerTest {
   AutoCloseable openMocks;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     openMocks = MockitoAnnotations.openMocks(this);
     when(vertx.getOrCreateContext()).thenReturn(vertxContext);
 
@@ -459,8 +459,6 @@ class SecurityManagerTest {
 
   @Test
   void permissionsFailPut() {
-    VertxTestContext context = new VertxTestContext();
-
     final String userId = UUID.randomUUID().toString();
     final String userCollection = new JsonObject()
       .put("users", new JsonArray().add(existingUser(userId)))
