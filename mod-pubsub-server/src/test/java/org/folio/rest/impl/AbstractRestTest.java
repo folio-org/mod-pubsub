@@ -177,12 +177,6 @@ public abstract class AbstractRestTest {
       System.clearProperty(KAFKA_HOST);
       System.clearProperty(KAFKA_PORT);
       kafkaContainer.stop();
-
-      try {
-        Thread.sleep(3000);
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
     });
   }
 
