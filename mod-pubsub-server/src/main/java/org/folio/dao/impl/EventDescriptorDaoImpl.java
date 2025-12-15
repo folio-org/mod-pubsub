@@ -1,11 +1,15 @@
 package org.folio.dao.impl;
 
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
-import io.vertx.core.json.JsonObject;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.RowSet;
-import io.vertx.sqlclient.Tuple;
+import static io.vertx.core.Future.failedFuture;
+import static org.apache.commons.collections4.CollectionUtils.isEmpty;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.ws.rs.NotFoundException;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.dao.EventDescriptorDao;
@@ -14,13 +18,12 @@ import org.folio.rest.jaxrs.model.EventDescriptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import javax.ws.rs.NotFoundException;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static org.apache.commons.collections4.CollectionUtils.isEmpty;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.json.JsonObject;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
+import io.vertx.sqlclient.Tuple;
 
 /**
  * Implementation for the EventDescriptorDao, works with PostgresClient to access data.
@@ -47,7 +50,14 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
   public Future<List<EventDescriptor>> getAll() {
     Promise<RowSet<Row>> promise = Promise.promise();
     String preparedQuery = GET_ALL_SQL.formatted(MODULE_SCHEMA, TABLE_NAME);
-    pgClientFactory.getInstance().selectRead(preparedQuery, 0, promise);
+    pgClientFactory.getInstance().selectRead(preparedQuery, 0, result -> {
+      if (result.succeeded()) {
+        promise.complete(result.result());
+      } else {
+        LOGGER.error("Error getting all EventDescriptors", result.cause());
+        promise.fail(result.cause());
+      }
+    });
     return promise.future().map(this::mapResultSetToEventDescriptorList);
   }
 
@@ -56,7 +66,14 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
     Promise<RowSet<Row>> promise = Promise.promise();
     try {
       String preparedQuery = GET_BY_ID_SQL.formatted(MODULE_SCHEMA, TABLE_NAME);
-      pgClientFactory.getInstance().selectRead(preparedQuery, Tuple.of(eventType), promise);
+      pgClientFactory.getInstance().selectRead(preparedQuery, Tuple.of(eventType), result -> {
+        if (result.succeeded()) {
+          promise.complete(result.result());
+        } else {
+          LOGGER.error("Error getting EventDescriptor by event type '{}'", eventType, result.cause());
+          promise.fail(result.cause());
+        }
+      });
     } catch (Exception e) {
       LOGGER.error("Error getting EventDescriptor by event type '{}'", eventType, e);
       promise.fail(e);
@@ -70,7 +87,14 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
     Promise<RowSet<Row>> promise = Promise.promise();
     String query = getQueryByEventTypes(eventTypes);
     String preparedQuery = query.formatted(MODULE_SCHEMA, TABLE_NAME);
-    pgClientFactory.getInstance().selectRead(preparedQuery, 0, promise);
+    pgClientFactory.getInstance().selectRead(preparedQuery, 0, result -> {
+      if (result.succeeded()) {
+        promise.complete(result.result());
+      } else {
+        LOGGER.error("Error getting EventDescriptors by event types '{}'", eventTypes, result.cause());
+        promise.fail(result.cause());
+      }
+    });
     return promise.future().map(this::mapResultSetToEventDescriptorList);
   }
 
@@ -88,46 +112,42 @@ public class EventDescriptorDaoImpl implements EventDescriptorDao {
 
   @Override
   public Future<String> save(EventDescriptor eventDescriptor) {
-    Promise<RowSet<Row>> promise = Promise.promise();
     try {
       String query = INSERT_SQL.formatted(MODULE_SCHEMA, TABLE_NAME);
-      pgClientFactory.getInstance().execute(query, Tuple.of(eventDescriptor.getEventType(), JsonObject.mapFrom(eventDescriptor)),
-        promise);
+      return pgClientFactory.getInstance().execute(query, Tuple.of(eventDescriptor.getEventType(), JsonObject.mapFrom(eventDescriptor)))
+        .map(updateResult -> eventDescriptor.getEventType());
     } catch (Exception e) {
       LOGGER.error("Error saving EventDescriptor with event type '{}'", eventDescriptor.getEventType(), e);
-      promise.fail(e);
+      return failedFuture(e);
     }
-    return promise.future().map(updateResult -> eventDescriptor.getEventType());
   }
 
   @Override
   public Future<EventDescriptor> update(EventDescriptor eventDescriptor) {
-    Promise<RowSet<Row>> promise = Promise.promise();
     try {
       String query = UPDATE_BY_ID_SQL.formatted(MODULE_SCHEMA, TABLE_NAME);
-      pgClientFactory.getInstance().execute(query, Tuple.of(JsonObject.mapFrom((eventDescriptor)), eventDescriptor.getEventType()),
-        promise);
+      return pgClientFactory.getInstance().execute(query, Tuple.of(JsonObject.mapFrom((eventDescriptor)), eventDescriptor.getEventType()))
+        .compose(updateResult -> updateResult.rowCount() == 1
+          ? Future.succeededFuture(eventDescriptor)
+          : failedFuture(new NotFoundException("EventDescriptor with event type '%s' was not updated".formatted(eventDescriptor.getEventType()))));
     } catch (Exception e) {
       LOGGER.error("Error updating EventDescriptor by event type '{}'", eventDescriptor.getEventType(), e);
-      promise.fail(e);
+      return failedFuture(e);
     }
-    return promise.future().compose(updateResult -> updateResult.rowCount() == 1
-      ? Future.succeededFuture(eventDescriptor)
-      : Future.failedFuture(new NotFoundException("EventDescriptor with event type '%s' was not updated".formatted(eventDescriptor.getEventType()))));
   }
 
   @Override
   public Future<Void> delete(String eventType) {
     String query = DELETE_BY_ID_SQL.formatted(MODULE_SCHEMA, TABLE_NAME);
     return pgClientFactory.getInstance().execute(query, Tuple.of(eventType))
-      .flatMap(result -> {
+      .compose(result -> {
         if (result.rowCount() == 1) {
           return Future.succeededFuture();
         }
         String message = "Error deleting EventDescriptor with event type '%s'".formatted(eventType);
         NotFoundException notFoundException = new NotFoundException(message);
         LOGGER.error(message, notFoundException);
-        return Future.failedFuture(notFoundException);
+        return failedFuture(notFoundException);
       });
   }
 

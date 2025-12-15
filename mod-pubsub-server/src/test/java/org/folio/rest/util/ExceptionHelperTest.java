@@ -1,21 +1,21 @@
 package org.folio.rest.util;
 
-import org.apache.http.HttpStatus;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.Test;
 
-public class ExceptionHelperTest {
+class ExceptionHelperTest {
 
   @Test
-  public void shouldReturnBadRequestResponse() {
+  void shouldReturnBadRequestResponse() {
     Response response = ExceptionHelper.mapExceptionToResponse(new BadRequestException("Bad request message"));
     assertNotNull(response);
     assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatus());
@@ -24,7 +24,7 @@ public class ExceptionHelperTest {
   }
 
   @Test
-  public void shouldReturnInternalServerErrorResponse() {
+  void shouldReturnInternalServerErrorResponse() {
     Response response = ExceptionHelper.mapExceptionToResponse(new InternalServerErrorException("Internal server error message"));
     assertNotNull(response);
     assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatus());

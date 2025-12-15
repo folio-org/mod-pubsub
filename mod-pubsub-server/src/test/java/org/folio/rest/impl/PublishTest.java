@@ -4,9 +4,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.created;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static java.lang.String.format;
 import static org.awaitility.Awaitility.await;
 import static org.folio.rest.util.OkapiConnectionParams.OKAPI_URL_HEADER;
@@ -23,25 +21,24 @@ import org.folio.rest.jaxrs.model.EventDescriptor;
 import org.folio.rest.jaxrs.model.PublisherDescriptor;
 import org.folio.rest.jaxrs.model.SubscriberDescriptor;
 import org.folio.rest.jaxrs.model.SubscriptionDefinition;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 
-@RunWith(VertxUnitRunner.class)
-public class PublishTest extends AbstractRestTest {
-  @ClassRule
-  public static WireMockRule wireMockRule = new WireMockRule(
-    new WireMockConfiguration().dynamicPort());
+class PublishTest extends AbstractRestTest {
+  @RegisterExtension
+  static WireMockExtension wireMock = WireMockExtension.newInstance()
+    .options(WireMockConfiguration.wireMockConfig().dynamicPort())
+    .build();
+
   private static final String PUBLISH_PATH = "/pubsub/publish";
   private static final String CALLBACK_ADDRESS = "/call-me-maybe";
   private static final String LOGIN_URL = "/authn/login-with-expiry";
@@ -68,7 +65,7 @@ public class PublishTest extends AbstractRestTest {
       .put("publishedBy", "mod-very-important-1.0.0"));
 
   @Test
-  public void shouldReturnBadRequestIfPublisherIsNotRegistered() {
+  void shouldReturnBadRequestIfPublisherIsNotRegistered() {
     RestAssured.given()
       .spec(spec)
       .body(EVENT.encode())
@@ -79,7 +76,7 @@ public class PublishTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldPublishEventIfNoSubscribersRegistered() {
+  void shouldPublishEventIfNoSubscribersRegistered() {
     EventDescriptor eventDescriptor = postEventDescriptor(EVENT_DESCRIPTOR);
     registerPublisher(eventDescriptor);
 
@@ -93,7 +90,7 @@ public class PublishTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldPublishEvent() {
+  void shouldPublishEvent() {
     EventDescriptor eventDescriptor = postEventDescriptor(EVENT_DESCRIPTOR);
     registerPublisher(eventDescriptor);
     registerSubscriber(eventDescriptor);
@@ -108,7 +105,7 @@ public class PublishTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldPublishEventWithPayload() throws InterruptedException {
+  void shouldPublishEventWithPayload() throws InterruptedException {
     EventDescriptor eventDescriptor = postEventDescriptor(EVENT_DESCRIPTOR);
     registerPublisher(eventDescriptor);
     registerSubscriber(eventDescriptor);
@@ -131,11 +128,12 @@ public class PublishTest extends AbstractRestTest {
       .pollInterval(3, TimeUnit.SECONDS)
       .untilAsserted(() -> {
         System.out.println("Asserting subscriber notification...");
-        verify(postRequestedFor(urlEqualTo(CALLBACK_ADDRESS)));});
+        wireMock.verify(postRequestedFor(urlEqualTo(CALLBACK_ADDRESS)));
+      });
   }
 
   @Test
-  public void shouldPublishEventWithPayloadAndTenantCollectionTopicsEnabled() throws InterruptedException {
+  void shouldPublishEventWithPayloadAndTenantCollectionTopicsEnabled() throws InterruptedException {
     try {
       PubSubConfig.setTenantCollectionTopicsQualifier("ALL");
       shouldPublishEventWithPayload();
@@ -185,18 +183,18 @@ public class PublishTest extends AbstractRestTest {
       .statusCode(HttpStatus.SC_CREATED);
   }
 
-  @Before
-  public void setUp(){
-    wireMockRule.stubFor(any(urlEqualTo(CALLBACK_ADDRESS)));
-    stubFor(post(LOGIN_URL)
+  @BeforeEach
+  void setUp(){
+    wireMock.stubFor(any(urlEqualTo(CALLBACK_ADDRESS)));
+    wireMock.stubFor(post(LOGIN_URL)
       .willReturn(created()
         .withHeader("Set-Cookie", ACCESS_TOKEN_COOKIE)
         .withHeader("Set-Cookie", REFRESH_TOKEN_COOKIE)
       ));
   }
 
-  @After
-  public void cleanUp() {
+  @AfterEach
+  void cleanUp() {
     RestAssured.given()
       .spec(spec)
       .queryParam("moduleId", "mod-very-important-1.0.0")
@@ -214,6 +212,6 @@ public class PublishTest extends AbstractRestTest {
   }
 
   private String mockOkapiUrl() {
-    return "http://localhost:"+ wireMockRule.port();
+    return "http://localhost:"+ wireMock.getPort();
   }
 }

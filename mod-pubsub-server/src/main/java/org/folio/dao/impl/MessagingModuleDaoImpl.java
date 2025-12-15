@@ -52,7 +52,14 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
   public Future<List<MessagingModule>> get(MessagingModuleFilter filter) {
     Promise<RowSet<Row>> promise = Promise.promise();
     String preparedQuery = GET_BY_SQL.formatted(MODULE_SCHEMA, TABLE_NAME, buildWhereClause(filter));
-    pgClientFactory.getInstance().selectRead(preparedQuery, 0, promise);
+    pgClientFactory.getInstance().selectRead(preparedQuery, 0, result -> {
+      if (result.succeeded()) {
+        promise.complete(result.result());
+      } else {
+        LOGGER.error("Error getting Messaging Modules by filter {}", filter, result.cause());
+        promise.fail(result.cause());
+      }
+    });
     return promise.future().map(this::mapResultSetToMessagingModuleList);
   }
 
@@ -84,7 +91,14 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
       for (MessagingModule messagingModule : messagingModules) {
         params.add(prepareInsertQueryParameters(messagingModule));
       }
-      pgClientFactory.getInstance().execute(sqlConnection, query, params, promise);
+      pgClientFactory.getInstance().execute(sqlConnection, query, params, result -> {
+        if (result.succeeded()) {
+          promise.complete(result.result());
+        } else {
+          LOGGER.error("Error saving Messaging Modules", result.cause());
+          promise.fail(result.cause());
+        }
+      });
     } catch (Exception e) {
       LOGGER.error("Error saving Messaging Modules", e);
       promise.fail(e);
@@ -112,14 +126,28 @@ public class MessagingModuleDaoImpl implements MessagingModuleDao {
   public Future<List<MessagingModule>> getAll() {
     Promise<RowSet<Row>> promise = Promise.promise();
     String preparedQuery = GET_ALL_SQL.formatted(MODULE_SCHEMA, TABLE_NAME);
-    pgClientFactory.getInstance().selectRead(preparedQuery, 0, promise);
+    pgClientFactory.getInstance().selectRead(preparedQuery, 0, result -> {
+      if (result.succeeded()) {
+        promise.complete(result.result());
+      } else {
+        LOGGER.error("Error getting all Messaging Modules", result.cause());
+        promise.fail(result.cause());
+      }
+    });
     return promise.future().map(this::mapResultSetToMessagingModuleList);
   }
 
   private Future<Boolean> delete(MessagingModuleFilter filter, AsyncResult<SQLConnection> sqlConnection) {
     Promise<RowSet<Row>> promise = Promise.promise();
     String query = DELETE_BY_SQL.formatted(MODULE_SCHEMA, TABLE_NAME, buildWhereClause(filter));
-    pgClientFactory.getInstance().execute(sqlConnection, query, promise);
+    pgClientFactory.getInstance().execute(sqlConnection, query, result -> {
+      if (result.succeeded()) {
+        promise.complete(result.result());
+      } else {
+        LOGGER.error("Error deleting Messaging Modules by filter {}", filter, result.cause());
+        promise.fail(result.cause());
+      }
+    });
     return promise.future().map(updateResult -> updateResult.rowCount() == 1);
   }
 

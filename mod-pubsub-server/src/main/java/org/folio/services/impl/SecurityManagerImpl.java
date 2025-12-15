@@ -1,5 +1,7 @@
 package org.folio.services.impl;
 
+import static io.vertx.core.Future.failedFuture;
+import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.http.HttpMethod.PUT;
 import static io.vertx.core.json.Json.encode;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -82,14 +84,14 @@ public class SecurityManagerImpl implements SecurityManager {
 
     if (!systemUserConfig.isCreateUser()) {
       LOGGER.info("getAccessToken:: System user is disabled. Using empty token for tenant {}", tenantId);
-      return Future.succeededFuture(EMPTY);
+      return succeededFuture(EMPTY);
     }
 
     String cachedAccessToken = cache.getAccessToken(tenantId);
     if (!StringUtils.isEmpty(cachedAccessToken)) {
       LOGGER.debug("getAccessToken:: Using cached access token for tenant {}",
         params.getTenantId());
-      return Future.succeededFuture(cachedAccessToken);
+      return succeededFuture(cachedAccessToken);
     }
 
     return logInWithExpiry(params)
@@ -100,7 +102,7 @@ public class SecurityManagerImpl implements SecurityManager {
     final String tenantId = params.getTenantId();
     LOGGER.info("logInWithExpiry:: Logging in, tenantId={}", tenantId);
 
-    return Future.succeededFuture(systemUserConfig.getUserCredentialsJson())
+    return succeededFuture(systemUserConfig.getUserCredentialsJson())
       .compose(userCredentials -> doRequest(params, LOGIN_WITH_EXPIRY_URL,
         HttpMethod.POST, userCredentials.encode()))
       .compose(response -> {
@@ -121,7 +123,7 @@ public class SecurityManagerImpl implements SecurityManager {
           LOGGER.info("logInWithExpiry:: Parsed 'access' and 'refresh' tokens, caching");
           cache.setAccessToken(tenantId, accessToken);
           cache.setRefreshToken(tenantId, refreshToken);
-          return Future.succeededFuture();
+          return succeededFuture();
         }
         String message = "%s user was not logged in, received status %d".formatted(
           systemUserConfig.getName(), response.getCode());
@@ -175,7 +177,7 @@ public class SecurityManagerImpl implements SecurityManager {
   @Override
   public Future<Void> createPubSubUser(OkapiConnectionParams params) {
     if (!systemUserConfig.isCreateUser()) {
-      return Future.succeededFuture();
+      return succeededFuture();
     }
 
     return existsPubSubUser(params)
@@ -187,8 +189,7 @@ public class SecurityManagerImpl implements SecurityManager {
           return createUser(params)
             .compose(userId -> saveCredentials(userId, params))
             .compose(userId -> establishPermissionsUser(userId, params));
-        }
-      });
+        }});
   }
 
   @Override
@@ -202,20 +203,16 @@ public class SecurityManagerImpl implements SecurityManager {
     var url = USERS_URL + "?query=" + PercentCodec.encode(cql);
     return doRequest(params, url, HttpMethod.GET, null)
       .compose(response -> {
-        Promise<User> promise = Promise.promise();
         if (response.getCode() == HttpStatus.HTTP_OK.toInt()) {
           JsonObject usersCollection = response.getJson();
           JsonArray users = usersCollection.getJsonArray("users");
           if (users.size() > 0) {
-            promise.complete(users.getJsonObject(0).mapTo(User.class));
-          } else {
-            promise.complete();
+            return succeededFuture(users.getJsonObject(0).mapTo(User.class));
           }
         } else {
           LOGGER.error("Failed request on GET users. Received status code {}", response.getCode());
-          promise.complete();
         }
-        return promise.future();
+        return succeededFuture();
       });
   }
 
@@ -225,17 +222,15 @@ public class SecurityManagerImpl implements SecurityManager {
 
     return doRequest(params, USERS_URL, HttpMethod.POST, encode(user))
       .compose(response -> {
-        Promise<String> promise = Promise.promise();
         if (response.getCode() == HttpStatus.HTTP_CREATED.toInt()) {
           LOGGER.info("Created {} user", systemUserConfig.getName());
-          promise.complete(id);
+          return succeededFuture(id);
         } else {
           String errorMessage = "Failed to create %s user. Received status code %s".formatted(
             systemUserConfig.getName(), response.getCode());
           LOGGER.error(errorMessage);
-          promise.fail(errorMessage);
+          return failedFuture(errorMessage);
         }
-        return promise.future();
       });
   }
 
@@ -243,7 +238,7 @@ public class SecurityManagerImpl implements SecurityManager {
     if (existingUserUpToDate(existingUser)) {
       LOGGER.info("The {} user [{}] is up to date", systemUserConfig.getName(),
         existingUser.getId());
-      return Future.succeededFuture(existingUser);
+      return succeededFuture(existingUser);
     }
 
     LOGGER.info("Have to update the {} user [{}]", systemUserConfig.getName(),
@@ -269,7 +264,7 @@ public class SecurityManagerImpl implements SecurityManager {
   }
 
   private Future<String> saveCredentials(String userId, OkapiConnectionParams params) {
-    return Future.succeededFuture(systemUserConfig.getUserCredentialsJson())
+    return succeededFuture(systemUserConfig.getUserCredentialsJson())
       .compose(credentials -> {
         credentials.put("userId", userId);
         return doRequest(params, CREDENTIALS_URL, HttpMethod.POST, credentials.encode())
@@ -302,7 +297,7 @@ public class SecurityManagerImpl implements SecurityManager {
       null).compose(res1 -> {
       if (res1.getCode() == HttpStatus.HTTP_OK.toInt()) {
         if (res1.getJson().getJsonArray("permissions").equals(new JsonArray(PERMISSIONS))) {
-          return Future.succeededFuture();
+          return succeededFuture();
         }
         JsonObject requestBody = res1.getJson()
           .put("permissions", new JsonArray(PERMISSIONS));
@@ -312,7 +307,7 @@ public class SecurityManagerImpl implements SecurityManager {
             if (res2.getCode() == HttpStatus.HTTP_OK.toInt()) {
               LOGGER.info("Updated user {} with permissions [{}]", systemUserConfig.getName(),
                 StringUtils.join(PERMISSIONS, ","));
-              return Future.succeededFuture();
+              return succeededFuture();
             }
             String errorMessage = "Failed to update permissions %s for %s user. Received status code %s: %s".formatted(
               StringUtils.join(PERMISSIONS, ","), systemUserConfig.getName(), res2.getCode(),
@@ -330,7 +325,7 @@ public class SecurityManagerImpl implements SecurityManager {
             if (res2.getCode() == HttpStatus.HTTP_CREATED.toInt()) {
               LOGGER.info("Created user {} with permissions [{}]", systemUserConfig.getName(),
                 StringUtils.join(PERMISSIONS, ","));
-              return Future.succeededFuture();
+              return succeededFuture();
             }
             String errorMessage = "Failed to add permissions %s for %s user. Received status code %s: %s".formatted(
               StringUtils.join(PERMISSIONS, ","), systemUserConfig.getName(), res2.getCode(),

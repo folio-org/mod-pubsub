@@ -1,10 +1,19 @@
 package org.folio.rest.util;
 
+import static io.vertx.core.Future.failedFuture;
+import static org.folio.rest.util.OkapiConnectionParams.OKAPI_TENANT_HEADER;
+import static org.folio.rest.util.OkapiConnectionParams.OKAPI_TOKEN_HEADER;
+import static org.folio.rest.util.OkapiConnectionParams.OKAPI_URL_HEADER;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.vertx.core.AsyncResult;
+
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
@@ -13,15 +22,6 @@ import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.folio.rest.util.OkapiConnectionParams.OKAPI_TENANT_HEADER;
-import static org.folio.rest.util.OkapiConnectionParams.OKAPI_TOKEN_HEADER;
-import static org.folio.rest.util.OkapiConnectionParams.OKAPI_URL_HEADER;
 
 /**
  * Util class with static method for sending http request
@@ -78,7 +78,6 @@ public final class RestUtil {
    */
   public static <T> Future<WrappedResponse> doRequest(OkapiConnectionParams params, String url,
                                                       HttpMethod method, T payload) {
-    Promise<WrappedResponse> promise = Promise.promise();
     try {
       Map<String, String> headers = params.getHeaders();
       String requestUrl = params.getOkapiUrl() + url;
@@ -97,29 +96,24 @@ public final class RestUtil {
       }
       LOGGER.info("Sending {} for {}", method.name(), requestUrl);
       if (method == HttpMethod.PUT || method == HttpMethod.POST) {
-        request.sendBuffer(Buffer.buffer(payload instanceof String s ? s : new ObjectMapper().writeValueAsString(payload)), handleResponse(promise));
+        return handleResponse(request.sendBuffer(Buffer.buffer(
+          payload instanceof String s ? s : new ObjectMapper().writeValueAsString(payload))));
       } else {
-        request.send(handleResponse(promise));
+        return handleResponse(request.send());
       }
-      return promise.future();
     } catch (Exception e) {
       LOGGER.error("Error happened during sending request", e);
-      promise.fail(e);
-      return promise.future();
+      return failedFuture(e);
     }
   }
 
-  private static Handler<AsyncResult<HttpResponse<Buffer>>> handleResponse(Promise<WrappedResponse> promise) {
-    return ar -> {
-      if (ar.succeeded()) {
-        LOGGER.info("Response received with statusCode {}", ar.result().statusCode());
-        WrappedResponse wr = new WrappedResponse(ar.result().statusCode(), ar.result().bodyAsString(), ar.result());
-        promise.complete(wr);
-      } else {
-        LOGGER.error("Error during sending request", ar.cause());
-        promise.fail(ar.cause());
-      }
-    };
+  private static Future<WrappedResponse> handleResponse(Future<HttpResponse<Buffer>> responseFuture) {
+    return responseFuture
+      .map(response -> {
+        LOGGER.info("Response received with statusCode {}", response.statusCode());
+        return new WrappedResponse(response.statusCode(), response.bodyAsString(), response);
+      })
+      .onFailure(throwable -> LOGGER.error("Error during sending request", throwable));
   }
 
   private static final Map<Vertx, WebClient> clients = new HashMap<>();

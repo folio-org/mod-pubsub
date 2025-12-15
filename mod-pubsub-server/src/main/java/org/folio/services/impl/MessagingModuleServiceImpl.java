@@ -7,7 +7,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.dao.EventDescriptorDao;
 import org.folio.dao.MessagingModuleDao;
-import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.EventDescriptor;
@@ -102,7 +101,7 @@ public class MessagingModuleServiceImpl implements MessagingModuleService {
                 .withTmp(true)));
           }
         }
-        return GenericCompositeFuture.join(futures);
+        return Future.join(futures);
       }).mapEmpty();
   }
 
