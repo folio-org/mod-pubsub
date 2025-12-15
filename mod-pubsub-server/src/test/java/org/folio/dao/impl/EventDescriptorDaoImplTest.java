@@ -15,14 +15,17 @@ import org.folio.rest.persist.helpers.LocalRowSet;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import io.vertx.core.Future;
+import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.sqlclient.Tuple;
 
+@ExtendWith(VertxExtension.class)
 class EventDescriptorDaoImplTest {
 
   @Mock
@@ -62,22 +65,19 @@ class EventDescriptorDaoImplTest {
   }
 
   @Test
-  void shouldFailOnDeleteMoreThanOneRow() {
-    VertxTestContext context = new VertxTestContext();
+  void shouldFailOnDeleteMoreThanOneRow(VertxTestContext context) {
     var future = shouldSucceedOnDelete(context, 2);
     assertTrue(future.failed());
     assertInstanceOf(NotFoundException.class, future.cause());
   }
 
   @Test
-  void shouldSucceedOnDeleteExisting() {
-    VertxTestContext context = new VertxTestContext();
+  void shouldSucceedOnDeleteExisting(VertxTestContext context) {
     shouldSucceedOnDelete(context, 1);
   }
 
   @Test
-  void shouldFailOnDeleteNotFound() {
-    VertxTestContext context = new VertxTestContext();
+  void shouldFailOnDeleteNotFound(VertxTestContext context) {
     var future = shouldSucceedOnDelete(context, 0);
     assertTrue(future.failed());
     assertInstanceOf(NotFoundException.class, future.cause());
