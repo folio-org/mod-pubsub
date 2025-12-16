@@ -30,13 +30,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import static java.lang.String.format;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.PUBLISHER;
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
@@ -68,7 +67,7 @@ public class PubSubClientUtils {
         if (ar.result().statusCode() == HttpStatus.HTTP_NO_CONTENT.toInt()) {
           result.complete(true);
         } else {
-          EventSendingException exception = new EventSendingException(format("Error during publishing Event Message in PubSub. Status code: %s . Status message: %s ", ar.result().statusCode(), ar.result().statusMessage()));
+          EventSendingException exception = new EventSendingException("Error during publishing Event Message in PubSub. Status code: %s . Status message: %s ".formatted(ar.result().statusCode(), ar.result().statusMessage()));
           LOGGER.error(exception);
           result.completeExceptionally(exception);
         }
@@ -119,7 +118,7 @@ public class PubSubClientUtils {
           if (ar.result().statusCode() == HttpStatus.HTTP_CREATED.toInt()) {
             future.complete(true);
           } else {
-            ModuleRegistrationException exception = new ModuleRegistrationException(format("EventDescriptor was not registered for eventType: %s . Status code: %s", eventDescriptor.getEventType(), ar.result().statusCode()));
+            ModuleRegistrationException exception = new ModuleRegistrationException("EventDescriptor was not registered for eventType: %s . Status code: %s".formatted(eventDescriptor.getEventType(), ar.result().statusCode()));
             LOGGER.error(exception);
             future.completeExceptionally(exception);
           }
@@ -202,7 +201,7 @@ public class PubSubClientUtils {
           LOGGER.info("Module {} was successfully unregistered as '{}'", moduleId, moduleRole);
           future.complete(true);
         } else {
-          String msg = format("Module %s was not unregistered as '%s' in PubSub. HTTP status: %s", moduleId, moduleRole, response.result().statusCode());
+          String msg = "Module %s was not unregistered as '%s' in PubSub. HTTP status: %s".formatted(moduleId, moduleRole, response.result().statusCode());
           LOGGER.error(msg);
           future.completeExceptionally(new ModuleUnregistrationException(msg));
         }
@@ -259,7 +258,7 @@ public class PubSubClientUtils {
   }
 
   private static Optional<InputStream> getFileInputStreamByParentPath(String parentPath) {
-    if (Paths.get(parentPath).isAbsolute()) {
+    if (Path.of(parentPath).isAbsolute()) {
       return getFileInputStreamByAbsoluteParentPath(parentPath);
     }
     String fullRelativeFilePath = parentPath + File.separatorChar + MESSAGING_CONFIG_FILE_NAME;
@@ -285,7 +284,7 @@ public class PubSubClientUtils {
   }
 
   public static String getModuleId() {
-    return format("%s-%s", PomReader.INSTANCE.getModuleName(), PomReader.INSTANCE.getVersion());
+    return "%s-%s".formatted(PomReader.INSTANCE.getModuleName(), PomReader.INSTANCE.getVersion());
   }
 
   private static PubsubClient createPubSubClient(OkapiConnectionParams params) {

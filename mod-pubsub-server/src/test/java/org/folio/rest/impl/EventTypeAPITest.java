@@ -3,12 +3,10 @@ package org.folio.rest.impl;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.apache.http.HttpStatus;
 import org.folio.rest.jaxrs.model.EventDescriptor;
 import org.folio.rest.jaxrs.model.PublisherDescriptor;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 
@@ -16,8 +14,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 
-@RunWith(VertxUnitRunner.class)
-public class EventTypeAPITest extends AbstractRestTest {
+class EventTypeAPITest extends AbstractRestTest {
 
   private EventDescriptor eventDescriptor = new EventDescriptor()
     .withEventType("CREATED_SRS_MARC_BIB_RECORD_WITH_ORDER_DATA")
@@ -26,7 +23,7 @@ public class EventTypeAPITest extends AbstractRestTest {
     .withSigned(false);
 
   @Test
-  public void shouldReturnEmptyListOnGet() {
+  void shouldReturnEmptyListOnGet() {
     RestAssured.given()
       .spec(spec)
       .when()
@@ -38,7 +35,7 @@ public class EventTypeAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnAllEventDescriptorsOnGet() {
+  void shouldReturnAllEventDescriptorsOnGet() {
     postEventDescriptor(eventDescriptor);
 
     RestAssured.given()
@@ -51,7 +48,7 @@ public class EventTypeAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnNotFoundOnGetByEventType() {
+  void shouldReturnNotFoundOnGetByEventType() {
     RestAssured.given()
       .spec(spec)
       .when()
@@ -61,7 +58,7 @@ public class EventTypeAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnEventDescriptorOnGetByEventType() {
+  void shouldReturnEventDescriptorOnGetByEventType() {
     EventDescriptor createdEventDescriptor = postEventDescriptor(eventDescriptor);
 
     RestAssured.given()
@@ -77,7 +74,7 @@ public class EventTypeAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldCreateEventDescriptorOnPost() {
+  void shouldCreateEventDescriptorOnPost() {
     RestAssured.given()
       .spec(spec)
       .body(JsonObject.mapFrom(eventDescriptor).encode())
@@ -88,7 +85,7 @@ public class EventTypeAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnBadRequestOnPost() {
+  void shouldReturnBadRequestOnPost() {
     RestAssured.given()
       .spec(spec)
       .body(new JsonObject().toString())
@@ -99,7 +96,7 @@ public class EventTypeAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnOkOnPostIfEventTypeWithTheSameDescriptorExists() {
+  void shouldReturnOkOnPostIfEventTypeWithTheSameDescriptorExists() {
     postEventDescriptor(eventDescriptor);
 
     RestAssured.given()
@@ -112,7 +109,7 @@ public class EventTypeAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnBadRequestOnPostIfEventTypeWithDifferentDescriptorExists() {
+  void shouldReturnBadRequestOnPostIfEventTypeWithDifferentDescriptorExists() {
     EventDescriptor createdEventDescriptor = postEventDescriptor(eventDescriptor);
 
     RestAssured.given()
@@ -129,7 +126,7 @@ public class EventTypeAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldUpdateEventDescriptorOnPut() {
+  void shouldUpdateEventDescriptorOnPut() {
     EventDescriptor eventDescriptor = new EventDescriptor()
       .withEventType("CREATED_SRS_MARC_BIB_RECORD_WITH_ORDER_DATA")
       .withDescription("Created SRS Marc Bibliographic Record with order data in 9xx fields")
@@ -153,7 +150,7 @@ public class EventTypeAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnBadRequestOnPut() {
+  void shouldReturnBadRequestOnPut() {
     RestAssured.given()
       .spec(spec)
       .body(new JsonObject().toString())
@@ -164,7 +161,7 @@ public class EventTypeAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnNotFoundOnPut() {
+  void shouldReturnNotFoundOnPut() {
     RestAssured.given()
       .spec(spec)
       .body(JsonObject.mapFrom(eventDescriptor).encode())
@@ -175,7 +172,7 @@ public class EventTypeAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldDeleteEventDescriptorOnDelete() {
+  void shouldDeleteEventDescriptorOnDelete() {
     EventDescriptor createdEventDescriptor = postEventDescriptor(eventDescriptor);
 
     RestAssured.given()
@@ -194,7 +191,7 @@ public class EventTypeAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnBadRequestOnDeleteIfModulesAreRegistered() {
+  void shouldReturnBadRequestOnDeleteIfModulesAreRegistered() {
     EventDescriptor createdEventDescriptor = postEventDescriptor(eventDescriptor);
 
     PublisherDescriptor publisherDescriptor = new PublisherDescriptor()
@@ -218,7 +215,7 @@ public class EventTypeAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnNotFoundOnDelete() {
+  void shouldReturnNotFoundOnDelete() {
     RestAssured.given()
       .spec(spec)
       .when()
@@ -228,7 +225,7 @@ public class EventTypeAPITest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldOverwriteTmpDescriptor() {
+  void shouldOverwriteTmpDescriptor() {
     EventDescriptor tmpEventDescriptor = new EventDescriptor()
       .withEventType("CREATED_SRS_MARC_BIB_RECORD_WITH_ORDER_DATA")
       .withEventTTL(1)

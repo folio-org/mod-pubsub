@@ -6,7 +6,8 @@ import java.util.Map;
 import javax.annotation.PreDestroy;
 
 import org.apache.kafka.clients.admin.AdminClientConfig;
-import org.folio.kafka.KafkaConfig;
+import org.folio.kafka.PubSubKafkaConfig;
+import org.folio.kafka.services.KafkaAdminClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -26,11 +27,16 @@ public class ApplicationConfig {
 
   private KafkaAdminClient adminClient;
   @Bean
-  public KafkaAdminClient kafkaAdminClient(@Autowired Vertx vertx, @Autowired KafkaConfig config) {
+  public KafkaAdminClient kafkaAdminClient(@Autowired Vertx vertx, @Autowired PubSubKafkaConfig config) {
     Map<String, String> configs = new HashMap<>();
     configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, config.getKafkaUrl());
     adminClient = KafkaAdminClient.create(vertx, configs);
     return adminClient;
+  }
+
+  @Bean
+  public KafkaAdminClientService kafkaAdminClientService(@Autowired Vertx vertx) {
+    return new KafkaAdminClientService(vertx);
   }
 
   @PreDestroy

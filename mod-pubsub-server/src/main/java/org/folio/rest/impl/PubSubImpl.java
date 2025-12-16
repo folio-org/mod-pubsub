@@ -38,7 +38,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 
-import static java.lang.String.format;
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.PUBLISHER;
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
 
@@ -123,7 +122,7 @@ public class PubSubImpl implements Pubsub {
     try {
       eventDescriptorService.getByEventType(eventTypeName)
         .map(eventDescriptorOptional -> eventDescriptorOptional
-          .orElseThrow(() -> new NotFoundException(format("Event Descriptor with event type '%s' was not found", eventTypeName))))
+          .orElseThrow(() -> new NotFoundException("Event Descriptor with event type '%s' was not found".formatted(eventTypeName))))
         .map(GetPubsubEventTypesByEventTypeNameResponse::respond200WithApplicationJson)
         .map(Response.class::cast)
         .otherwise(ExceptionHelper::mapExceptionToResponse)
@@ -173,7 +172,7 @@ public class PubSubImpl implements Pubsub {
     try {
       auditMessageService.getAuditMessagePayloadByEventId(eventId, tenantId)
         .map(auditMessagePayloadOptional -> auditMessagePayloadOptional
-          .orElseThrow(() -> new NotFoundException(format("Couldn't find audit message payload for event %s", eventId))))
+          .orElseThrow(() -> new NotFoundException("Couldn't find audit message payload for event %s".formatted(eventId))))
         .map(GetPubsubAuditMessagesPayloadByEventIdResponse::respond200WithApplicationJson)
         .map(Response.class::cast)
         .otherwise(ExceptionHelper::mapExceptionToResponse)
@@ -311,7 +310,7 @@ public class PubSubImpl implements Pubsub {
         .withModuleRole(MessagingModule.ModuleRole.fromValue(moduleRole));
       promise.complete(filter);
     } catch (IllegalArgumentException e) {
-      String msg = format("Invalid moduleRole was specified: %s. Acceptable moduleRole values are: PUBLISHER, SUBSCRIBER.", moduleRole);
+      String msg = "Invalid moduleRole was specified: %s. Acceptable moduleRole values are: PUBLISHER, SUBSCRIBER.".formatted(moduleRole);
       LOGGER.error(msg);
       promise.fail(new BadRequestException(msg));
     }
@@ -336,7 +335,7 @@ public class PubSubImpl implements Pubsub {
         .withCorrelationId(correlationId);
     } catch (Exception e) {
       LOGGER.error("Error parsing date", e);
-      throw new BadRequestException(format("Supported date formats %s, %s, %s", dateFormats[0], dateFormats[1], dateFormats[2]));
+      throw new BadRequestException("Supported date formats %s, %s, %s".formatted(dateFormats[0], dateFormats[1], dateFormats[2]));
     }
   }
 

@@ -1,25 +1,24 @@
 package org.folio.dao.impl;
 
-import io.vertx.core.Future;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
-import org.folio.dao.PostgresClientFactory;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.helpers.LocalRowSet;
-import org.folio.rest.util.MessagingModuleFilter;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(VertxUnitRunner.class)
-public class MessagingModuleDaoImplUnitTest {
+import org.folio.dao.PostgresClientFactory;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.helpers.LocalRowSet;
+import org.folio.rest.util.MessagingModuleFilter;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import io.vertx.core.Future;
+import io.vertx.junit5.VertxTestContext;
+
+class MessagingModuleDaoImplUnitTest {
 
   @Mock
   private PostgresClientFactory postgresClientFactory;
@@ -30,32 +29,43 @@ public class MessagingModuleDaoImplUnitTest {
   @InjectMocks
   private MessagingModuleDaoImpl messagingModuleDao = new MessagingModuleDaoImpl();
 
-  @Before
-  public void setUp() {
-    MockitoAnnotations.initMocks(this);
+  AutoCloseable openMocks;
+
+  @BeforeEach
+  void setUp() {
+    openMocks = MockitoAnnotations.openMocks(this);
     when(postgresClientFactory.getInstance())
       .thenReturn(pgClient);
   }
 
-  private void shouldSucceedOnDelete(TestContext context, int rowCount) {
+  @AfterEach
+  void tearDown() throws Exception {
+    openMocks.close();
+  }
+
+
+  private void shouldSucceedOnDelete(VertxTestContext context, int rowCount) {
     // given
     when(pgClient.execute(anyString()))
         .thenReturn(Future.succeededFuture(new LocalRowSet(rowCount)));
     // when
     messagingModuleDao.delete(new MessagingModuleFilter())
     // then
-    .onComplete(context.asyncAssertSuccess(x -> {
+    .onComplete(r -> {
       verify(pgClient).execute(anyString());
-    }));
+      context.completeNow();
+    });
   }
 
   @Test
-  public void shouldSucceedOnDeleteExisting(TestContext context) {
+  void shouldSucceedOnDeleteExisting() {
+    VertxTestContext context = new VertxTestContext();
     shouldSucceedOnDelete(context, 1);
   }
 
   @Test
-  public void shouldSucceedOnDeleteNotFound(TestContext context) {
+  void shouldSucceedOnDeleteNotFound() {
+    VertxTestContext context = new VertxTestContext();
     shouldSucceedOnDelete(context, 0);
   }
 

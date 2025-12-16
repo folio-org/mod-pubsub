@@ -5,9 +5,9 @@ import static org.hamcrest.core.Is.is;
 
 import java.util.Arrays;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class SystemUserConfigTest {
+class SystemUserConfigTest {
   private static final String SYSTEM_USER_NAME_VAR = "SYSTEM_USER_NAME";
   private static final String SYSTEM_USER_PASSWORD_VAR = "SYSTEM_USER_PASSWORD";
   private static final String VALID_USERNAME = "test-username";
@@ -16,13 +16,13 @@ public class SystemUserConfigTest {
   private static final String BLANK_STRING = "   ";
 
   @Test
-  public void validSystemUserCredentials() {
+  void validSystemUserCredentials() {
     SystemUserConfig config = new SystemUserConfig(VALID_USERNAME, VALID_PASSWORD, true);
     assertThat(config.getName(), is(VALID_USERNAME));
   }
 
   @Test
-  public void invalidSystemUserCredentials() {
+  void invalidSystemUserCredentials() {
     testFailedValidation(VALID_USERNAME, null, SYSTEM_USER_PASSWORD_VAR);
     testFailedValidation(VALID_USERNAME, EMPTY_STRING, SYSTEM_USER_PASSWORD_VAR);
     testFailedValidation(VALID_USERNAME, BLANK_STRING, SYSTEM_USER_PASSWORD_VAR);

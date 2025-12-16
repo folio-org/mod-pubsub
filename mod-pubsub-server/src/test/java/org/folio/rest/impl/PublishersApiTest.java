@@ -1,26 +1,23 @@
 package org.folio.rest.impl;
 
-import io.restassured.RestAssured;
-import io.restassured.response.Response;
-import io.restassured.response.ValidatableResponse;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
-
-import org.apache.http.HttpStatus;
-import org.folio.rest.jaxrs.model.EventDescriptor;
-import org.folio.rest.jaxrs.model.PublisherDescriptor;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import java.util.Arrays;
-import java.util.Collections;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
-@RunWith(VertxUnitRunner.class)
-public class PublishersApiTest extends AbstractRestTest {
+import java.util.Arrays;
+import java.util.Collections;
+
+import org.apache.http.HttpStatus;
+import org.folio.rest.jaxrs.model.EventDescriptor;
+import org.folio.rest.jaxrs.model.PublisherDescriptor;
+import org.junit.jupiter.api.Test;
+
+import io.restassured.RestAssured;
+import io.restassured.response.Response;
+import io.restassured.response.ValidatableResponse;
+import io.vertx.core.json.JsonObject;
+
+class PublishersApiTest extends AbstractRestTest {
 
   private final EventDescriptor eventDescriptor = new EventDescriptor()
     .withEventType("CREATED_SRS_MARC_BIB_RECORD_WITH_ORDER_DATA")
@@ -37,7 +34,7 @@ public class PublishersApiTest extends AbstractRestTest {
     .withTmp(false);
 
   @Test
-  public void shouldReturnEmptyListOnGet() {
+  void shouldReturnEmptyListOnGet() {
     RestAssured.given()
       .spec(spec)
       .when()
@@ -48,7 +45,7 @@ public class PublishersApiTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnPublisherOnGetByEventType() {
+  void shouldReturnPublisherOnGetByEventType() {
     EventDescriptor createdEventDescriptor1 = postEventDescriptor(eventDescriptor);
     EventDescriptor createdEventDescriptor2 = postEventDescriptor(eventDescriptor2);
 
@@ -75,7 +72,7 @@ public class PublishersApiTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldCreatePublisherOnPost() {
+  void shouldCreatePublisherOnPost() {
     EventDescriptor createdEventDescriptor1 = postEventDescriptor(eventDescriptor);
     EventDescriptor createdEventDescriptor2 = postEventDescriptor(eventDescriptor2);
 
@@ -95,7 +92,7 @@ public class PublishersApiTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldClearPreviousPublisherInfoOnPostWithSameModuleNameAndTenantId() {
+  void shouldClearPreviousPublisherInfoOnPostWithSameModuleNameAndTenantId() {
     EventDescriptor createdEventDescriptor1 = postEventDescriptor(eventDescriptor);
     EventDescriptor createdEventDescriptor2 = postEventDescriptor(eventDescriptor2);
     String moduleName = "test-module-1.0.0";
@@ -131,7 +128,7 @@ public class PublishersApiTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldNotClearExistingPublisherInfoOnPostWithSameTenantIdAndSimilarModuleId() {
+  void shouldNotClearExistingPublisherInfoOnPostWithSameTenantIdAndSimilarModuleId() {
     EventDescriptor createdEventDescriptor = postEventDescriptor(eventDescriptor);
     String circulationStorageModuleId = "mod-circulation-storage-1.2.3";
     String circulationModuleId = "mod-circulation-1.2.3";
@@ -158,7 +155,7 @@ public class PublishersApiTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnBadRequestOnPostWhenEventTypeDoesNotExist() {
+  void shouldReturnBadRequestOnPostWhenEventTypeDoesNotExist() {
     PublisherDescriptor publisherDescriptor = new PublisherDescriptor()
       .withEventDescriptors(Collections.singletonList(eventDescriptor))
       .withModuleId("test-module-1.0.0");
@@ -175,7 +172,7 @@ public class PublishersApiTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnBadRequestOnPostWhenSpecificEventTypeDoesNotExist() {
+  void shouldReturnBadRequestOnPostWhenSpecificEventTypeDoesNotExist() {
     EventDescriptor createdEventDescriptor1 = postEventDescriptor(eventDescriptor);
 
     PublisherDescriptor publisherDescriptor = new PublisherDescriptor()
@@ -194,7 +191,7 @@ public class PublishersApiTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnBadRequestOnDeclarePublisherWithEventDescriptorDifferentFromExistingOne() {
+  void shouldReturnBadRequestOnDeclarePublisherWithEventDescriptorDifferentFromExistingOne() {
     int newEventTTL = 10;
     EventDescriptor createdEventDescriptor = postEventDescriptor(eventDescriptor);
     createdEventDescriptor.withEventTTL(newEventTTL);
@@ -215,7 +212,7 @@ public class PublishersApiTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldReturnBadRequestOnPostWhenEventDescriptorDoesNotExist() {
+  void shouldReturnBadRequestOnPostWhenEventDescriptorDoesNotExist() {
     int newEventTTL = 10;
     EventDescriptor createdEventDescriptor = postEventDescriptor(eventDescriptor);
     createdEventDescriptor.withEventTTL(newEventTTL);
@@ -237,7 +234,7 @@ public class PublishersApiTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldDeletePublisherOnDelete() {
+  void shouldDeletePublisherOnDelete() {
     EventDescriptor createdEventDescriptor = postEventDescriptor(eventDescriptor);
 
     PublisherDescriptor publisherDescriptor = new PublisherDescriptor()
@@ -270,7 +267,7 @@ public class PublishersApiTest extends AbstractRestTest {
   }
 
   @Test
-  public void shouldNotFailWhenRegisteringEmptyPublishersList() {
+  void shouldNotFailWhenRegisteringEmptyPublishersList() {
     PublisherDescriptor publisherDescriptor = new PublisherDescriptor()
       .withEventDescriptors(Collections.emptyList())
       .withModuleId("mod-very-important-1.0.0");

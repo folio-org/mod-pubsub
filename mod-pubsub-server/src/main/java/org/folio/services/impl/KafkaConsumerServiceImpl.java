@@ -1,5 +1,4 @@
 package org.folio.services.impl;
-
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -14,9 +13,8 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.HttpStatus;
-import org.folio.kafka.KafkaConfig;
+import org.folio.kafka.PubSubKafkaConfig;
 import org.folio.kafka.PubSubConfig;
-import org.folio.okapi.common.GenericCompositeFuture;
 import org.folio.rest.jaxrs.model.AuditMessage;
 import org.folio.rest.jaxrs.model.Event;
 import org.folio.rest.jaxrs.model.MessagingModule;
@@ -38,9 +36,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static java.lang.String.format;
+import static java.lang.Boolean.FALSE;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
-import static org.folio.rest.RestVerticle.MODULE_SPECIFIC_ARGS;
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
 import static org.folio.rest.util.OkapiConnectionParams.USER_ID;
 import static org.folio.rest.util.RestUtil.doRequest;
@@ -53,14 +50,15 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
   private static final Logger LOGGER = LogManager.getLogger();
 
   private Vertx vertx;
-  private KafkaConfig kafkaConfig;
+  private PubSubKafkaConfig kafkaConfig;
   private Cache cache;
   private AuditService auditService;
   private SecurityManager securityManager;
-  private static final int RETRY_NUMBER = Integer.parseInt(MODULE_SPECIFIC_ARGS.getOrDefault("pubsub.delivery.retry.number", "5"));
+  private static final int RETRY_NUMBER =
+    Integer.parseInt(System.getenv().getOrDefault("pubsub.delivery.retry.number", "5"));
 
   public KafkaConsumerServiceImpl(@Autowired Vertx vertx,
-                                  @Autowired KafkaConfig kafkaConfig,
+                                  @Autowired PubSubKafkaConfig kafkaConfig,
                                   @Autowired SecurityManager securityManager,
                                   @Autowired Cache cache) {
     this.vertx = vertx;
@@ -92,13 +90,13 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
           .subscribe(topic)
           .onSuccess(result -> {
             cache.addSubscription(topic);
-            LOGGER.info(format("Subscribed to topic {%s}", topic));
+            LOGGER.info("Subscribed to topic {%s}".formatted(topic));
           })
           .onFailure(e ->
-            LOGGER.error(format("Could not subscribe to some of the topic {%s}", topic), e));
+            LOGGER.error("Could not subscribe to some of the topic {%s}".formatted(topic), e));
       })
       .toList();
-    return GenericCompositeFuture.all(futures).mapEmpty();
+    return Future.all(futures).mapEmpty();
   }
 
   protected KafkaConsumer<String, String> createKafkaConsumer(Vertx vertx,
@@ -146,7 +144,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
           .withEventType(event.getEventType())))
       .compose(subscribers -> {
         if (isEmpty(subscribers)) {
-          String errorMessage = format("There is no SUBSCRIBERS registered for event type %s. Event %s will not be delivered", event.getEventType(), event.getId());
+          String errorMessage = "There is no SUBSCRIBERS registered for event type %s. Event %s will not be delivered".formatted(event.getEventType(), event.getId());
           LOGGER.error(errorMessage);
           auditService.saveAuditMessage(constructJsonAuditMessage(event, params.getTenantId(), AuditMessage.State.REJECTED, errorMessage));
         } else {
@@ -158,7 +156,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
                 .onComplete(getEventDeliveredHandler(event, params.getTenantId(), subscriber, params, retry)));
             });
         }
-        GenericCompositeFuture.all(futureList)
+        Future.all(futureList)
           .onComplete(ar -> result.complete());
         return result.future();
       });
@@ -167,9 +165,9 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
   protected Handler<AsyncResult<RestUtil.WrappedResponse>> getEventDeliveredHandler(Event event, String tenantId, MessagingModule subscriber, OkapiConnectionParams params, Map<MessagingModule, AtomicInteger> retry) {
     retry.get(subscriber).incrementAndGet();
     return ar -> {
-      LOGGER.info("Delivering was complete. Checking for response...");
+      LOGGER.info("Delivering for event with ID {} was complete. Checking for response...", event.getId());
       if (ar.failed()) {
-        String errorMessage = format("%s event with id '%s' was not delivered to %s", event.getEventType(), event.getId(), subscriber.getSubscriberCallback());
+        String errorMessage = "%s event with id '%s' was not delivered to %s".formatted(event.getEventType(), event.getId(), subscriber.getSubscriberCallback());
         LOGGER.error(errorMessage, ar.cause());
         auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.REJECTED, errorMessage));
         retryDelivery(event, subscriber, params, retry);
@@ -179,7 +177,7 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
           && statusCode != HttpStatus.HTTP_CREATED.toInt()
           && statusCode != HttpStatus.HTTP_NO_CONTENT.toInt()) {
 
-          String error = format("Error delivering %s event with id '%s' to %s, response status code is %s, %s",
+          String error = "Error delivering %s event with id '%s' to %s, response status code is %s, %s".formatted(
             event.getEventType(), event.getId(), subscriber.getSubscriberCallback(), statusCode, ar.result().getResponse().statusMessage());
           LOGGER.error(error);
           auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId, AuditMessage.State.REJECTED, error));

@@ -3,7 +3,7 @@ package org.folio.services.impl;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import org.folio.dao.MessagingModuleDao;
-import org.folio.kafka.KafkaConfig;
+import org.folio.kafka.PubSubKafkaConfig;
 import org.folio.rest.util.MessagingModuleFilter;
 import org.folio.rest.util.OkapiConnectionParams;
 import org.folio.services.ConsumerService;
@@ -21,13 +21,13 @@ import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
 public class StartupServiceImpl implements StartupService {
 
   private Vertx vertx;
-  private KafkaConfig kafkaConfig;
+  private PubSubKafkaConfig kafkaConfig;
   private MessagingModuleDao messagingModuleDao;
   private ConsumerService consumerService;
   private KafkaTopicService kafkaTopicService;
 
   public StartupServiceImpl(@Autowired Vertx vertx,
-                            @Autowired KafkaConfig kafkaConfig,
+                            @Autowired PubSubKafkaConfig kafkaConfig,
                             @Autowired MessagingModuleDao messagingModuleDao,
                             @Autowired ConsumerService consumerService,
                             @Autowired KafkaTopicService kafkaTopicService) {

@@ -34,7 +34,13 @@ public final class DbUtil {
     Promise<SQLConnection> tx = Promise.promise();
     Future.succeededFuture()
       .compose(v -> {
-        postgresClient.startTx(tx);
+        postgresClient.startTx(result -> {
+          if (result.succeeded()) {
+            tx.complete(result.result());
+          } else {
+            tx.fail(result.cause());
+          }
+        });
         return tx.future();
       })
       .compose(v -> action.apply(tx.future()))

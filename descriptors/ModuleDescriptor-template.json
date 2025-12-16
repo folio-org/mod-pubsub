@@ -26,7 +26,7 @@
           ],
           "pathPattern": "/pubsub/event-types",
           "permissionsRequired": [
-            "pubsub.event-types.get"
+            "pubsub.event-types.collection.get"
           ]
         },
         {
@@ -44,7 +44,7 @@
           ],
           "pathPattern": "/pubsub/event-types/{eventTypeName}",
           "permissionsRequired": [
-            "pubsub.event-types.get"
+            "pubsub.event-types.item.get"
           ]
         },
         {
@@ -220,9 +220,15 @@
   ],
   "permissionSets": [
     {
-      "permissionName": "pubsub.event-types.get",
+      "permissionName": "pubsub.event-types.collection.get",
+      "displayName": "PubSub - get Event Descriptor collection",
+      "description": "Get Event Descriptor collection"
+    },
+    {
+      "permissionName": "pubsub.event-types.item.get",
       "displayName": "PubSub - get Event Descriptor",
-      "description": "Get Event Descriptor"
+      "description": "Get Event Descriptor",
+      "replaces": ["pubsub.event-types.get"]
     },
     {
       "permissionName": "pubsub.event-types.post",
@@ -290,6 +296,66 @@
       "description": "Delete publishers or subscribers"
     },
     {
+      "permissionName": "remote-storage.pub-sub-handlers.log-record-event.post",
+      "displayName" : "log record events from pub-sub",
+      "description" : "log record events received from pub-sub"
+    },
+    {
+      "permissionName": "audit.pub-sub-handlers.log-record-event.post",
+      "displayName" : "log record events from pub-sub",
+      "description" : "log record events received from pub-sub"
+    },
+    {
+      "permissionName": "circulation.handlers.loan-related-fee-fine-closed.post",
+      "displayName": "circulation - loan-related fee/fine closed",
+      "description": "Loan-related fee/fine closed"
+    },
+    {
+      "permissionName": "circulation.handlers.fee-fine-balance-changed.post",
+      "displayName": "circulation - fee/fine balance changed",
+      "description": "Fee/fine balance changed"
+    },
+    {
+      "permissionName": "patron-blocks.handlers.fee-fine-balance-changed.post",
+      "displayName": "Patron blocks - post fee fine balance changed event",
+      "description": "Post fee fine balance changed event"
+    },
+    {
+      "permissionName": "patron-blocks.handlers.item-checked-out.post",
+      "displayName": "Patron blocks - post item checked out event",
+      "description": "Post item checked out event"
+    },
+    {
+      "permissionName": "patron-blocks.handlers.item-checked-in.post",
+      "displayName": "Patron blocks - post item checked in event",
+      "description": "Post item checked in event"
+    },
+    {
+      "permissionName": "patron-blocks.handlers.item-declared-lost.post",
+      "displayName": "Patron blocks - post item declared lost event",
+      "description": "Post item declared lost event"
+    },
+    {
+      "permissionName": "patron-blocks.handlers.item-aged-to-lost.post",
+      "displayName": "Patron blocks - post item aged to lost event",
+      "description": "Post item aged to lost event"
+    },
+    {
+      "permissionName": "patron-blocks.handlers.item-claimed-returned.post",
+      "displayName": "Patron blocks - post item claimed returned event",
+      "description": "Post item claimed returned event"
+    },
+    {
+      "permissionName": "patron-blocks.handlers.loan-due-date-changed.post",
+      "displayName": "Patron blocks - post loan due date changed event",
+      "description": "Post loan due date changed event"
+    },
+    {
+      "permissionName": "patron-blocks.handlers.loan-closed.post",
+      "displayName": "Patron blocks - post loan closed event",
+      "description": "Post loan closed event"
+    },
+    {
       "permissionName": "pubsub.events.post",
       "displayName": "PubSub - post event.",
       "description": "Post all events.",
@@ -303,6 +369,26 @@
       ]
     }
   ],
+  "metadata": {
+    "user": {
+      "type": "system",
+      "permissions": [
+        "pubsub.events.post",
+        "audit.pub-sub-handlers.log-record-event.post",
+        "remote-storage.pub-sub-handlers.log-record-event.post",
+        "circulation.handlers.loan-related-fee-fine-closed.post",
+        "circulation.handlers.fee-fine-balance-changed.post",
+        "patron-blocks.handlers.fee-fine-balance-changed.post",
+        "patron-blocks.handlers.item-checked-out.post",
+        "patron-blocks.handlers.item-checked-in.post",
+        "patron-blocks.handlers.item-declared-lost.post",
+        "patron-blocks.handlers.item-aged-to-lost.post",
+        "patron-blocks.handlers.item-claimed-returned.post",
+        "patron-blocks.handlers.loan-due-date-changed.post",
+        "patron-blocks.handlers.loan-closed.post"
+      ]
+    }
+  },
   "launchDescriptor": {
     "dockerImage": "${artifactId}:${version}",
     "dockerArgs": {

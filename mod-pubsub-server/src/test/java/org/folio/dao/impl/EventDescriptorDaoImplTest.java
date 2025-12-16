@@ -1,5 +1,7 @@
 package org.folio.dao.impl;
 
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
@@ -10,20 +12,21 @@ import javax.ws.rs.NotFoundException;
 import org.folio.dao.PostgresClientFactory;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.helpers.LocalRowSet;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import io.vertx.core.Future;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 import io.vertx.sqlclient.Tuple;
 
-@RunWith(VertxUnitRunner.class)
-public class EventDescriptorDaoImplTest {
+@ExtendWith(VertxExtension.class)
+class EventDescriptorDaoImplTest {
 
   @Mock
   private PostgresClientFactory postgresClientFactory;
@@ -34,34 +37,49 @@ public class EventDescriptorDaoImplTest {
   @InjectMocks
   EventDescriptorDaoImpl eventDescriptorDao = new EventDescriptorDaoImpl();
 
-  @Before
-  public void setUp() {
-    MockitoAnnotations.initMocks(this);
+  AutoCloseable openMocks;
+
+  @BeforeEach
+  void setUp() {
+    openMocks = MockitoAnnotations.openMocks(this);
     when(postgresClientFactory.getInstance()).thenReturn(postgresClient);
   }
 
-  private void shouldSucceedOnDelete(TestContext context, int rowCount) {
+  @AfterEach
+  void tearDown() throws Exception {
+    openMocks.close();
+  }
+
+  private Future<Void> shouldSucceedOnDelete(VertxTestContext context, int rowCount) {
     // given
     when(postgresClient.execute(anyString(), any(Tuple.class)))
       .thenReturn(Future.succeededFuture(new LocalRowSet(rowCount)));
     // when
-    eventDescriptorDao.delete("event-type")
+    return eventDescriptorDao.delete("event-type")
     // then
-    .onComplete(context.asyncAssertSuccess(x ->
-      verify(postgresClient).execute(anyString(), any(Tuple.class))));
-  }
-  @Test(expected = NotFoundException.class)
-  public void shouldFailOnDeleteMoreThanOneRow(TestContext context) {
-    shouldSucceedOnDelete(context, 2);
+    .onComplete(x -> {
+        verify(postgresClient).execute(anyString(), any(Tuple.class));
+        context.completeNow();
+      }
+    );
   }
 
   @Test
-  public void shouldSucceedOnDeleteExisting(TestContext context) {
+  void shouldFailOnDeleteMoreThanOneRow(VertxTestContext context) {
+    var future = shouldSucceedOnDelete(context, 2);
+    assertTrue(future.failed());
+    assertInstanceOf(NotFoundException.class, future.cause());
+  }
+
+  @Test
+  void shouldSucceedOnDeleteExisting(VertxTestContext context) {
     shouldSucceedOnDelete(context, 1);
   }
 
-  @Test(expected = NotFoundException.class)
-  public void shouldFailOnDeleteNotFound(TestContext context) {
-    shouldSucceedOnDelete(context, 0);
+  @Test
+  void shouldFailOnDeleteNotFound(VertxTestContext context) {
+    var future = shouldSucceedOnDelete(context, 0);
+    assertTrue(future.failed());
+    assertInstanceOf(NotFoundException.class, future.cause());
   }
 }

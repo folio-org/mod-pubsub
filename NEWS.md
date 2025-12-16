@@ -1,10 +1,29 @@
+## 2025-03-11 v2.16.0
+* [MODPUBSUB-295](https://folio-org.atlassian.net/browse/MODPUBSUB-295) Review and cleanup Module Descriptor
+* [MODPUBSUB-302](https://folio-org.atlassian.net/browse/MODPUBSUB-302) Change permissions to support Eureka
+* [MODPUBSUB-307](https://folio-org.atlassian.net/browse/MODPUBSUB-307) Add permissions for circulation event handlers
+* [MODPUBSUB-309](https://folio-org.atlassian.net/browse/MODPUBSUB-309) Upgrade to kafka-clients 3.9.0, folio-di-support 2.2.0, vertx 4.5.11
+* [MODPUBSUB-318](https://folio-org.atlassian.net/browse/MODPUBSUB-318) Upgrade to Java 21
+
+## 2024-11-19 v2.15.1
+* [MODPUBSUB-302](https://folio-org.atlassian.net/browse/MODPUBSUB-302) Add permissions in pubsub module for MD file changes in Eureka
+
+## 2024-10-29 v2.15.0
+* [MODPUBSUB-301](https://folio-org.atlassian.net/browse/MODPUBSUB-301) Circulation logs are not displayed
+* [MODPUBSUB-298](https://folio-org.atlassian.net/browse/MODPUBSUB-298) Upgrade to RMB v35.3.0
+* [MODPUBSUB-296](https://folio-org.atlassian.net/browse/MODPUBSUB-296) Add new permission to the list of those granted to the pubsub system user
+* [EUREKA-225](https://folio-org.atlassian.net/browse/EUREKA-225) Update module descriptors to use the "metadata" field
+
+## 2024-06-20 v2.14.0
+* [MODPUBSUB-290](https://folio-org.atlassian.net/browse/MODPUBSUB-290) Use folio-kafka-wrapper to create topics
+* [EUREKA-79](https://folio-org.atlassian.net/browse/EUREKA-79) Skip retrieving token if system user is disabled
+
 ## 2024-03-20 v2.13.0
 * [MODPUBSUB-291](https://folio-org.atlassian.net/browse/MODPUBSUB-291) Upgrade to RMB 35.2.0, Vertx 4.5.5
 * [MODPUBSUB-286](https://folio-org.atlassian.net/browse/MODPUBSUB-286) Fix memory leak issue related to Caffeine usage
 * [MODPUBSUB-283](https://folio-org.atlassian.net/browse/MODPUBSUB-283) Upgrade to RMB 35.1.1, folio-di-support 2.0.1, kafka-clients 3.6.0
 * [MODPUBSUB-282](https://folio-org.atlassian.net/browse/MODPUBSUB-282) Allow disabling system user
 * [MODPUBSUB-278](https://folio-org.atlassian.net/browse/MODPUBSUB-278) Remove default user password
-* 
 
 ## 2023-10-13 v2.11.0
 * [FOLIO-3678](https://issues.folio.org/browse/FOLIO-3678) Use API-related Workflows
