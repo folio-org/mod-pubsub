@@ -1,3 +1,6 @@
+## 2025-12-29 v2.15.8
+* [MODPUBSUB-335](https://folio-org.atlassian.net/browse/MODPUBSUB-335) Upgrade to RMB 35.3.2 and Vert.x 4.5.23
+
 ## 2025-04-01 v2.15.7
 * [MODPUBSUB-315](https://folio-org.atlassian.net/browse/MODPUBSUB-315) Add missing system user permissions for Okapi
 
