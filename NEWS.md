@@ -1,3 +1,6 @@
+## 2026-01-02 v2.16.2
+* [MODPUBSUB-340](https://folio-org.atlassian.net/browse/MODPUBSUB-340) Always close producer; more logging; remove executor
+
 ## 2025-04-23 v2.16.1
 * [MODPUBSUB-315](https://folio-org.atlassian.net/browse/MODPUBSUB-315) Add missing permissions
 
