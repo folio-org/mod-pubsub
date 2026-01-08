@@ -1,3 +1,6 @@
+## 2026-01-08 v2.16.3
+* [MODPUBSUB-336](https://folio-org.atlassian.net/browse/MODPUBSUB-336) Update to Vertx 4.5.23 and RMB 35.4.2
+
 ## 2026-01-02 v2.16.2
 * [MODPUBSUB-340](https://folio-org.atlassian.net/browse/MODPUBSUB-340) Always close producer; more logging; remove executor
 
