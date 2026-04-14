@@ -1,3 +1,12 @@
+## 2026-04-14 v2.17.0
+* [MODPUBSUB-314](https://folio-org.atlassian.net/browse/MODPUBSUB-314) Sensitive data in logs cleanup
+* [MODPUBSUB-315](https://folio-org.atlassian.net/browse/MODPUBSUB-315) Add missing permissions
+* [MODPUBSUB-325](https://folio-org.atlassian.net/browse/MODPUBSUB-325) Fix CQL query when calling `GET /users`
+* [MODPUBSUB-326](https://folio-org.atlassian.net/browse/MODPUBSUB-326) Always close KafkaProducer, remove executor
+* [MODPUBSUB-333](https://folio-org.atlassian.net/browse/MODPUBSUB-333) Upgrade to Vert.x 5.0
+* [MODPUBSUB-345](https://folio-org.atlassian.net/browse/MODPUBSUB-345) Enable GitHub maven workflow
+* Upgrade confluentinc/cp-kafka:7.3.1 to apache/kafka-native:3.8.0
+
 ## 2025-03-11 v2.16.0
 * [MODPUBSUB-295](https://folio-org.atlassian.net/browse/MODPUBSUB-295) Review and cleanup Module Descriptor
 * [MODPUBSUB-302](https://folio-org.atlassian.net/browse/MODPUBSUB-302) Change permissions to support Eureka
