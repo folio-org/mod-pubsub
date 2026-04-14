@@ -254,8 +254,8 @@ public class SecurityManagerImpl implements SecurityManager {
             updatedUser.getId());
           promise.complete(updatedUser);
         } else {
-          LOGGER.error("Unable to update the {} user [{}]", systemUserConfig.getName(),
-            response.getBody());
+          LOGGER.error("Unable to update the {} user, response status code: {}",
+            systemUserConfig.getName(), response.getCode());
           promise.fail("Unable to update the %s user: %s".formatted(systemUserConfig.getName(),
             response.getBody()));
         }
@@ -309,11 +309,11 @@ public class SecurityManagerImpl implements SecurityManager {
                 StringUtils.join(PERMISSIONS, ","));
               return succeededFuture();
             }
-            String errorMessage = "Failed to update permissions %s for %s user. Received status code %s: %s".formatted(
+            LOGGER.error("Failed to update permissions {} for {} user. Received status code {}",
+              StringUtils.join(PERMISSIONS, ","), systemUserConfig.getName(), res2.getCode());
+            return Future.failedFuture("Failed to update permissions %s for %s user. Received status code %s: %s".formatted(
               StringUtils.join(PERMISSIONS, ","), systemUserConfig.getName(), res2.getCode(),
-              res2.getBody());
-            LOGGER.error(errorMessage);
-            return Future.failedFuture(errorMessage);
+              res2.getBody()));
           });
       } else if (res1.getCode() == HttpStatus.HTTP_NOT_FOUND.toInt()) {
         JsonObject requestBody = new JsonObject()
@@ -327,17 +327,17 @@ public class SecurityManagerImpl implements SecurityManager {
                 StringUtils.join(PERMISSIONS, ","));
               return succeededFuture();
             }
-            String errorMessage = "Failed to add permissions %s for %s user. Received status code %s: %s".formatted(
+            LOGGER.error("Failed to add permissions {} for {} user. Received status code {}",
+              StringUtils.join(PERMISSIONS, ","), systemUserConfig.getName(), res2.getCode());
+            return Future.failedFuture("Failed to add permissions %s for %s user. Received status code %s: %s".formatted(
               StringUtils.join(PERMISSIONS, ","), systemUserConfig.getName(), res2.getCode(),
-              res2.getBody());
-            LOGGER.error(errorMessage);
-            return Future.failedFuture(errorMessage);
+              res2.getBody()));
           });
       }
-      String errorMessage = "Failed to get permissions for %s user. Received status code %s: %s".formatted(
-        systemUserConfig.getName(), res1.getCode(), res1.getBody());
-      LOGGER.error(errorMessage);
-      return Future.failedFuture(errorMessage);
+      LOGGER.error("Failed to get permissions for {} user. Received status code {}",
+        systemUserConfig.getName(), res1.getCode());
+      return Future.failedFuture("Failed to get permissions for %s user. Received status code %s: %s".formatted(
+        systemUserConfig.getName(), res1.getCode(), res1.getBody()));
     });
   }
 

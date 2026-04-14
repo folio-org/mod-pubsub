@@ -90,10 +90,10 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
           .subscribe(topic)
           .onSuccess(result -> {
             cache.addSubscription(topic);
-            LOGGER.info("Subscribed to topic {%s}".formatted(topic));
+            LOGGER.info("Subscribed to topic {}", topic);
           })
           .onFailure(e ->
-            LOGGER.error("Could not subscribe to some of the topic {%s}".formatted(topic), e));
+            LOGGER.error("Could not subscribe to some of the topic {}", topic, e));
       })
       .toList();
     return Future.all(futures).mapEmpty();
