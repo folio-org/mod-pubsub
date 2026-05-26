@@ -75,7 +75,7 @@ public abstract class AbstractRestTest {
   private static String useExternalDatabase;
   protected static Vertx vertx;
   private static final KafkaContainer kafkaContainer =
-      new KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0"))
+      new KafkaContainer(DockerImageName.parse("apache/kafka-native:4.2.0"))
       .withStartupAttempts(3);
 
   @BeforeAll

@@ -23,7 +23,7 @@
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
     <raml-module-builder.version>36.0.0</raml-module-builder.version>
-    <vertx.version>5.0.5</vertx.version>
+    <vertx.version>5.0.12</vertx.version>
     <lombok.version>1.18.36</lombok.version>
     <wiremock.version>3.0.1</wiremock.version>
     <junit.version>5.13.0</junit.version>
@@ -88,7 +88,7 @@
       <dependency>
         <groupId>org.apache.kafka</groupId>
         <artifactId>kafka-clients</artifactId>
-        <version>3.9.0</version>
+        <version>4.2.0</version>
       </dependency>
 
     </dependencies>
