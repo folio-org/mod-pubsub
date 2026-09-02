@@ -169,6 +169,32 @@ If this variable is not set, default "folio" prefix will be used in topic names,
 If `SYSTEM_USER_CREATE` is set to `true` (default value), the system user will be created if it does not exist in the system.
 If `SYSTEM_USER_CREATE` is set to `false`, the system user will not be created.
 
+****Event delivery****
+
+Delivery of an event to a subscriber is retried when the subscriber cannot be reached or rejects the
+event, and also when the attempt fails before the subscriber is contacted at all (for example when
+the system user token cannot be obtained). These optional variables control the retries; all
+defaults are applied when the variable is unset.
+
+| Variable                            | Default | Description                                             |
+|-------------------------------------|---------|---------------------------------------------------------|
+| `pubsub.delivery.retry.number`      | `5`     | Retries per subscriber, after the initial attempt.      |
+| `pubsub.delivery.retry.delay.ms`    | `1000`  | Pause before each retry, in milliseconds.               |
+
+****Outbound HTTP client****
+
+`mod-pubsub` delivers every event over HTTP, so these optional variables bound how long a slow or
+unresponsive subscriber can tie up delivery. All values are per JVM; the defaults are applied when
+the variable is unset.
+
+| Variable                              | Default | Description                                                                                                     |
+|---------------------------------------|---------|-----------------------------------------------------------------------------------------------------------------|
+| `pubsub.http.response.timeout.ms`     | `60000` | How long a request may go without producing data before it fails. Raise it if subscribers legitimately take longer to acknowledge an event. |
+| `pubsub.http.pool.wait.timeout.ms`    | `10000` | How long a request may wait for a connection from the pool before it fails.                                     |
+| `pubsub.http.idle.timeout.seconds`    | `60`    | Idle pooled connections are closed after this many **seconds**.                                                 |
+| `pubsub.http.max.pool.size`           | `100`   | Maximum HTTP/1.1 connections per host.                                                                          |
+| `pubsub.http.max.wait.queue.size`     | `1000`  | Maximum requests queued for a connection. Requests beyond this fail immediately rather than queueing without limit. |
+
 ## Verifying the module can connect and work with kafka
 
 To verify that pubsub can successfully connect and work with kafka send the following requests:
