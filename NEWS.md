@@ -1,3 +1,6 @@
+## 2026-11-26 v2.17.3
+* [MODPUBSUB-354](https://folio-org.atlassian.net/browse/MODPUBSUB-354) Fix silent event delivery stalls and lost events
+
 ## 2026-11-20 v2.17.2
 * [MODPUBSUB-357](https://folio-org.atlassian.net/browse/MODPUBSUB-357) Upgrade to Vertx 5.2.3, RMB 36.0.2 fixing vulns
 

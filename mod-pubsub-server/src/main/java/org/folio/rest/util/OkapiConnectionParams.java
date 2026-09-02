@@ -18,6 +18,8 @@ public final class OkapiConnectionParams {
 
   private Map<String, String> headers;
   private Vertx vertx;
+
+  /** TCP connect timeout, in milliseconds. */
   private int timeout = 2000;
 
   public OkapiConnectionParams() {

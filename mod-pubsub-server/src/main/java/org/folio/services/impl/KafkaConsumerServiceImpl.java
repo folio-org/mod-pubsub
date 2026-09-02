@@ -36,7 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static java.lang.Boolean.FALSE;
+import static io.vertx.core.Future.succeededFuture;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.folio.rest.jaxrs.model.MessagingModule.ModuleRole.SUBSCRIBER;
 import static org.folio.rest.util.OkapiConnectionParams.USER_ID;
@@ -56,6 +56,12 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
   private SecurityManager securityManager;
   private static final int RETRY_NUMBER =
     Integer.parseInt(System.getenv().getOrDefault("pubsub.delivery.retry.number", "5"));
+  /**
+   * Pause between delivery attempts. Retrying immediately just spends the whole retry budget
+   * inside the same outage, so a failing subscriber gets no chance to recover.
+   */
+  private static final long RETRY_DELAY_MS =
+    Long.parseLong(System.getenv().getOrDefault("pubsub.delivery.retry.delay.ms", "1000"));
 
   public KafkaConsumerServiceImpl(@Autowired Vertx vertx,
                                   @Autowired PubSubKafkaConfig kafkaConfig,
@@ -123,16 +129,49 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
           LOGGER.error("Could not find OkapiConnectionParams for tenantId={}", tenantId);
           return;
         }
-        deliverEvent(event, knownOkapiParams);
+        // The delivery future must not be dropped: everything that can fail before the first POST
+        // is reported through it, and a discarded failure leaves no log line and no audit row.
+        deliverEvent(event, knownOkapiParams)
+          .onFailure(e -> auditDeliveryFailure(event, tenantId, e));
       } catch (Exception e) {
         LOGGER.error("Error reading event value", e);
       }
     };
   }
 
+  private void auditDeliveryFailure(Event event, String tenantId, Throwable cause) {
+    String errorMessage = "%s event with id '%s' was not delivered: %s".formatted(
+      event.getEventType(), event.getId(), cause.getMessage());
+    LOGGER.error(errorMessage, cause);
+    auditService.saveAuditMessage(constructJsonAuditMessage(event, tenantId,
+      AuditMessage.State.REJECTED, errorMessage));
+  }
+
   protected Future<Void> deliverEvent(Event event, OkapiConnectionParams params) {
-    List<Future<RestUtil.WrappedResponse>> futureList = new ArrayList<>(); //NOSONAR
-    Promise<Void> result = Promise.promise();
+    return deliverEvent(event, params, 0);
+  }
+
+  /**
+   * Deliver an event, retrying the whole attempt if it fails before any subscriber has been
+   * contacted. Failures raised after the first POST are retried per subscriber by
+   * {@link #retryDelivery}; this covers the earlier steps - obtaining an access token and loading
+   * the messaging modules - which previously abandoned the event on the first error.
+   */
+  private Future<Void> deliverEvent(Event event, OkapiConnectionParams params, int attempt) {
+    return dispatchEvent(event, params)
+      .recover(cause -> {
+        if (attempt >= RETRY_NUMBER) {
+          return Future.failedFuture(cause);
+        }
+        LOGGER.warn("deliverEvent:: Could not start delivering {} event with id '{}', "
+            + "retrying in {} ms (attempt {} of {})", event.getEventType(), event.getId(),
+          retryDelayMs(), attempt + 1, RETRY_NUMBER, cause);
+        return after(retryDelayMs())
+          .compose(v -> deliverEvent(event, params, attempt + 1));
+      });
+  }
+
+  private Future<Void> dispatchEvent(Event event, OkapiConnectionParams params) {
     Map<MessagingModule, AtomicInteger> retry = new ConcurrentHashMap<>();
     return securityManager.getAccessToken(params)
       .onSuccess(params::setToken)
@@ -147,19 +186,37 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
           String errorMessage = "There is no SUBSCRIBERS registered for event type %s. Event %s will not be delivered".formatted(event.getEventType(), event.getId());
           LOGGER.error(errorMessage);
           auditService.saveAuditMessage(constructJsonAuditMessage(event, params.getTenantId(), AuditMessage.State.REJECTED, errorMessage));
-        } else {
-          subscribers
-            .forEach(subscriber -> {
-              retry.put(subscriber, new AtomicInteger(0));
-              LOGGER.info("Start delivering messages to subscriber {}", subscriber.getSubscriberCallback());
-              futureList.add(RestUtil.doRequest(params, subscriber.getSubscriberCallback(), HttpMethod.POST, event.getEventPayload())
-                .onComplete(getEventDeliveredHandler(event, params.getTenantId(), subscriber, params, retry)));
-            });
+          return succeededFuture();
         }
-        Future.all(futureList)
-          .onComplete(ar -> result.complete());
-        return result.future();
+        List<Future<RestUtil.WrappedResponse>> futureList = new ArrayList<>();
+        subscribers
+          .forEach(subscriber -> {
+            retry.put(subscriber, new AtomicInteger(0));
+            LOGGER.info("Start delivering messages to subscriber {}", subscriber.getSubscriberCallback());
+            futureList.add(RestUtil.doRequest(params, subscriber.getSubscriberCallback(), HttpMethod.POST, event.getEventPayload())
+              .onComplete(getEventDeliveredHandler(event, params.getTenantId(), subscriber, params, retry)));
+          });
+        // join, not all: a rejection by one subscriber is reported and retried by the delivery
+        // handler and must not be reported again as a failure of the whole event, nor cancel the
+        // remaining subscribers.
+        return Future.join(futureList)
+          .otherwiseEmpty()
+          .mapEmpty();
       });
+  }
+
+  /** Pause between delivery attempts, in milliseconds. Overridable so tests need not sleep. */
+  protected long retryDelayMs() {
+    return RETRY_DELAY_MS;
+  }
+
+  private Future<Void> after(long delayMs) {
+    if (delayMs <= 0) {
+      return succeededFuture();
+    }
+    Promise<Void> promise = Promise.promise();
+    vertx.setTimer(delayMs, id -> promise.complete());
+    return promise.future();
   }
 
   protected Handler<AsyncResult<RestUtil.WrappedResponse>> getEventDeliveredHandler(Event event, String tenantId, MessagingModule subscriber, OkapiConnectionParams params, Map<MessagingModule, AtomicInteger> retry) {
@@ -197,11 +254,17 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
 
   private void retryDelivery(Event event, MessagingModule subscriber, OkapiConnectionParams params, Map<MessagingModule, AtomicInteger> retry) {
     if (retry.get(subscriber).get() <= RETRY_NUMBER) {
-      LOGGER.info("Retry to deliver event {} event with id '{}' to {}", event.getEventType(), event.getId(), subscriber.getSubscriberCallback());
-      securityManager.getAccessToken(params)
-        .onSuccess(params::setToken)
-        .compose(v -> doRequest(params, subscriber.getSubscriberCallback(), HttpMethod.POST, event.getEventPayload())
-          .onComplete(getEventDeliveredHandler(event, params.getTenantId(), subscriber, params, retry)));
+      LOGGER.info("Retry to deliver event {} event with id '{}' to {} in {} ms", event.getEventType(), event.getId(), subscriber.getSubscriberCallback(), retryDelayMs());
+      after(retryDelayMs())
+        .compose(v -> securityManager.getAccessToken(params))
+        .onSuccess(token -> {
+          params.setToken(token);
+          doRequest(params, subscriber.getSubscriberCallback(), HttpMethod.POST, event.getEventPayload())
+            .onComplete(getEventDeliveredHandler(event, params.getTenantId(), subscriber, params, retry));
+        })
+        // The retry never reached the subscriber - most likely the token could not be renewed.
+        // Without this handler the retry chain would end silently.
+        .onFailure(cause -> auditDeliveryFailure(event, params.getTenantId(), cause));
     }
   }
 }
