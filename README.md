@@ -177,9 +177,9 @@ the system user token cannot be obtained). These optional variables control the 
 defaults are applied when the variable is unset.
 
 | Variable                            | Default | Description                                             |
-|-------------------------------------|---------|---------------------------------------------------------|
-| `pubsub.delivery.retry.number`      | `5`     | Retries per subscriber, after the initial attempt.      |
-| `pubsub.delivery.retry.delay.ms`    | `1000`  | Pause before each retry, in milliseconds.               |
+|------------------------------|---------|---------------------------------------------------------|
+| `DELIVERY_RETRY_NUMBER`      | `5`     | Retries per subscriber, after the initial attempt.      |
+| `DELIVERY_RETRY_DELAY_MS`    | `1000`  | Pause before each retry, in milliseconds.               |
 
 ****Outbound HTTP client****
 
@@ -188,12 +188,12 @@ unresponsive subscriber can tie up delivery. All values are per JVM; the default
 the variable is unset.
 
 | Variable                              | Default | Description                                                                                                     |
-|---------------------------------------|---------|-----------------------------------------------------------------------------------------------------------------|
-| `pubsub.http.response.timeout.ms`     | `60000` | How long a request may go without producing data before it fails. Raise it if subscribers legitimately take longer to acknowledge an event. |
-| `pubsub.http.pool.wait.timeout.ms`    | `10000` | How long a request may wait for a connection from the pool before it fails.                                     |
-| `pubsub.http.idle.timeout.seconds`    | `60`    | Idle pooled connections are closed after this many **seconds**.                                                 |
-| `pubsub.http.max.pool.size`           | `100`   | Maximum HTTP/1.1 connections per host.                                                                          |
-| `pubsub.http.max.wait.queue.size`     | `1000`  | Maximum requests queued for a connection. Requests beyond this fail immediately rather than queueing without limit. |
+|--------------------------------|---------|-----------------------------------------------------------------------------------------------------------------|
+| `HTTP_RESPONSE_TIMEOUT_MS`     | `60000` | How long a request may go without producing data before it fails. Raise it if subscribers legitimately take longer to acknowledge an event. |
+| `HTTP_POOL_WAIT_TIMEOUT_MS`    | `10000` | How long a request may wait for a connection from the pool before it fails.                                     |
+| `HTTP_IDLE_TIMEOUT_SECONDS`    | `60`    | Idle pooled connections are closed after this many **seconds**.                                                 |
+| `HTTP_MAX_POOL_SIZE`           | `100`   | Maximum HTTP/1.1 connections per host.                                                                          |
+| `HTTP_MAX_WAIT_QUEUE_SIZE`     | `1000`  | Maximum requests queued for a connection. Requests beyond this fail immediately rather than queueing without limit. |
 
 ## Verifying the module can connect and work with kafka
 
