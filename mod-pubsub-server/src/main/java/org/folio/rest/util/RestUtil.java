@@ -40,14 +40,14 @@ public final class RestUtil {
    * goes quiet; it is applied per request, in milliseconds, so there is no unit ambiguity.
    */
   static final long RESPONSE_TIMEOUT_MS =
-    longFromEnv("pubsub.http.response.timeout.ms", 60_000);
+    longFromEnv("HTTP_RESPONSE_TIMEOUT_MS", 60_000);
 
   /**
    * How long a request may wait for a connection from the pool before it is failed. Without it a
    * saturated pool parks requests indefinitely and the caller has nothing to log, audit or retry.
    */
   static final long POOL_WAIT_TIMEOUT_MS =
-    longFromEnv("pubsub.http.pool.wait.timeout.ms", 10_000);
+    longFromEnv("HTTP_POOL_WAIT_TIMEOUT_MS", 10_000);
 
   /**
    * Idle pooled connections are closed after this many seconds. Vert.x reads
@@ -55,7 +55,7 @@ public final class RestUtil {
    * otherwise - so the unit is always set explicitly alongside it.
    */
   static final int IDLE_TIMEOUT_SECONDS =
-    intFromEnv("pubsub.http.idle.timeout.seconds", 60);
+    intFromEnv("HTTP_IDLE_TIMEOUT_SECONDS", 60);
 
   /**
    * Connections per host. The Vert.x default of 5 is far too small for a module whose whole job is
@@ -63,7 +63,7 @@ public final class RestUtil {
    * outbound call, including the system user login.
    */
   static final int MAX_POOL_SIZE =
-    intFromEnv("pubsub.http.max.pool.size", 100);
+    intFromEnv("HTTP_MAX_POOL_SIZE", 100);
 
   /**
    * Requests allowed to queue for a connection. Vert.x defaults to an unbounded queue, which turns
@@ -71,7 +71,7 @@ public final class RestUtil {
    * failure is logged, audited and retried.
    */
   static final int MAX_WAIT_QUEUE_SIZE =
-    intFromEnv("pubsub.http.max.wait.queue.size", 1_000);
+    intFromEnv("HTTP_MAX_WAIT_QUEUE_SIZE", 1_000);
 
   public static class WrappedResponse {
     private final int code;

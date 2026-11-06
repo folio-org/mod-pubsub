@@ -55,13 +55,13 @@ public class KafkaConsumerServiceImpl implements ConsumerService {
   private AuditService auditService;
   private SecurityManager securityManager;
   private static final int RETRY_NUMBER =
-    Integer.parseInt(System.getenv().getOrDefault("pubsub.delivery.retry.number", "5"));
+    Integer.parseInt(System.getenv().getOrDefault("DELIVERY_RETRY_NUMBER", "5"));
   /**
    * Pause between delivery attempts. Retrying immediately just spends the whole retry budget
    * inside the same outage, so a failing subscriber gets no chance to recover.
    */
   private static final long RETRY_DELAY_MS =
-    Long.parseLong(System.getenv().getOrDefault("pubsub.delivery.retry.delay.ms", "1000"));
+    Long.parseLong(System.getenv().getOrDefault("DELIVERY_RETRY_DELAY_MS", "1000"));
 
   public KafkaConsumerServiceImpl(@Autowired Vertx vertx,
                                   @Autowired PubSubKafkaConfig kafkaConfig,
