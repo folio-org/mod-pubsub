@@ -460,6 +460,34 @@
       {
         "name": "SYSTEM_USER_PASSWORD",
         "value": "pubsub"
+      },
+      {
+        "name": "DELIVERY_RETRY_NUMBER",
+        "value": "5"
+      },
+      {
+        "name": "DELIVERY_RETRY_DELAY_MS",
+        "value": "1000"
+      },
+      {
+        "name": "HTTP_RESPONSE_TIMEOUT_MS",
+        "value": "60000"
+      },
+      {
+        "name": "HTTP_POOL_WAIT_TIMEOUT_MS",
+        "value": "10000"
+      },
+      {
+        "name": "HTTP_IDLE_TIMEOUT_SECONDS",
+        "value": "60"
+      },
+      {
+        "name": "HTTP_MAX_POOL_SIZE",
+        "value": "100"
+      },
+      {
+        "name": "HTTP_MAX_WAIT_QUEUE_SIZE",
+        "value": "1000"
       }
     ]
   }
