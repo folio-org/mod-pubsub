@@ -1,3 +1,6 @@
+## 2.18.0 (in progress)
+* [MODPUBSUB-354](https://folio-org.atlassian.net/browse/MODPUBSUB-354) Fix silent event delivery stalls and lost events
+
 ## 2026-04-14 v2.17.0
 * [MODPUBSUB-314](https://folio-org.atlassian.net/browse/MODPUBSUB-314) Sensitive data in logs cleanup
 * [MODPUBSUB-315](https://folio-org.atlassian.net/browse/MODPUBSUB-315) Add missing permissions
