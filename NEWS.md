@@ -1,5 +1,6 @@
 ## 2.18.0 (in progress)
 * [MODPUBSUB-354](https://folio-org.atlassian.net/browse/MODPUBSUB-354) Fix silent event delivery stalls and lost events
+* [MODPUBSUB-357](https://folio-org.atlassian.net/browse/MODPUBSUB-357) Upgrade to Vertx 5.2.3, RMB 36.0.2 fixing vulns
 
 ## 2026-04-14 v2.17.0
 * [MODPUBSUB-314](https://folio-org.atlassian.net/browse/MODPUBSUB-314) Sensitive data in logs cleanup
