@@ -1,3 +1,6 @@
+## 2026-11-18 v2.17.1
+* [MODPUBSUB-358](https://folio-org.atlassian.net/browse/MODPUBSUB-358) Upgrade to folio-liquibase-util v1.11.1
+
 ## 2026-04-14 v2.17.0
 * [MODPUBSUB-314](https://folio-org.atlassian.net/browse/MODPUBSUB-314) Sensitive data in logs cleanup
 * [MODPUBSUB-315](https://folio-org.atlassian.net/browse/MODPUBSUB-315) Add missing permissions
