@@ -1,6 +1,8 @@
 package org.folio.rest.util;
 
-import org.junit.Assert;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+
 import org.junit.jupiter.api.Test;
 
 class SimpleConfigurationReaderTest {
@@ -10,7 +12,7 @@ class SimpleConfigurationReaderTest {
     String expectedValue = "validProperty";
     System.setProperty("test.props", expectedValue);
     String actualValue = SimpleConfigurationReader.getValue("validProperty", "test.props", null);
-    Assert.assertEquals(expectedValue, actualValue);
+    assertThat(actualValue, is(expectedValue));
   }
 
   @Test
@@ -18,14 +20,14 @@ class SimpleConfigurationReaderTest {
     String expectedValue = "validProperty";
     System.setProperty("test.props", expectedValue);
     String actualValue = SimpleConfigurationReader.getValue(null, "test.props", null);
-    Assert.assertEquals(expectedValue, actualValue);
+    assertThat(actualValue, is(expectedValue));
   }
 
   @Test
   void shouldReturnDefaultValueIfSysAndSpringPropertiesAreEmpty() {
     String defaultValue = "default";
     String actualValue = SimpleConfigurationReader.getValue(null, "test2.props", "default");
-    Assert.assertEquals(defaultValue, actualValue);
+    assertThat(actualValue, is(defaultValue));
   }
 }
 
