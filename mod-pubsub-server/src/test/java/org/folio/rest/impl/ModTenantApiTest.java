@@ -7,8 +7,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static org.folio.rest.util.OkapiConnectionParams.OKAPI_URL_HEADER;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.Matchers.is;
 
 import java.util.UUID;
 
@@ -59,11 +58,9 @@ class ModTenantApiTest extends AbstractRestTest {
     wireMock.stubFor(put(userByIdUrl(user.getId()))
       .willReturn(aResponse().withStatus(400).withBody(expectedErrorMessage)));
 
-    String body = getTenant().extract().body().asString();
-
-    assertTrue(body, new JsonObject(body).getBoolean("complete"));
-    assertEquals("Unable to update the %s user: %s".formatted(SYSTEM_USER_NAME, expectedErrorMessage),
-      new JsonObject(body).getString("error"));
+    getTenant()
+    .body("complete", is(true))
+    .body("error", is("Unable to update the %s user: %s".formatted(SYSTEM_USER_NAME, expectedErrorMessage)));
   }
 
   private User existingUser() {
