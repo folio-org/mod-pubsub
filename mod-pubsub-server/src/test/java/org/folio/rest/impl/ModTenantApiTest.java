@@ -40,7 +40,7 @@ class ModTenantApiTest extends AbstractRestTest {
     .build();
 
   @BeforeAll
-  public static void setUpProxying() {
+  static void setUpProxying() {
     // forward to okapi by default
     wireMock.stubFor(any(anyUrl()).willReturn(aResponse().proxiedFrom(OKAPI_URL))
       .atPriority(Integer.MAX_VALUE));
