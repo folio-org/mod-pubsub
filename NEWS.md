@@ -1,3 +1,6 @@
+## 2026-11-20 v2.17.2
+* [MODPUBSUB-357](https://folio-org.atlassian.net/browse/MODPUBSUB-357) Upgrade to Vertx 5.2.3, RMB 36.0.2 fixing vulns
+
 ## 2026-11-18 v2.17.1
 * [MODPUBSUB-358](https://folio-org.atlassian.net/browse/MODPUBSUB-358) Upgrade to folio-liquibase-util v1.11.1
 
