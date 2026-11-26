@@ -2,7 +2,9 @@ package org.folio.services.impl;
 
 import static io.vertx.core.Future.succeededFuture;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeast;
@@ -19,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.folio.config.user.SystemUserConfig;
@@ -45,6 +49,7 @@ import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
@@ -58,12 +63,21 @@ class ConsumerServiceUnitTest {
   private static final String TENANT = "diku";
   private static final String TOKEN = "token";
   private static final String CALLBACK_ADDRESS = "/source-storage/records";
+  /**
+   * Retries outlive the future returned by deliverEvent, so a retry scheduled by one test can
+   * still arrive while the next one runs. Tests that count requests use their own callback.
+   */
+  private static final String RETRY_CALLBACK_ADDRESS = "/retry-only/records";
+  private static final String HEADERS_CALLBACK_ADDRESS = "/headers-only/records";
   private static final String EVENT_TYPE = "record_created";
 
   private static final String OKAPI_URL_HEADER = "x-okapi-url";
   private static final String OKAPI_TENANT_HEADER = "x-okapi-tenant";
   private static final String OKAPI_TOKEN_HEADER = "x-okapi-token";
   private static final String USER_ID = "X-Okapi-User-Id";
+
+  /** One initial attempt plus the default {@code pubsub.delivery.retry.number} of 5. */
+  private static final int EXPECTED_ATTEMPTS = 6;
 
   private Vertx vertx = Vertx.vertx();
   @Mock
@@ -142,6 +156,84 @@ class ConsumerServiceUnitTest {
         assertEquals(event.getEventPayload(), requests.getFirst().getBodyAsString());
       })
       .onComplete(context.succeedingThenComplete());
+  }
+
+  @Test
+  void shouldNotSendBlankTokenHeaderToSubscriber() throws Exception {
+    var params = new OkapiConnectionParams(headers, vertx);
+    // This is the state SecurityManagerImpl leaves params in when the system user is disabled:
+    // no token to send, even though the inbound headers still carry one.
+    params.setToken("");
+
+    LoggedRequest request = sendAndCapture(params);
+
+    assertFalse(request.getHeaders().getHeader(OKAPI_TOKEN_HEADER).isPresent(),
+      "an empty x-okapi-token must not be sent - a gateway reads it as a present but useless "
+        + "credential");
+  }
+
+  @Test
+  void shouldSendTokenHeaderToSubscriberWhenPresent() throws Exception {
+    LoggedRequest request = sendAndCapture(new OkapiConnectionParams(headers, vertx));
+
+    assertEquals(TOKEN, request.getHeader(OKAPI_TOKEN_HEADER));
+  }
+
+  @Test
+  void shouldNotModifyCallerHeaders() throws Exception {
+    Map<String, String> headersBefore = new HashMap<>(headers);
+
+    sendAndCapture(new OkapiConnectionParams(headers, vertx));
+
+    // OkapiConnectionParams instances are cached per tenant and reused for every event, so
+    // per-request headers must not be written back into them.
+    assertEquals(headersBefore, headers);
+  }
+
+  private LoggedRequest sendAndCapture(OkapiConnectionParams params) throws Exception {
+    wireMock.stubFor(WireMock.post(HEADERS_CALLBACK_ADDRESS).willReturn(WireMock.ok()));
+
+    await(RestUtil.doRequest(params, HEADERS_CALLBACK_ADDRESS, HttpMethod.POST, "payload"));
+
+    List<LoggedRequest> requests = wireMock.findAll(
+      WireMock.postRequestedFor(WireMock.urlEqualTo(HEADERS_CALLBACK_ADDRESS)));
+    assertEquals(1, requests.size());
+    return requests.getFirst();
+  }
+
+  @Test
+  void shouldRetryAndFailWhenAccessTokenCannotBeObtained() {
+    doReturn(1L).when(consumerService).retryDelayMs();
+    doReturn(Future.failedFuture("no token for you"))
+      .when(securityManager).getAccessToken(any(OkapiConnectionParams.class));
+    when(cache.getMessagingModules())
+      .thenReturn(succeededFuture(buildMessagingModules(RETRY_CALLBACK_ADDRESS)));
+
+    var result = consumerService.deliverEvent(buildEvent(), buildOkapiConnectionParams());
+
+    assertThrows(ExecutionException.class, () -> await(result));
+    // A failure before the first POST used to abandon the event outright; it is now retried, and
+    // the failure surfaces to the caller so it can be logged and audited.
+    verify(securityManager, times(EXPECTED_ATTEMPTS))
+      .getAccessToken(any(OkapiConnectionParams.class));
+    wireMock.verify(0, WireMock.postRequestedFor(WireMock.urlEqualTo(RETRY_CALLBACK_ADDRESS)));
+  }
+
+  @Test
+  void shouldRetryDeliveryAfterTransientFailureBeforeDispatch() throws Exception {
+    wireMock.stubFor(WireMock.post(RETRY_CALLBACK_ADDRESS)
+      .willReturn(WireMock.noContent()));
+
+    doReturn(1L).when(consumerService).retryDelayMs();
+    doReturn(Future.failedFuture("token endpoint unavailable"), succeededFuture(TOKEN))
+      .when(securityManager).getAccessToken(any(OkapiConnectionParams.class));
+    when(cache.getMessagingModules())
+      .thenReturn(succeededFuture(buildMessagingModules(RETRY_CALLBACK_ADDRESS)));
+
+    await(consumerService.deliverEvent(buildEvent(), buildOkapiConnectionParams()));
+
+    // The first attempt never got as far as a POST; the retry did.
+    wireMock.verify(1, WireMock.postRequestedFor(WireMock.urlEqualTo(RETRY_CALLBACK_ADDRESS)));
   }
 
   @Test
@@ -339,6 +431,10 @@ class ConsumerServiceUnitTest {
   }
 
   private Set<MessagingModule> buildMessagingModules() {
+    return buildMessagingModules(CALLBACK_ADDRESS);
+  }
+
+  private Set<MessagingModule> buildMessagingModules(String callbackAddress) {
     Set<MessagingModule> messagingModules = new HashSet<>();
     messagingModules.add(new MessagingModule()
       .withId(UUID.randomUUID().toString())
@@ -347,9 +443,13 @@ class ConsumerServiceUnitTest {
       .withTenantId(TENANT)
       .withModuleRole(MessagingModule.ModuleRole.SUBSCRIBER)
       .withActivated(true)
-      .withSubscriberCallback(CALLBACK_ADDRESS));
+      .withSubscriberCallback(callbackAddress));
 
     return messagingModules;
+  }
+
+  private static <T> T await(Future<T> future) throws Exception {
+    return future.toCompletionStage().toCompletableFuture().get(30, TimeUnit.SECONDS);
   }
 
   private Event buildEvent() {
